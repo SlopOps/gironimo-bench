@@ -204,4 +204,5 @@ Individual model outputs remain the property of their respective providers.
 **SlopOps** — open-source tools and educational content for engineers building production systems with LLMs.
 
 GitHub: [https://github.com/SlopOps](https://github.com/SlopOps)
+
 YouTube: [https://youtube.com/@SlopOps](https://youtube.com/@SlopOps)
