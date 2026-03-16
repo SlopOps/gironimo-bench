@@ -1,14 +1,12 @@
 # Gironimo Bench
 
-Benchmarking how large language models perform on **real-world AI-assisted software development workflows**.
+Benchmarking LLMs on **real-world software development workflows** — see how AI performs at building complete systems from a single specification prompt.
 
-Part of the SlopOps YouTube series, Gironimo Bench evaluates whether modern language models can implement a complex software system from a **single, detailed specification prompt**.
+Part of the SlopOps YouTube series, Gironimo Bench evaluates modern language models on a **full engineering workflow**:
 
-Unlike traditional benchmarks that focus on reasoning questions or short code snippets, Gironimo Bench evaluates a **complete development pipeline**:
+**specification → architecture → implementation → human review**
 
-**specification → architecture → implementation → human evaluation**
-
-All runs follow the same methodology and are **curated and verified by hand** to ensure consistent and transparent scoring.
+All runs follow the same methodology and are **curated and verified by hand** for consistent, trustworthy scoring.
 
 ---
 
@@ -18,20 +16,20 @@ The Gironimo Bench tests how well LLMs can turn a **long, detailed prompt** into
 
 This is not multiple-choice reasoning or toy coding tasks. The benchmark evaluates whether a model can produce a **realistic, maintainable codebase** with:
 
-* coherent system architecture
-* functional source code
-* automated or manual tests
-* realistic engineering structure
-* production-oriented design decisions
+* coherent system architecture  
+* functional source code  
+* automated or manual tests  
+* realistic engineering structure  
+* production-oriented design decisions  
 
 Each run answers questions such as:
 
-* Can the model correctly interpret a specification?
-* Can it design a coherent architecture?
-* Can it generate maintainable code?
-* Can it follow a structured development workflow?
+* Can the model correctly interpret a specification?  
+* Can it design a coherent architecture?  
+* Can it generate maintainable code?  
+* Can it follow a structured development workflow?  
 
-> **One-Shot Attempts:** Each model gets a few retries to succeed. Fewer attempts = higher One-Shot score.
+> **One-Shot Attempts:** Each model gets a few retries to succeed. Fewer retries = higher score.
 
 ---
 
@@ -39,9 +37,9 @@ Each run answers questions such as:
 
 Most LLM benchmarks measure:
 
-* reasoning questions
-* short code snippets
-* academic tasks
+* reasoning questions  
+* short code snippets  
+* academic tasks  
 
 Gironimo Bench evaluates something different:
 
@@ -49,10 +47,10 @@ Gironimo Bench evaluates something different:
 
 Pipeline for every run:
 
-1. Specification (long, detailed prompt)
-2. Architecture interpretation
-3. Implementation (code generation)
-4. Human review and scoring
+1. Specification (long, detailed prompt)  
+2. Architecture interpretation  
+3. Implementation (code generation)  
+4. Human review and scoring  
 
 This mirrors how professional engineering teams build software, while giving models a **fair chance with retries**.
 
@@ -70,19 +68,19 @@ Future versions may introduce new challenges or scoring refinements.
 
 ## 📊 Current Leaderboard
 
-| Model         | Score | One-Shot Attempts | Date |
-| ------------- | ----- | ----------------- | ---- |
-| *Coming soon* | –     | –                 | –    |
+| Model         | Score | One-Shot Attempts (fewer = better) | Date |
+| ------------- | ----- | --------------------------------- | ---- |
+| *Coming soon* | –     | –                                 | –    |
 
-Full leaderboard and detailed breakdowns will be available at:
-
-👉 [https://gironimo.ai/bench](https://gironimo.ai/bench) (coming soon)
+> Scores are **curated by hand**, not automated. Leaderboard updates after each SlopOps video.  
+> Full leaderboard and detailed breakdowns will be available at: [https://gironimo.ai/bench](https://gironimo.ai/bench) (coming soon)
 
 ---
 
 ## 🗂 Repository Structure
 
 ```
+
 gironimo-bench/
 │
 ├── spec/               # Benchmark specifications
@@ -102,11 +100,13 @@ gironimo-bench/
 │   └── generate-leaderboard.py
 │
 └── website/            # GitHub Pages site (future)
+
 ```
 
 Typical run structure:
 
 ```
+
 run-001/
 │
 ├── prompt.md            # Full spec used
@@ -114,6 +114,7 @@ run-001/
 ├── code/                # Generated source code
 ├── metrics.json         # Scoring breakdown
 └── notes.md             # Human evaluation notes
+
 ```
 
 ---
@@ -135,7 +136,8 @@ Each category is scored **0–10 points**, and the **total adds to 100 points**.
 | **Best Practices & Security** | Lighthouse: best practices, secure coding, maintainability | 10         |
 | **SEO & Value**               | Lighthouse: SEO + cost/value tradeoffs                     | 10         |
 
-> **Overall Gironimo Score** = sum of all 10 categories → **maximum 100 points**.
+> **Overall Gironimo Score** = sum of all 10 categories → **maximum 100 points**.  
+> Visual leaderboard is designed for easy comparison, perfect for **Doug DeMuro-style scoring** in videos.
 
 ---
 
@@ -145,10 +147,10 @@ Every SlopOps episode evaluates a single model on the Gironimo Bench.
 
 Episodes include:
 
-* **Live model runs on the spec prompt**
-* **Architecture and code review**
-* **Score breakdowns per category**
-* **Lessons learned and leaderboard update**
+* **Live model runs on the spec prompt**  
+* **Architecture and code review**  
+* **Score breakdowns per category**  
+* **Lessons learned and leaderboard update**  
 
 📺 [Watch on YouTube](https://youtube.com/@SlopOps)
 
@@ -168,10 +170,10 @@ Website is generated from this repository via GitHub Pages and updated after eac
 
 Each run:
 
-* Follows the same evaluation methodology
-* Is scored against the same rubric
-* Reviewed by a human engineer
-* Includes documented reasoning
+* Follows the same evaluation methodology  
+* Is scored against the same rubric  
+* Reviewed by a human engineer  
+* Includes documented reasoning  
 
 This ensures results are **consistent, comparable, and trustworthy**.
 
@@ -181,10 +183,10 @@ This ensures results are **consistent, comparable, and trustworthy**.
 
 All runs include:
 
-* Original specification prompt
-* Generated architecture
-* Produced code
-* Human evaluation notes
+* Original specification prompt  
+* Generated architecture  
+* Produced code  
+* Human evaluation notes  
 
 Allows **independent inspection and verification**.
 
@@ -192,7 +194,7 @@ Allows **independent inspection and verification**.
 
 ## 📄 License
 
-**Benchmark specification and methodology:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+**Benchmark specification and methodology:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)  
 **Code (scripts, website):** [Apache 2.0](LICENSE)
 
 Individual model outputs remain the property of their respective providers.
@@ -203,6 +205,5 @@ Individual model outputs remain the property of their respective providers.
 
 **SlopOps** — open-source tools and educational content for engineers building production systems with LLMs.
 
-GitHub: [https://github.com/SlopOps](https://github.com/SlopOps)
-
+GitHub: [https://github.com/SlopOps](https://github.com/SlopOps)  
 YouTube: [https://youtube.com/@SlopOps](https://youtube.com/@SlopOps)
