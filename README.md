@@ -205,4 +205,3 @@ Open-source tools and educational content for engineers building production syst
 
 GitHub: https://github.com/SlopOps  
 YouTube: https://youtube.com/@SlopOps
-```
