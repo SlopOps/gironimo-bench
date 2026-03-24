@@ -28,6 +28,7 @@ Each run answers questions such as:
 * Can it design a coherent architecture?  
 * Can it generate maintainable code?  
 * Can it follow a structured development workflow?  
+* Does it demonstrate engineering judgment beyond instruction-following?
 
 > **One-Shot Attempts:** Each model gets a few retries to succeed. Fewer retries = higher score.
 
@@ -54,13 +55,58 @@ Pipeline for every run:
 
 This mirrors how professional engineering teams build software, while giving models a **fair chance with retries**.
 
+### What We Actually Test
+
+Gironimo Bench evaluates **end-to-end engineering capability in real-world chat interfaces**:
+
+| Layer | What We Test |
+|-------|--------------|
+| **Model Capability** | Can it understand complex requirements and generate working code? |
+| **Output Handling** | Can it produce complete, multi-file implementations within output limits? |
+| **Continuation Support** | Does it work with our 3-continuation policy to overcome truncation? |
+| **Asset Management** | Can it provide self-contained, deployable assets (not just file references)? |
+| **Deployment Awareness** | Does it produce code that actually works on GitHub Pages? |
+
+A model's score reflects not just code quality, but its ability to deliver a complete, working system within the constraints of chat-based interaction.
+
+### Creative Freedom Over Rigid Compliance
+
+The v1 specification defines **what** to build, not **how**. Models have creative freedom to:
+
+- Choose visual style and implementation approach
+- Design interactive elements with personality
+- Organize content meaningfully
+- Make thoughtful engineering trade-offs
+
+**Boring but correct implementations score lower.** The benchmark rewards creativity, cohesion, and engineering judgment—not just instruction-following.
+
+---
+
+## 🧪 How the Specification Tests Real Engineering
+
+The v1 specification is intentionally designed to evaluate **attention to detail, interpretation, and judgment**. It contains subtle signals that separate careful readers from skimmers:
+
+| Technique | Example in Spec | What It Tests |
+|-----------|-----------------|---------------|
+| **Contradiction** | "Not a cartoon" but "still friendly and approachable" | Balance, nuance, avoiding extremes |
+| **Hidden Requirement** | "The giraffe should not be the only animated element" | Attention to detail, thorough reading |
+| **Misleading Example** | Grouping by category shown but "not required" | Independent thinking, avoiding mimicry |
+| **Underspecified Intent** | "Purposeful, not decorative" animation | Interpretation, documentation of choices |
+| **Negative Constraints** | "External image files are not acceptable" | Following prohibitions, constraint awareness |
+| **Red Herring** | Favicon mentioned as optional | Prioritization, avoiding distractions |
+| **Output Structure** | First response must include file list + HTML | Communication discipline, planning |
+
+These are not "trick questions." They mirror real engineering: specifications have nuance, trade-offs, and unstated expectations. The best engineers read carefully, interpret thoughtfully, and document their reasoning.
+
 ---
 
 ## 📦 Benchmark Versions
 
-| Version | Description                                              |
-| ------- | -------------------------------------------------------- |
-| v1      | Standardized specification prompt for testing all models |
+| Version | Description |
+| ------- | ----------- |
+| **v1** | Build a complete, deployable Gironimo brand website with five integrated features. Creative freedom emphasized. GitHub Pages deployment required. Self-contained assets required. |
+
+[View the v1 specification →](spec/v1.md)
 
 Future versions may introduce new challenges or scoring refinements.
 
@@ -68,9 +114,9 @@ Future versions may introduce new challenges or scoring refinements.
 
 ## 📊 Current Leaderboard
 
-| Model         | Score | One-Shot Attempts (fewer = better) | Date |
-| ------------- | ----- | --------------------------------- | ---- |
-| *Coming soon* | –     | –                                 | –    |
+| Model | Score | One-Shot Attempts (fewer = better) | Date |
+| ----- | ----- | --------------------------------- | ---- |
+| *Coming soon* | – | – | – |
 
 > Scores are **curated by hand**, not automated. Leaderboard updates after each SlopOps video.  
 > Full leaderboard and detailed breakdowns will be available at: [https://gironimo.ai/bench](https://gironimo.ai/bench) (coming soon)
@@ -81,18 +127,18 @@ Future versions may introduce new challenges or scoring refinements.
 
 Each category is scored **0–10 points**, and the **total adds to 100 points**. This keeps the leaderboard simple and easy to understand.
 
-| Category                      | Description                                                | Max Points |
-| ----------------------------- | ---------------------------------------------------------- | ---------- |
-| **Gironimo Bench Completion** | Did the model run through the full evaluation?             | 10         |
-| **One-Shot Attempts**         | How many retries were needed to succeed (fewer = higher)   | 10         |
-| **Design**                    | Beauty, creativity, and structure of the solution          | 10         |
-| **Architecture**              | Engineering decisions, maintainability, system design      | 10         |
-| **Code Quality**              | Readability, comments, modularity, error handling          | 10         |
-| **Feature Complete**          | Implements all requested features correctly                | 10         |
-| **Performance**               | Lighthouse performance metrics                             | 10         |
-| **Accessibility**             | Lighthouse accessibility metrics                           | 10         |
-| **Best Practices & Security** | Lighthouse: best practices, secure coding, maintainability | 10         |
-| **Tech Value & Trade-offs**   | Appropriate technology choices, cost/value balance         | 10         |
+| Category | Description | Max Points |
+| -------- | ----------- | ---------- |
+| **Gironimo Bench Completion** | Did the model run through the full evaluation? | 10 |
+| **One-Shot Attempts** | How many retries were needed to succeed (fewer = higher) | 10 |
+| **Design** | Beauty, creativity, personality, cohesion | 10 |
+| **Architecture** | Engineering decisions, maintainability, system design | 10 |
+| **Code Quality** | Readability, comments, modularity, error handling | 10 |
+| **Feature Complete** | Implements all requested features with integrity | 10 |
+| **Performance** | Lighthouse performance metrics | 10 |
+| **Accessibility** | Lighthouse accessibility metrics | 10 |
+| **Best Practices & Security** | Lighthouse: best practices, secure coding, maintainability | 10 |
+| **Tech Value & Trade-offs** | Appropriate technology choices; simplicity valued over complexity | 10 |
 
 > **Overall Gironimo Score** = sum of all 10 categories → **maximum 100 points**.  
 > Visual leaderboard is designed for easy comparison, perfect for **Doug DeMuro-style scoring** in videos.
@@ -119,6 +165,7 @@ Models are given a limited number of attempts (typically **3–4**) to produce a
 * “Build failed”
 * “Site does not deploy”
 * “Feature X is not functioning”
+* “Missing asset: [file] not provided”
 
 **Not allowed:**
 
@@ -144,27 +191,78 @@ This phase exists to produce a working result for evaluation and demonstration (
 
 ---
 
+### Continuation Policy (v1 Specific)
+
+The v1 specification requires multiple files. To account for output limits, each model receives **up to 3 continuation prompts** to complete their implementation:
+
+1. **Initial response:** Model outputs implementation
+2. **Continuation 1:** If incomplete, evaluator prompts "Continue. Provide remaining files."
+3. **Continuation 2:** Same
+4. **Continuation 3:** Same
+
+**If the implementation is complete and deploys within 3 continuations:**
+- Counts as **1 attempt** in Phase 1
+- Continuation scaffolding does not count against attempts
+
+**If still incomplete after 3 continuations:**
+- Moves to Phase 2 (completion mode)
+
+---
+
+### Asset Completeness (v1 Specific)
+
+The v1 specification requires **self-contained assets**. Submissions that reference external files without providing their contents are considered incomplete.
+
+**Acceptable:**
+- Inline SVG in HTML
+- SVG provided as a separate file with full markup
+- Canvas with drawing code included
+- CSS-based illustrations
+- External images from free, public CDNs with attribution in README
+
+**Not acceptable:**
+- References to image files (`giraffe.svg`) without providing the file contents
+- Placeholder comments like `<!-- add giraffe image here -->`
+- External images without attribution or from restricted sources
+
+Missing assets count as a failed attempt in Phase 1 and may be resolved in Phase 2.
+
+---
+
 ## 📊 How Scoring Works
 
 ### **One-Shot Attempts (10 pts)**
 
 | Attempts to Deploy (Phase 1 only) | Score |
 | --------------------------------- | ----- |
-| 1                                 | 10    |
-| 2                                 | 8     |
-| 3                                 | 6     |
-| 4                                 | 4     |
-| Failed within limit               | 0     |
+| 1 | 10 |
+| 2 | 8 |
+| 3 | 6 |
+| 4 | 4 |
+| Failed within limit | 0 |
 
 ---
 
 ### **Gironimo Bench Completion (10 pts)**
 
-| Outcome                      | Score |
-| ---------------------------- | ----- |
-| Fully deploys within Phase 1 | 10    |
-| Deploys only after Phase 2   | 6     |
-| Never deploys                | 0     |
+| Outcome | Score |
+| ------- | ----- |
+| Fully deploys within Phase 1 | 10 |
+| Deploys only after Phase 2 | 6 |
+| Never deploys | 0 |
+
+---
+
+### **GitHub Pages Deployment Requirement (v1 Specific)**
+
+Successful deployment to GitHub Pages is **required** for scoring in all categories except One-Shot Attempts and Completion. A site that does not deploy receives a maximum score of 4 across all quality categories, regardless of implementation quality.
+
+| Deployment Outcome | Maximum Possible Score |
+| ------------------ | ---------------------- |
+| Deploys successfully | 100 (full scoring) |
+| Does not deploy | 40 (capped: only attempts/completion count) |
+
+This ensures the benchmark tests real-world deliverability, not just code that "looks right" in the response.
 
 ---
 
@@ -188,7 +286,7 @@ Some categories involve human judgment. To ensure consistency, the following sco
 * **0–3:** Broken, unusable, or visually chaotic
 * **4–6:** Functional but basic, minimal polish
 * **7–8:** Clean, consistent, professional
-* **9–10:** Exceptional polish, cohesive, memorable
+* **9–10:** Exceptional polish, cohesive, memorable, surprising
 
 ---
 
@@ -228,6 +326,8 @@ Gironimo Bench evaluates two distinct dimensions:
 
 A model that succeeds immediately but produces a basic result will score differently than one that requires multiple attempts but delivers a stronger system.
 
+**For v1 specifically:** This benchmark rewards **engineering judgment**, not just instruction-following. Creative, cohesive, surprising implementations that meet all requirements will score higher than rigid, uninspired but correct implementations.
+
 ---
 
 ## 📌 Transparency
@@ -237,6 +337,9 @@ Each run includes:
 * Number of attempts used in Phase 1
 * Whether Phase 2 was required
 * Any manual intervention performed
+* For v1: whether continuation prompts were used
+* For v1: any missing assets that required Phase 2 resolution
+* For v1: notes on how the model handled subtle specification signals (contradictions, hidden requirements, etc.)
 
 This ensures results are **interpretable, reproducible, and fair**.
 
@@ -248,7 +351,7 @@ This ensures results are **interpretable, reproducible, and fair**.
 gironimo-bench/
 │
 ├── spec/               # Benchmark specifications
-│   └── v1.md           # Long spec prompt for all runs
+│   └── v1.md           # Full spec prompt for all runs (creative freedom, GitHub Pages required, self-contained assets)
 │
 ├── results/            # Official benchmark runs
 │   ├── claude/
@@ -275,7 +378,7 @@ run-001/
 ├── architecture.md      # Generated architecture
 ├── code/                # Generated source code
 ├── metrics.json         # Scoring breakdown
-└── notes.md             # Human evaluation notes
+└── notes.md             # Human evaluation notes (including continuation, asset history, and spec interpretation notes)
 ```
 
 ---
@@ -286,9 +389,11 @@ Every SlopOps episode evaluates a single model on the Gironimo Bench.
 
 Episodes include:
 
-* **Live model runs on the spec prompt**  
+* **Live model runs on the v1 spec prompt**  
 * **Architecture and code review**  
 * **Score breakdowns per category**  
+* **Creativity and judgment assessment**  
+* **Analysis of how the model handled subtle specification signals**  
 * **Lessons learned and leaderboard update**  
 
 📺 [Watch on YouTube](https://youtube.com/@SlopOps)
@@ -313,6 +418,9 @@ Each run:
 * Is scored against the same rubric  
 * Reviewed by a human engineer  
 * Includes documented reasoning  
+* Evaluates creativity and judgment, not just feature count  
+* Tracks continuation usage and asset completeness  
+* Notes how the model interpreted subtle specification signals
 
 This ensures results are **consistent, comparable, and trustworthy**.
 
@@ -322,10 +430,13 @@ This ensures results are **consistent, comparable, and trustworthy**.
 
 All runs include:
 
-* Original specification prompt  
+* Original specification prompt (v1)  
 * Generated architecture  
 * Produced code  
 * Human evaluation notes  
+* Deployment outcome and continuation history  
+* Asset completeness documentation  
+* Notes on specification interpretation (how the model handled contradictions, hidden requirements, etc.)
 
 Allows **independent inspection and verification**.
 
