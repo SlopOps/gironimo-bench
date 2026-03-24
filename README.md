@@ -114,9 +114,9 @@ Future versions may introduce new challenges or scoring refinements.
 
 ## 📊 Current Leaderboard
 
-| Model | Score | One-Shot Attempts (fewer = better) | Date |
-| ----- | ----- | --------------------------------- | ---- |
-| *Coming soon* | – | – | – |
+| Model | Score | One-Shot Attempts (fewer = better) | Date | Live Demo |
+| ----- | ----- | --------------------------------- | ---- | --------- |
+| *Coming soon* | – | – | – | – |
 
 > Scores are **curated by hand**, not automated. Leaderboard updates after each SlopOps video.  
 > Full leaderboard and detailed breakdowns will be available at: [https://gironimo.ai/bench](https://gironimo.ai/bench) (coming soon)
@@ -350,35 +350,44 @@ This ensures results are **interpretable, reproducible, and fair**.
 ```
 gironimo-bench/
 │
-├── spec/               # Benchmark specifications
-│   └── v1.md           # Full spec prompt for all runs (creative freedom, GitHub Pages required, self-contained assets)
+├── index.html                    # Landing page with leaderboard and live demo links
 │
-├── results/            # Official benchmark runs
-│   ├── claude/
-│   ├── gpt/
-│   ├── qwen/
-│   └── deepseek/
+├── results/                      # Each model's complete run
+│   ├── claude-3.5-sonnet/        # Live demo at index.html
+│   │   ├── index.html            # The model's deployed site
+│   │   ├── prompt.md             # Full spec used
+│   │   ├── architecture.md       # Model's architecture response
+│   │   ├── metrics.json          # Score breakdown
+│   │   └── notes.md              # Human evaluation notes
+│   ├── gpt-4o/
+│   ├── qwen-2.5-72b/
+│   └── deepseek-v3/
 │
-├── evaluations/        # Scoring methodology
+├── spec/                         # Benchmark specifications
+│   └── v1.md
+│
+├── evaluations/                  # Scoring methodology
 │   ├── rubric.md
 │   └── scoring-notes/
 │
-├── scripts/            # Automation
+├── scripts/                      # Automation
 │   └── generate-leaderboard.py
 │
-└── website/            # GitHub Pages site (future)
+└── website/                      # GitHub Pages site (future)
 ```
+
+**Live Demos:** Each model's site is deployed and accessible at `/results/{model-id}/`. Browse, inspect source, judge for yourself.
 
 Typical run structure:
 
 ```
-run-001/
+results/claude-3.5-sonnet/
 │
-├── prompt.md            # Full spec used
-├── architecture.md      # Generated architecture
-├── code/                # Generated source code
-├── metrics.json         # Scoring breakdown
-└── notes.md             # Human evaluation notes (including continuation, asset history, and spec interpretation notes)
+├── index.html            # Live demo site
+├── prompt.md             # Full spec used
+├── architecture.md       # Generated architecture
+├── metrics.json          # Score breakdown
+└── notes.md              # Human evaluation notes (continuation, asset history, spec interpretation)
 ```
 
 ---
@@ -394,6 +403,7 @@ Episodes include:
 * **Score breakdowns per category**  
 * **Creativity and judgment assessment**  
 * **Analysis of how the model handled subtle specification signals**  
+* **Live demo walkthrough** of the model's deployed site  
 * **Lessons learned and leaderboard update**  
 
 📺 [Watch on YouTube](https://youtube.com/@SlopOps)
