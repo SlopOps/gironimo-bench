@@ -106,7 +106,7 @@ These are not "trick questions." They mirror real engineering: specifications ha
 | ------- | ----------- |
 | **v1** | Build a complete, deployable Gironimo brand website with five integrated features. Creative freedom emphasized. GitHub Pages deployment required. Self-contained assets required. |
 
-[View the v1 specification →](spec/v1.md)
+[View the v1 specification →](/spec/v1.md)
 
 Future versions may introduce new challenges or scoring refinements.
 
@@ -350,38 +350,42 @@ This ensures results are **interpretable, reproducible, and fair**.
 ```
 gironimo-bench/
 │
-├── index.html                    # Landing page with leaderboard and live demo links
+├── docs/                         # GitHub Pages source (website)
+│   ├── index.html                # Landing page with leaderboard and live demo links
+│   ├── .nojekyll                 # Disables Jekyll processing
+│   │
+│   └── results/                  # Live demo sites
+│       ├── claude-3.5-sonnet/    # Live demo at index.html
+│       │   ├── index.html        # The model's deployed site
+│       │   ├── prompt.md         # Full spec used
+│       │   ├── architecture.md   # Model's architecture response
+│       │   ├── metrics.json      # Score breakdown
+│       │   └── notes.md          # Human evaluation notes
+│       ├── gpt-4o/
+│       ├── qwen-2.5-72b/
+│       └── deepseek-v3/
 │
-├── results/                      # Each model's complete run
-│   ├── claude-3.5-sonnet/        # Live demo at index.html
-│   │   ├── index.html            # The model's deployed site
-│   │   ├── prompt.md             # Full spec used
-│   │   ├── architecture.md       # Model's architecture response
-│   │   ├── metrics.json          # Score breakdown
-│   │   └── notes.md              # Human evaluation notes
-│   ├── gpt-4o/
-│   ├── qwen-2.5-72b/
-│   └── deepseek-v3/
-│
-├── spec/                         # Benchmark specifications
+├── spec/                         # Benchmark specifications (not deployed)
 │   └── v1.md
 │
-├── evaluations/                  # Scoring methodology
+├── evaluations/                  # Scoring methodology (not deployed)
 │   ├── rubric.md
 │   └── scoring-notes/
 │
-├── scripts/                      # Automation
+├── scripts/                      # Automation (not deployed)
 │   └── generate-leaderboard.py
 │
-└── website/                      # GitHub Pages site (future)
+└── README.md                     # This file
 ```
 
 **Live Demos:** Each model's site is deployed and accessible at `/results/{model-id}/`. Browse, inspect source, judge for yourself.
 
+**GitHub Pages Setup:** This repository is configured to publish from the `/docs` folder. A `.nojekyll` file disables Jekyll processing, ensuring all files are served as-is.
+
 Typical run structure:
 
 ```
-results/claude-3.5-sonnet/
+docs/results/claude-3.5-sonnet/
 │
 ├── index.html            # Live demo site
 ├── prompt.md             # Full spec used
