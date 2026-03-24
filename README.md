@@ -55,6 +55,20 @@ Pipeline for every run:
 
 This mirrors how professional engineering teams build software, while giving models a **fair chance with retries**.
 
+### What We Actually Test
+
+Gironimo Bench evaluates **end-to-end engineering capability in real-world chat interfaces**:
+
+| Layer | What We Test |
+|-------|--------------|
+| **Model Capability** | Can it understand complex requirements and generate working code? |
+| **Output Handling** | Can it produce complete, multi-file implementations within output limits? |
+| **Continuation Support** | Does it work with our 3-continuation policy to overcome truncation? |
+| **Asset Management** | Can it provide self-contained, deployable assets (not just file references)? |
+| **Deployment Awareness** | Does it produce code that actually works on GitHub Pages? |
+
+A model's score reflects not just code quality, but its ability to deliver a complete, working system within the constraints of chat-based interaction.
+
 ### Creative Freedom Over Rigid Compliance
 
 The v1 specification defines **what** to build, not **how**. Models have creative freedom to:
@@ -72,7 +86,7 @@ The v1 specification defines **what** to build, not **how**. Models have creativ
 
 | Version | Description |
 | ------- | ----------- |
-| **v1** | Build a complete, deployable Gironimo brand website with five integrated features. Creative freedom emphasized. GitHub Pages deployment required. |
+| **v1** | Build a complete, deployable Gironimo brand website with five integrated features. Creative freedom emphasized. GitHub Pages deployment required. Self-contained assets required. |
 
 [View the v1 specification →](spec/v1.md)
 
@@ -133,6 +147,7 @@ Models are given a limited number of attempts (typically **3–4**) to produce a
 * “Build failed”
 * “Site does not deploy”
 * “Feature X is not functioning”
+* “Missing asset: [file] not provided”
 
 **Not allowed:**
 
@@ -173,6 +188,26 @@ The v1 specification requires multiple files. To account for output limits, each
 
 **If still incomplete after 3 continuations:**
 - Moves to Phase 2 (completion mode)
+
+---
+
+### Asset Completeness (v1 Specific)
+
+The v1 specification requires **self-contained assets**. Submissions that reference external files without providing their contents are considered incomplete.
+
+**Acceptable:**
+- Inline SVG in HTML
+- SVG provided as a separate file with full markup
+- Canvas with drawing code included
+- CSS-based illustrations
+- External images from free, public CDNs with attribution in README
+
+**Not acceptable:**
+- References to image files (`giraffe.svg`) without providing the file contents
+- Placeholder comments like `<!-- add giraffe image here -->`
+- External images without attribution or from restricted sources
+
+Missing assets count as a failed attempt in Phase 1 and may be resolved in Phase 2.
 
 ---
 
@@ -285,6 +320,7 @@ Each run includes:
 * Whether Phase 2 was required
 * Any manual intervention performed
 * For v1: whether continuation prompts were used
+* For v1: any missing assets that required Phase 2 resolution
 
 This ensures results are **interpretable, reproducible, and fair**.
 
@@ -296,7 +332,7 @@ This ensures results are **interpretable, reproducible, and fair**.
 gironimo-bench/
 │
 ├── spec/               # Benchmark specifications
-│   └── v1.md           # Full spec prompt for all runs (creative freedom, GitHub Pages required)
+│   └── v1.md           # Full spec prompt for all runs (creative freedom, GitHub Pages required, self-contained assets)
 │
 ├── results/            # Official benchmark runs
 │   ├── claude/
@@ -323,7 +359,7 @@ run-001/
 ├── architecture.md      # Generated architecture
 ├── code/                # Generated source code
 ├── metrics.json         # Scoring breakdown
-└── notes.md             # Human evaluation notes
+└── notes.md             # Human evaluation notes (including continuation and asset history)
 ```
 
 ---
@@ -362,7 +398,8 @@ Each run:
 * Is scored against the same rubric  
 * Reviewed by a human engineer  
 * Includes documented reasoning  
-* Evaluates creativity and judgment, not just feature count
+* Evaluates creativity and judgment, not just feature count  
+* Tracks continuation usage and asset completeness
 
 This ensures results are **consistent, comparable, and trustworthy**.
 
@@ -376,7 +413,8 @@ All runs include:
 * Generated architecture  
 * Produced code  
 * Human evaluation notes  
-* Deployment outcome and continuation history
+* Deployment outcome and continuation history  
+* Asset completeness documentation
 
 Allows **independent inspection and verification**.
 
