@@ -82,6 +82,24 @@ The v1 specification defines **what** to build, not **how**. Models have creativ
 
 ---
 
+## 🧪 How the Specification Tests Real Engineering
+
+The v1 specification is intentionally designed to evaluate **attention to detail, interpretation, and judgment**. It contains subtle signals that separate careful readers from skimmers:
+
+| Technique | Example in Spec | What It Tests |
+|-----------|-----------------|---------------|
+| **Contradiction** | "Not a cartoon" but "still friendly and approachable" | Balance, nuance, avoiding extremes |
+| **Hidden Requirement** | "The giraffe should not be the only animated element" | Attention to detail, thorough reading |
+| **Misleading Example** | Grouping by category shown but "not required" | Independent thinking, avoiding mimicry |
+| **Underspecified Intent** | "Purposeful, not decorative" animation | Interpretation, documentation of choices |
+| **Negative Constraints** | "External image files are not acceptable" | Following prohibitions, constraint awareness |
+| **Red Herring** | Favicon mentioned as optional | Prioritization, avoiding distractions |
+| **Output Structure** | First response must include file list + HTML | Communication discipline, planning |
+
+These are not "trick questions." They mirror real engineering: specifications have nuance, trade-offs, and unstated expectations. The best engineers read carefully, interpret thoughtfully, and document their reasoning.
+
+---
+
 ## 📦 Benchmark Versions
 
 | Version | Description |
@@ -321,6 +339,7 @@ Each run includes:
 * Any manual intervention performed
 * For v1: whether continuation prompts were used
 * For v1: any missing assets that required Phase 2 resolution
+* For v1: notes on how the model handled subtle specification signals (contradictions, hidden requirements, etc.)
 
 This ensures results are **interpretable, reproducible, and fair**.
 
@@ -359,7 +378,7 @@ run-001/
 ├── architecture.md      # Generated architecture
 ├── code/                # Generated source code
 ├── metrics.json         # Scoring breakdown
-└── notes.md             # Human evaluation notes (including continuation and asset history)
+└── notes.md             # Human evaluation notes (including continuation, asset history, and spec interpretation notes)
 ```
 
 ---
@@ -374,6 +393,7 @@ Episodes include:
 * **Architecture and code review**  
 * **Score breakdowns per category**  
 * **Creativity and judgment assessment**  
+* **Analysis of how the model handled subtle specification signals**  
 * **Lessons learned and leaderboard update**  
 
 📺 [Watch on YouTube](https://youtube.com/@SlopOps)
@@ -399,7 +419,8 @@ Each run:
 * Reviewed by a human engineer  
 * Includes documented reasoning  
 * Evaluates creativity and judgment, not just feature count  
-* Tracks continuation usage and asset completeness
+* Tracks continuation usage and asset completeness  
+* Notes how the model interpreted subtle specification signals
 
 This ensures results are **consistent, comparable, and trustworthy**.
 
@@ -414,7 +435,8 @@ All runs include:
 * Produced code  
 * Human evaluation notes  
 * Deployment outcome and continuation history  
-* Asset completeness documentation
+* Asset completeness documentation  
+* Notes on specification interpretation (how the model handled contradictions, hidden requirements, etc.)
 
 Allows **independent inspection and verification**.
 
