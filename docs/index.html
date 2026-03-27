@@ -1,1 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <title>Gironimo Bench — Real-World LLM Software Engineering Benchmark</title>
+  <meta name="description" content="Gironimo Bench evaluates LLMs on real-world software engineering workflows: specification → architecture → implementation → review. See how AI builds production-grade systems from a single prompt." />
+  <meta name="keywords" content="LLM benchmark, AI coding benchmark, software engineering AI, Gironimo Bench, LLM evaluation, AI code generation, GitHub Pages benchmark" />
+  <meta name="author" content="SlopOps" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Gironimo Bench — Real-World LLM Engineering Benchmark" />
+  <meta property="og:description" content="Benchmarking LLMs on full software engineering workflows: spec → architecture → implementation → review." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://gironimo.ai/bench" />
+  <meta property="og:image" content="https://gironimo.ai/og-image.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Gironimo Bench" />
+  <meta name="twitter:description" content="Real-world LLM software engineering benchmark." />
+
+  <!-- Performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: rgba(255,255,255,0.06);
+      --text: #e8eefc;
+      --muted: rgba(232,238,252,0.7);
+      --accent: #7c5cff;
+      --accent2: #00d4ff;
+      --border: rgba(255,255,255,0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 800px at 20% 0%, #1a1440 0%, transparent 60%),
+                  radial-gradient(900px 600px at 90% 20%, #0b3b4a 0%, transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 0;
+    }
+
+    .logo {
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .pill {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* HERO */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 52px;
+      line-height: 1.1;
+      margin: 0 0 16px;
+      letter-spacing: -1px;
+    }
+
+    .gradient {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      max-width: 720px;
+      margin: 0 auto 32px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .cta {
+      display: inline-flex;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      transition: 0.2s;
+    }
+
+    .btn.primary {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border: none;
+      color: black;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 60px 0;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    .card h3 {
+      margin-top: 0;
+    }
+
+    /* SECTION */
+    section {
+      padding: 40px 0;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 60px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .hero h1 {
+        font-size: 38px;
+      }
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Gironimo Bench",
+    "applicationCategory": "DeveloperApplication",
+    "description": "Benchmarking LLMs on real-world software engineering workflows.",
+    "operatingSystem": "Web"
+  }
+  </script>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <nav>
+      <div class="logo">GIRONIMO BENCH</div>
+      <div class="pill">LLM Engineering Benchmark</div>
+    </nav>
+
+    <header class="hero">
+      <h1>
+        Benchmarking AI on <span class="gradient">real software engineering</span>
+      </h1>
+      <p>
+        Gironimo Bench evaluates how well language models can turn a single specification into a
+        production-ready system — including architecture, code, and real-world engineering judgment.
+      </p>
+
+      <div class="cta">
+        <a class="btn primary" href="#leaderboard">View Leaderboard</a>
+        <a class="btn" href="https://youtube.com/@SlopOps" target="_blank">Watch Episodes</a>
+      </div>
+    </header>
+
+    <section>
+      <div class="grid">
+        <div class="card">
+          <h3>Spec → System</h3>
+          <p class="muted">Models must interpret long, ambiguous specifications and turn them into working software.</p>
+        </div>
+        <div class="card">
+          <h3>Real Engineering</h3>
+          <p class="muted">Architecture, maintainability, and deployment readiness — not toy problems.</p>
+        </div>
+        <div class="card">
+          <h3>Human Scoring</h3>
+          <p class="muted">Every run is manually reviewed for accuracy, creativity, and engineering quality.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>What Makes It Different</h2>
+      <p class="muted">
+        Most benchmarks test isolated reasoning. Gironimo Bench evaluates end-to-end software delivery:
+        from understanding a spec to producing deployable systems under real constraints.
+      </p>
+    </section>
+
+    <section id="leaderboard">
+      <h2>Leaderboard</h2>
+      <p class="muted">Updated after each SlopOps evaluation video.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Score</th>
+            <th>One-Shot Attempts</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Coming soon</td>
+            <td>—</td>
+            <td>—</td>
+            <td>Evaluations in progress</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Engineering-First Evaluation</h2>
+      <p class="muted">
+        Each run is reviewed across design, architecture, code quality, performance, and real deployment success.
+        The benchmark rewards systems thinking, not just correct answers.
+      </p>
+    </section>
+
+    <footer>
+      Built by <strong>SlopOps</strong> •
+      <a href="https://github.com/SlopOps" target="_blank">GitHub</a> •
+      <a href="https://youtube.com/@SlopOps" target="_blank">YouTube</a>
+      <br><br>
+      © 2026 Gironimo Bench
+    </footer>
+
+  </div>
+
+</body>
+</html>
