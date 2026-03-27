@@ -100,6 +100,62 @@ These are not "trick questions." They mirror real engineering: specifications ha
 
 ---
 
+## 📊 Benchmark Difficulty
+
+Gironimo Bench is designed to be **genuinely challenging** — not a toy problem or a simple UI exercise. It tests whether an LLM can build a **real, integrated system** under the same constraints a human engineer would face.
+
+### Why This Is Hard
+
+| Challenge | What It Requires |
+|-----------|------------------|
+| **Five integrated features** | No feature can work in isolation. All must share state and react to each other. |
+| **Single source of truth** | Models must design a centralized state architecture. Violations cause visible desync bugs. |
+| **Derived state discipline** | Computed values cannot be stored. Weak models cache results, causing stale UI. |
+| **Atomic updates** | Multiple state changes in one tick must batch to a single render. Failure = flicker. |
+| **Real CSV data** | Runtime fetch, parsing, error handling. No hardcoding allowed. |
+| **Cross-feature integration** | Philosophy selection affects leaderboard, workflow, and mascot. All must stay in sync. |
+| **GitHub Pages deployment** | Must work in a real static hosting environment. No server-side tricks. |
+
+### Common Failure Modes (What "Hard" Looks Like)
+
+| Failure | Visual Symptom | Root Cause |
+|---------|---------------|------------|
+| **State Desync** | Giraffe jumps between positions randomly; leaderboard and philosophy selections don't match | No single source of truth; multiple state stores |
+| **Flicker** | UI flashes during rapid clicks or state changes | Non-atomic updates; intermediate states rendered |
+| **CSV Crash** | Leaderboard blank or site errors on load | No error handling for fetch failures; hardcoded data |
+| **Philosophy Drift** | Selected philosophy highlights wrong models or inconsistent behavior | Derived state stored instead of recomputed |
+| **Notification Chaos** | Toasts appear multiple times or on wrong actions | Feature-to-feature direct communication bypassing state |
+| **Giraffe Glitch** | Mascot reacts to wrong elements or doesn't react at all | Direct DOM querying instead of store-driven behavior |
+
+### What Separates Strong Models from Weak Ones
+
+| Model Tier | Typical Outcome | What Viewers Will See |
+|------------|-----------------|----------------------|
+| **Quantized/Small** | Deploys with visible bugs | State desync, giraffe glitches, flicker, CSV fails |
+| **Mid-Tier** | Mostly correct with minor issues | Occasional flicker, highlight race conditions, notification lag |
+| **Strong** | Clean, integrated, polished | Smooth updates, correct integration, edge case handling |
+| **SOTA** | Exceptional, with delightful extras | Perfect state management, thoughtful UX, surprising elegance |
+
+### Why This Matters
+
+Most LLM benchmarks test:
+- Multiple choice reasoning
+- Short code snippets
+- Isolated function completion
+
+Gironimo Bench tests something different:
+
+**Can a model build a complete, integrated system from a specification?**
+
+This is the difference between:
+- Writing a function → **engineering a system**
+- Following instructions → **making architectural judgments**
+- Producing code that "looks right" → **code that actually works when deployed**
+
+The difficulty is intentional. It creates **real separation** between models and produces **watchable content** — from entertaining failures to impressive showcases.
+
+---
+
 ## 📦 Benchmark Versions
 
 | Version | Description |
