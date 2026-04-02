@@ -185,7 +185,7 @@ Each category is scored **0–10 points**, and the **total adds to 100 points**.
 
 | Category | Description | Max Points |
 | -------- | ----------- | ---------- |
-| **Gironimo Bench Completion** | Did the model run through the full evaluation? | 10 |
+| **Speed** | How fast does the model run and iterate? | 10 |
 | **One-Shot Attempts** | How many retries were needed to succeed (fewer = higher) | 10 |
 | **Design** | Beauty, creativity, personality, cohesion | 10 |
 | **Architecture** | Engineering decisions, maintainability, system design | 10 |
@@ -194,7 +194,7 @@ Each category is scored **0–10 points**, and the **total adds to 100 points**.
 | **Performance** | Lighthouse performance metrics | 10 |
 | **Accessibility** | Lighthouse accessibility metrics | 10 |
 | **Best Practices & Security** | Lighthouse: best practices, secure coding, maintainability | 10 |
-| **Tech Value & Trade-offs** | Appropriate technology choices; simplicity valued over complexity | 10 |
+| **Value** | What is the price to quality ratio | 10 |
 
 > **Overall Gironimo Score** = sum of all 10 categories → **maximum 100 points**.  
 > Visual leaderboard is designed for easy comparison, perfect for **Doug DeMuro-style scoring** in videos.
