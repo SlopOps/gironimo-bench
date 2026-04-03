@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="description" content="Gironimo - AI Model Leaderboard and Workflow System">
+    <title>Gironimo | AI Model Leaderboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Header with Theme Toggle -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1 class="app-title">🦒 Gironimo</h1>
+                <span class="tagline">Stand tall. See far. Move deliberately.</span>
+            </div>
+            <div class="header-right">
+                <button id="themeToggle" class="btn btn-icon" aria-label="Toggle theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Grid Layout -->
+        <div class="main-grid">
+            <!-- Left Column: Philosophy Explorer + Mascot -->
+            <aside class="left-column">
+                <div class="philosophy-section card">
+                    <h2>Philosophy Explorer</h2>
+                    <div class="philosophy-filters">
+                        <button data-category="all" class="filter-chip active">All</button>
+                        <button data-category="Practical" class="filter-chip">Practical</button>
+                        <button data-category="Philosophical" class="filter-chip">Philosophical</button>
+                        <button data-category="Technical" class="filter-chip">Technical</button>
+                    </div>
+                    <div class="philosophy-list" id="philosophyList"></div>
+                </div>
+
+                <!-- Mascot Section -->
+                <div class="mascot-section card">
+                    <div class="mascot-container" id="mascotContainer">
+                        <svg viewBox="0 0 200 300" class="giraffe-svg">
+                            <!-- Body -->
+                            <ellipse cx="100" cy="200" rx="35" ry="50" fill="#F4A261" class="giraffe-body"/>
+                            <!-- Neck -->
+                            <rect x="85" y="80" width="30" height="120" rx="10" fill="#E76F51" class="giraffe-neck"/>
+                            <!-- Head -->
+                            <ellipse cx="100" cy="70" rx="25" ry="20" fill="#F4A261" class="giraffe-head"/>
+                            <!-- Eyes -->
+                            <circle cx="90" cy="65" r="4" fill="#2D2D2D" class="giraffe-eye-left"/>
+                            <circle cx="110" cy="65" r="4" fill="#2D2D2D" class="giraffe-eye-right"/>
+                            <!-- Horns -->
+                            <line x1="90" y1="50" x2="85" y2="35" stroke="#E76F51" stroke-width="4" stroke-linecap="round"/>
+                            <line x1="110" y1="50" x2="115" y2="35" stroke="#E76F51" stroke-width="4" stroke-linecap="round"/>
+                            <!-- Spots -->
+                            <circle cx="100" cy="180" r="6" fill="#D35400" opacity="0.6"/>
+                            <circle cx="90" cy="150" r="5" fill="#D35400" opacity="0.6"/>
+                            <circle cx="110" cy="140" r="5" fill="#D35400" opacity="0.6"/>
+                            <!-- Legs -->
+                            <rect x="75" y="240" width="10" height="40" rx="3" fill="#E76F51"/>
+                            <rect x="115" y="240" width="10" height="40" rx="3" fill="#E76F51"/>
+                            <!-- Tail -->
+                            <path d="M65 200 Q50 190 55 180" stroke="#E76F51" stroke-width="3" fill="none"/>
+                        </svg>
+                    </div>
+                    <div class="mascot-message" id="mascotMessage">🦒 Standing tall...</div>
+                </div>
+            </aside>
+
+            <!-- Center Column: Leaderboard -->
+            <main class="center-column">
+                <div class="leaderboard-section card">
+                    <div class="leaderboard-header">
+                        <h2>Model Leaderboard</h2>
+                        <div class="leaderboard-controls">
+                            <label for="sortBy">Sort by:</label>
+                            <select id="sortBy" class="select-control">
+                                <option value="overall_score">Overall Score</option>
+                                <option value="date">Date</option>
+                                <option value="model">Model Name</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="leaderboard-table" id="leaderboardTable">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Model</th>
+                                    <th>Date</th>
+                                    <th>Overall Score</th>
+                                    <th>Design</th>
+                                    <th>Architecture</th>
+                                    <th>Code Quality</th>
+                                    <th>Best Practices</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody">
+                                <tr><td colspan="8" class="loading">Loading leaderboard data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Workflow System -->
+                <div class="workflow-section card">
+                    <h2>Development Workflow</h2>
+                    <div class="workflow-stages" id="workflowStages"></div>
+                    <div class="workflow-progress">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Column: Notifications -->
+            <aside class="right-column">
+                <div class="notifications-section card">
+                    <h2>Notifications</h2>
+                    <div class="notifications-list" id="notificationsList">
+                        <div class="notification-placeholder">Select a model to begin</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Modal Component -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Stage Details</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Tooltip Component -->
+    <div id="tooltip" class="tooltip hidden"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
