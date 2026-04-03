@@ -1,0 +1,99 @@
+<!-- /docs/gironimo/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦒 Gironimo - AI Model Benchmark</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <header class="site-header">
+            <div class="logo">
+                <span class="logo-icon">🦒</span>
+                <h1>Gironimo</h1>
+            </div>
+            <button id="theme-toggle" class="btn btn-icon" aria-label="Toggle theme">
+                <span class="theme-icon">🌙</span>
+            </button>
+        </header>
+
+        <main class="main-content">
+            <section class="hero-section">
+                <div class="mascot-container" id="mascot-container">
+                    <canvas id="giraffe-canvas" width="200" height="300"></canvas>
+                </div>
+                <div class="hero-text">
+                    <h2>Stand Tall. See Far. Move Deliberately.</h2>
+                    <p>Explore AI model performance through the Gironimo benchmark.</p>
+                </div>
+            </section>
+
+            <section class="content-grid">
+                <div class="panel philosophy-panel">
+                    <h3>Philosophy Explorer</h3>
+                    <div class="category-filters" id="category-filters">
+                        <button class="filter-btn active" data-category="all">All</button>
+                        <button class="filter-btn" data-category="Practical">Practical</button>
+                        <button class="filter-btn" data-category="Philosophical">Philosophical</button>
+                        <button class="filter-btn" data-category="Technical">Technical</button>
+                    </div>
+                    <div class="statements-list" id="statements-list"></div>
+                </div>
+
+                <div class="panel workflow-panel">
+                    <h3>Workflow System</h3>
+                    <div class="workflow-stages" id="workflow-stages"></div>
+                    <div class="workflow-info" id="workflow-info">
+                        <p>Select a model to see workflow progression</p>
+                    </div>
+                </div>
+
+                <div class="panel leaderboard-panel">
+                    <h3>Leaderboard</h3>
+                    <div class="leaderboard-controls">
+                        <label for="sort-select">Sort by:</label>
+                        <select id="sort-select">
+                            <option value="overall_score">Overall Score</option>
+                            <option value="date">Date</option>
+                            <option value="model">Alphabetical</option>
+                        </select>
+                    </div>
+                    <div class="leaderboard-table-container">
+                        <table class="leaderboard-table" id="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Model</th>
+                                    <th>Score</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="leaderboard-error" class="error-message hidden"></div>
+                </div>
+            </section>
+        </main>
+
+        <div id="modal-overlay" class="modal-overlay hidden">
+            <div class="modal">
+                <button class="modal-close" aria-label="Close modal">&times;</button>
+                <div class="modal-content" id="modal-content"></div>
+            </div>
+        </div>
+
+        <div id="notification-container" class="notification-container"></div>
+    </div>
+
+    <script src="js/store.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/mascot.js"></script>
+    <script src="js/philosophy.js"></script>
+    <script src="js/workflow.js"></script>
+    <script src="js/leaderboard.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
