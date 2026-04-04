@@ -220,6 +220,22 @@
       border-radius: 4px;
     }
 
+    /* Refresh button */
+    .refresh-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-left: 12px;
+      transition: all 0.2s ease;
+    }
+    
+    .refresh-btn:hover {
+      background: rgba(255,255,255,0.12);
+    }
+
     /* Mobile styles */
     @media (max-width: 768px) {
       .grid { grid-template-columns: 1fr; }
@@ -248,6 +264,11 @@
       text-align: center;
       color: var(--muted);
       font-size: 14px;
+    }
+    
+    .last-updated {
+      font-size: 12px;
+      margin-top: 8px;
     }
   </style>
 </head>
@@ -318,8 +339,14 @@
 
       <!-- LEADERBOARD -->
       <section id="leaderboard">
-        <h2>Leaderboard</h2>
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h2 style="margin-bottom: 0;">Leaderboard</h2>
+          </div>
+          <button class="refresh-btn" onclick="refreshLeaderboard()">⟳ Refresh Data</button>
+        </div>
         <p class="muted">Updated after each evaluation video.</p>
+        <p class="last-updated muted" id="last-updated"></p>
 
         <div class="leaderboard-wrapper">
           <table id="leaderboard-table">
@@ -364,15 +391,48 @@
   </div>
 
   <script>
+    let currentData = null;
+    
     // Parse CSV and render leaderboard
-    async function loadLeaderboard() {
+    async function loadLeaderboard(bypassCache = false) {
+      const tbody = document.getElementById('leaderboard-body');
+      const lastUpdatedSpan = document.getElementById('last-updated');
+      
       try {
-        const response = await fetch('results/leaderboard.csv');
+        tbody.innerHTML = '<tr><td colspan="14">Loading...</td></tr>';
+        
+        // Add cache-busting timestamp
+        let url = 'results/leaderboard.csv';
+        if (bypassCache) {
+          url += '?t=' + Date.now();
+        }
+        
+        const response = await fetch(url, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const csvText = await response.text();
+        
+        // Show last modified time from response headers if available
+        const lastModified = response.headers.get('last-modified');
+        if (lastModified) {
+          lastUpdatedSpan.textContent = `Last updated: ${new Date(lastModified).toLocaleString()}`;
+        } else {
+          lastUpdatedSpan.textContent = `Loaded: ${new Date().toLocaleString()}`;
+        }
+        
         const rows = parseCSV(csvText);
         
         if (rows.length <= 1) {
-          document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="14">No data available</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="14">No data available</td></tr>';
           return;
         }
         
@@ -384,7 +444,7 @@
             obj[h.trim()] = row[i] ? row[i].trim() : '';
           });
           return obj;
-        });
+        }).filter(row => row.model && row.model !== '');
         
         // Separate ranked and unranked entries
         const ranked = [];
@@ -404,44 +464,61 @@
         
         // Combine: ranked first, then unranked
         const sortedData = [...ranked, ...unranked];
+        currentData = sortedData;
         
         // Render table
-        const tbody = document.getElementById('leaderboard-body');
         let html = '';
         
         sortedData.forEach((row, index) => {
           const isRanked = index < ranked.length;
           const rank = isRanked ? index + 1 : '—';
-          const modelLink = row.result_url && row.result_url !== '?' 
-            ? `<a href="${row.result_url}" target="_blank">${row.model}</a>` 
-            : row.model;
-          const youtubeLink = row.video_url && row.video_url !== '?' 
+          const modelLink = row.result_url && row.result_url !== '?' && row.result_url !== '' 
+            ? `<a href="${row.result_url}" target="_blank">${escapeHtml(row.model)}</a>` 
+            : escapeHtml(row.model);
+          const youtubeLink = row.video_url && row.video_url !== '?' && row.video_url !== '' 
             ? `<a href="${row.video_url}" target="_blank">YouTube</a>` 
             : '—';
           
           html += `<tr>
             <td class="rank">${rank}</td>
             <td>${modelLink}</td>
-            <td class="score">${row.overall_score}</td>
+            <td class="score">${escapeHtml(row.overall_score || '—')}</td>
             <td>${youtubeLink}</td>
-            <td>${row.speed || '—'}</td>
-            <td>${row.one_shot_attempts || '—'}</td>
-            <td>${row.design || '—'}</td>
-            <td>${row.architecture || '—'}</td>
-            <td>${row.code_quality || '—'}</td>
-            <td>${row.feature_complete || '—'}</td>
-            <td>${row.performance || '—'}</td>
-            <td>${row.accessibility || '—'}</td>
-            <td>${row.best_practices || '—'}</td>
-            <td>${row.value || '—'}</td>
+            <td>${escapeHtml(row.speed || '—')}</td>
+            <td>${escapeHtml(row.one_shot_attempts || '—')}</td>
+            <td>${escapeHtml(row.design || '—')}</td>
+            <td>${escapeHtml(row.architecture || '—')}</td>
+            <td>${escapeHtml(row.code_quality || '—')}</td>
+            <td>${escapeHtml(row.feature_complete || '—')}</td>
+            <td>${escapeHtml(row.performance || '—')}</td>
+            <td>${escapeHtml(row.accessibility || '—')}</td>
+            <td>${escapeHtml(row.best_practices || '—')}</td>
+            <td>${escapeHtml(row.value || '—')}</td>
           </tr>`;
         });
         
         tbody.innerHTML = html;
       } catch (error) {
         console.error('Error loading leaderboard:', error);
-        document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="14">Error loading data. Make sure results/leaderboard.csv exists.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="14" style="color: #ffa69e;">Error loading data: ${error.message}. Make sure results/leaderboard.csv exists.</td></tr>`;
+        lastUpdatedSpan.textContent = 'Failed to load data';
       }
+    }
+    
+    // Refresh with cache busting
+    function refreshLeaderboard() {
+      loadLeaderboard(true);
+    }
+    
+    // Escape HTML to prevent XSS
+    function escapeHtml(str) {
+      if (!str) return '—';
+      return String(str).replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
     }
     
     // Simple CSV parser
@@ -476,8 +553,8 @@
       return result;
     }
     
-    // Load on page load
-    loadLeaderboard();
+    // Load on page load with cache busting
+    loadLeaderboard(true);
   </script>
 
 </body>
