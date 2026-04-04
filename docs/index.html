@@ -387,7 +387,7 @@
     // Parse CSV and render leaderboard
     async function loadLeaderboard() {
       try {
-        const response = await fetch('results/leaderboard.csv');
+        const response = await fetch('leaderboard.csv');
         const csvText = await response.text();
         const rows = parseCSV(csvText);
         
