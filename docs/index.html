@@ -191,6 +191,57 @@
       font-weight: 600;
     }
 
+    /* Scrollable table body - max 10 rows */
+    #leaderboard-table {
+      display: block;
+    }
+
+    #leaderboard-table thead {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    #leaderboard-table tbody {
+      display: block;
+      max-height: 440px;
+      overflow-y: auto;
+    }
+
+    #leaderboard-table tbody tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    #leaderboard-table th,
+    #leaderboard-table td {
+      width: 7%;
+    }
+
+    #leaderboard-table th:nth-child(1),
+    #leaderboard-table td:nth-child(1) { width: 6%; }
+    #leaderboard-table th:nth-child(2),
+    #leaderboard-table td:nth-child(2) { width: 15%; }
+    #leaderboard-table th:nth-child(3),
+    #leaderboard-table td:nth-child(3) { width: 8%; }
+    #leaderboard-table th:nth-child(4),
+    #leaderboard-table td:nth-child(4) { width: 10%; }
+
+    #leaderboard-table tbody::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #leaderboard-table tbody::-webkit-scrollbar-track {
+      background: var(--card);
+      border-radius: 4px;
+    }
+
+    #leaderboard-table tbody::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 4px;
+    }
+
     /* Mobile styles */
     @media (max-width: 768px) {
       .grid { grid-template-columns: 1fr; }
@@ -336,30 +387,24 @@
     // Parse CSV and render leaderboard
     async function loadLeaderboard() {
       try {
-        const response = await fetch('leaderboard.csv');
+        const response = await fetch('results/leaderboard.csv');
         const csvText = await response.text();
+        const rows = parseCSV(csvText);
         
-        // Split into lines and remove empty ones
-        const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
-        
-        if (lines.length < 2) {
+        if (rows.length <= 1) {
           document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="14">No data available</td></tr>';
           return;
         }
         
-        // Parse header
-        const headers = lines[0].split(',');
-        
-        // Parse data rows
-        let data = [];
-        for (let i = 1; i < lines.length; i++) {
-          const values = lines[i].split(',');
+        // Parse header and data
+        const headers = rows[0];
+        let data = rows.slice(1).map(row => {
           const obj = {};
-          headers.forEach((h, idx) => {
-            obj[h.trim()] = values[idx] ? values[idx].trim() : '';
+          headers.forEach((h, i) => {
+            obj[h.trim()] = row[i] ? row[i].trim() : '';
           });
-          data.push(obj);
-        }
+          return obj;
+        });
         
         // Separate ranked and unranked entries
         const ranked = [];
@@ -387,28 +432,28 @@
         sortedData.forEach((row, index) => {
           const isRanked = index < ranked.length;
           const rank = isRanked ? index + 1 : '—';
-          const modelLink = row.result_url && row.result_url !== '?' && row.result_url !== '' 
+          const modelLink = row.result_url && row.result_url !== '?' 
             ? `<a href="${row.result_url}" target="_blank">${row.model}</a>` 
             : row.model;
-          const youtubeLink = row.video_url && row.video_url !== '?' && row.video_url !== '' 
+          const youtubeLink = row.video_url && row.video_url !== '?' 
             ? `<a href="${row.video_url}" target="_blank">YouTube</a>` 
             : '—';
           
           html += `<tr>
             <td class="rank">${rank}</td>
             <td>${modelLink}</td>
-            <td class="score">${row.overall_score || '—'}</td>
+            <td class="score">${row.overall_score}</td>
             <td>${youtubeLink}</td>
-            <td>${row.speed || '—'}</td>
-            <td>${row.one_shot_attempts || '—'}</td>
-            <td>${row.design || '—'}</td>
-            <td>${row.architecture || '—'}</td>
-            <td>${row.code_quality || '—'}</td>
-            <td>${row.feature_complete || '—'}</td>
-            <td>${row.performance || '—'}</td>
-            <td>${row.accessibility || '—'}</td>
-            <td>${row.best_practices || '—'}</td>
-            <td>${row.value || '—'}</td>
+            <td>${row.speed}</td>
+            <td>${row.one_shot_attempts}</td>
+            <td>${row.design}</td>
+            <td>${row.architecture}</td>
+            <td>${row.code_quality}</td>
+            <td>${row.feature_complete}</td>
+            <td>${row.performance}</td>
+            <td>${row.accessibility}</td>
+            <td>${row.best_practices}</td>
+            <td>${row.value}</td>
           </tr>`;
         });
         
@@ -417,6 +462,38 @@
         console.error('Error loading leaderboard:', error);
         document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="14">Error loading data</td></tr>';
       }
+    }
+    
+    // Simple CSV parser
+    function parseCSV(text) {
+      const lines = text.split('\n');
+      const result = [];
+      
+      for (let line of lines) {
+        if (!line.trim()) continue;
+        
+        const row = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            row.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        
+        row.push(current.trim());
+        result.push(row);
+      }
+      
+      return result;
     }
     
     // Load on page load
