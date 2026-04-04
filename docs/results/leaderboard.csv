@@ -1,2 +1,4 @@
 model,date,video_url,result_url,speed,one_shot_attempts,design,architecture,code_quality,feature_complete,performance,accessibility,best_practices,value,overall_score
-GPT-5.3,2026-04-04,https://youtube.com/video123456,/chatgpt-v5-3/,?,?,?,?,?,?,?,?,?,?,??
+Deepseek-3.2,2026-04-04,https://www.youtube.com/@slopops,/deepseek-v3-2/,?,?,?,?,?,?,?,?,?,?,??
+ChatGPT-5.3,2026-04-04,https://www.youtube.com/@slopops,/chatgpt-v5-3/,?,?,?,?,?,?,?,?,?,?,??
+Kimi-2.5,2026-04-04,https://www.youtube.com/@slopops,/kimi-v2-5/,?,?,?,?,?,?,?,?,?,?,??
