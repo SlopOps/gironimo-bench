@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <!-- Google tag (gtag.js) -->
@@ -11,7 +11,7 @@
     gtag('config', 'G-Q5R5LECE2Y');
   </script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>Gironimo Bench — Real-World LLM Software Engineering Benchmark</title>
   <meta name="description" content="Gironimo Bench evaluates LLMs on real-world software engineering workflows: specification → architecture → implementation → review." />
@@ -36,52 +36,45 @@
                   radial-gradient(900px 600px at 90% 20%, #0b3b4a 0%, transparent 55%),
                   var(--bg);
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
-    a { 
-      color: inherit;
-      text-decoration: none;
-    }
+    a { color: inherit; }
 
     .container {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 0 20px;
+      padding: 0 24px;
     }
 
     nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 24px 0;
       flex-wrap: wrap;
-      gap: 16px;
-      padding: 20px 0;
+      gap: 12px;
     }
 
-    .logo { 
-      font-weight: 700;
-      font-size: 1.25rem;
-      letter-spacing: -0.3px;
-    }
+    .logo { font-weight: 700; }
 
-    /* GitHub button styling - mobile friendly */
+    /* GitHub button styling - mobile friendly replacement for the pill */
     .github-btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.08);
       border: 1px solid var(--border);
       border-radius: 40px;
       padding: 8px 16px;
       font-size: 13px;
       font-weight: 500;
       transition: all 0.2s ease;
-      backdrop-filter: blur(4px);
+      text-decoration: none;
     }
     
     .github-btn:hover {
-      background: rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.15);
       border-color: rgba(255,255,255,0.3);
     }
     
@@ -92,21 +85,20 @@
     }
 
     header.hero {
-      padding: 60px 0 32px;
+      padding: 80px 0 40px;
       text-align: center;
     }
 
     h1 {
-      font-size: 44px;
-      line-height: 1.2;
-      margin: 0 0 12px;
+      font-size: 52px;
+      line-height: 1.1;
+      margin: 0 0 16px;
     }
 
     .gradient {
       background: linear-gradient(90deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      background-clip: text;
     }
 
     .muted { color: var(--muted); }
@@ -116,17 +108,14 @@
       justify-content: center;
       gap: 12px;
       margin-top: 24px;
-      flex-wrap: wrap;
     }
 
     .btn {
-      padding: 10px 18px;
-      border-radius: 40px;
+      padding: 12px 18px;
+      border-radius: 10px;
       border: 1px solid var(--border);
       text-decoration: none;
       font-weight: 600;
-      transition: all 0.2s ease;
-      display: inline-block;
     }
 
     .btn.primary {
@@ -135,8 +124,12 @@
       color: black;
     }
 
+    main {
+      display: block;
+    }
+
     section {
-      padding: 32px 0;
+      padding: 40px 0;
     }
 
     h2 {
@@ -157,39 +150,27 @@
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 14px;
       padding: 18px;
       backdrop-filter: blur(10px);
-    }
-
-    /* Leaderboard table */
-    .leaderboard-wrapper {
-      overflow-x: auto;
-      width: 100%;
-      border-radius: 20px;
-      background: rgba(0,0,0,0.2);
-      margin-top: 16px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
+      margin-top: 16px;
     }
 
     th, td {
-      padding: 12px 10px;
+      padding: 12px;
       border-bottom: 1px solid var(--border);
       text-align: left;
-      vertical-align: middle;
     }
 
     th {
       color: var(--muted);
-      font-size: 11px;
+      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 600;
     }
 
     td a {
@@ -203,78 +184,52 @@
 
     .rank {
       font-weight: 700;
-      color: var(--accent2);
-      width: 50px;
+      color: var(--accent);
     }
 
     .score {
       font-weight: 600;
     }
 
-    /* Unranked row styling */
-    .unranked-row {
-      opacity: 0.65;
-    }
-    
-    .unranked-row .rank {
-      color: var(--muted);
-    }
-
-    /* Mobile styles: hide extra columns, keep Rank, Model, Score, YouTube */
+    /* Mobile styles */
     @media (max-width: 768px) {
       .grid { grid-template-columns: 1fr; }
-      h1 { font-size: 32px; }
-      header.hero { padding: 40px 0 24px; }
-      .container { padding: 0 16px; }
+      h1 { font-size: 38px; }
       
-      /* Hide all columns except Rank (1), Model (2), Score (3), YouTube (4) */
+      /* Hide all columns except Rank, Model, Score, and YouTube on mobile */
       th:nth-child(n+5),
       td:nth-child(n+5) {
         display: none;
       }
       
-      /* Ensure YouTube column (4th) stays visible */
+      /* Keep YouTube column visible (4th column) */
       th:nth-child(4),
       td:nth-child(4) {
         display: table-cell;
       }
-      
-      th, td {
-        padding: 10px 6px;
-      }
     }
 
-    /* Desktop extra columns are visible by default */
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 38px; }
+    }
+
     footer {
-      padding: 48px 0 32px;
+      padding: 60px 0;
       text-align: center;
       color: var(--muted);
-      font-size: 13px;
-    }
-    
-    .small-note {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 16px;
-      text-align: center;
-    }
-    
-    .loading-state, .error-state {
-      text-align: center;
-      padding: 48px 20px;
-      background: var(--card);
-      border-radius: 24px;
-      margin: 20px 0;
+      font-size: 14px;
     }
   </style>
 </head>
+
 <body>
 
   <div class="container">
 
-    <!-- NAV with GitHub button -->
+    <!-- NAV with GitHub button instead of pill -->
     <nav aria-label="Primary navigation">
-      <div class="logo">🏋️ GIRONIMO BENCH</div>
+      <div class="logo">GIRONIMO BENCH</div>
       <a href="https://github.com/SlopOps/gironimo-bench" class="github-btn" target="_blank" rel="noopener noreferrer">
         <svg class="github-icon" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
@@ -334,38 +289,34 @@
 
       <!-- LEADERBOARD -->
       <section id="leaderboard">
-        <h2>🏆 Leaderboard</h2>
-        <p class="muted">Sorted by total overall score — entries with "??" appear at the bottom.</p>
+        <h2>Leaderboard</h2>
+        <p class="muted">Updated after each evaluation video.</p>
 
-        <div class="leaderboard-wrapper">
-          <table id="leaderboard-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Model</th>
-                <th>Score</th>
-                <th>Video</th>
-                <!-- Extra core columns (visible on desktop, hidden on mobile) -->
-                <th>Speed</th>
-                <th>Attempts</th>
-                <th>Design</th>
-                <th>Arch</th>
-                <th>Code</th>
-                <th>Features</th>
-                <th>Perf</th>
-                <th>Access</th>
-                <th>Best Prac</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody id="leaderboard-body">
-              <tr><td colspan="14" class="loading-state">📡 Loading benchmark data...</td</tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="small-note">
-          💡 Overall score = sum of 10 categories (max 100). Rows with "??" are unranked.
-        </div>
+        <table id="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Model</th>
+              <th>Score</th>
+              <th>YouTube</th>
+              <th>Speed</th>
+              <th>1-Shot</th>
+              <th>Design</th>
+              <th>Arch</th>
+              <th>Code</th>
+              <th>Features</th>
+              <th>Perf</th>
+              <th>Access</th>
+              <th>Best Prac</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+            <tr>
+              <td colspan="14">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
     </main>
@@ -376,234 +327,127 @@
       <a href="https://github.com/SlopOps" target="_blank">GitHub</a> •
       <a href="https://youtube.com/@SlopOps" target="_blank">YouTube</a>
       <br><br>
-      © 2026 SlopOps — Real-world LLM benchmark
+      © 2026 SlopOps
     </footer>
 
   </div>
 
   <script>
-    // CSV path - using resultsleaderboard.csv in /docs/ folder (as per your file)
-    const CSV_PATH = './resultsleaderboard.csv';
-
+    // Parse CSV and render leaderboard
     async function loadLeaderboard() {
-      const tbody = document.getElementById('leaderboard-body');
-      if (!tbody) return;
-      
       try {
-        tbody.innerHTML = '<tr><td colspan="14" class="loading-state">📡 Fetching leaderboard data...</td></tr>';
-        
-        const response = await fetch(CSV_PATH);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: CSV not found at ${CSV_PATH}`);
-        }
-        
+        const response = await fetch('results/leaderboard.csv');
         const csvText = await response.text();
-        const parsed = parseCSV(csvText);
+        const rows = parseCSV(csvText);
         
-        if (parsed.length < 2) {
-          tbody.innerHTML = '<tr><td colspan="14" class="error-state">⚠️ No data found in CSV. Add resultsleaderboard.csv</td></tr>';
+        if (rows.length <= 1) {
+          document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="14">No data available</td></tr>';
           return;
         }
         
-        const headers = parsed[0];
-        const dataRows = parsed.slice(1);
-        
-        // Map each row to an object
-        const models = dataRows.map(row => {
+        // Parse header and data
+        const headers = rows[0];
+        let data = rows.slice(1).map(row => {
           const obj = {};
-          headers.forEach((header, idx) => {
-            let val = (row[idx] || '').trim();
-            // Clean up any BOM or weird spaces
-            obj[header] = val;
+          headers.forEach((h, i) => {
+            obj[h.trim()] = row[i] ? row[i].trim() : '';
           });
           return obj;
-        }).filter(m => m.model && m.model !== ''); // filter empty rows
+        });
         
-        // Separate ranked (numeric overall_score, not '??') and unranked
+        // Separate ranked and unranked entries
         const ranked = [];
         const unranked = [];
         
-        for (const model of models) {
-          const scoreRaw = model.overall_score;
-          let isRanked = false;
-          let numericScore = null;
-          
-          if (scoreRaw && scoreRaw !== '??' && scoreRaw !== '?' && scoreRaw !== '???') {
-            const parsedScore = parseFloat(scoreRaw);
-            if (!isNaN(parsedScore) && isFinite(parsedScore)) {
-              numericScore = parsedScore;
-              isRanked = true;
-            }
-          }
-          
-          if (isRanked && numericScore !== null) {
-            ranked.push({ ...model, numericScore });
+        data.forEach(row => {
+          const score = row.overall_score;
+          if (score && score !== '??' && score !== '?' && !isNaN(parseFloat(score))) {
+            ranked.push(row);
           } else {
-            unranked.push({ ...model, numericScore: null });
+            unranked.push(row);
           }
-        }
+        });
         
-        // Sort ranked by numericScore descending
-        ranked.sort((a, b) => b.numericScore - a.numericScore);
+        // Sort ranked by overall_score (descending)
+        ranked.sort((a, b) => parseFloat(b.overall_score) - parseFloat(a.overall_score));
         
-        // Unranked stay in original order (stable)
-        const sortedModels = [...ranked, ...unranked];
+        // Combine: ranked first, then unranked
+        const sortedData = [...ranked, ...unranked];
         
-        if (sortedModels.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="14" class="error-state">📭 No models found in CSV.</td></tr>';
-          return;
-        }
-        
-        // Render rows
+        // Render table
+        const tbody = document.getElementById('leaderboard-body');
         let html = '';
-        let rankCounter = 1;
         
-        for (let i = 0; i < sortedModels.length; i++) {
-          const m = sortedModels[i];
-          const isRankedEntry = m.numericScore !== null;
+        sortedData.forEach((row, index) => {
+          const isRanked = index < ranked.length;
+          const rank = isRanked ? index + 1 : '—';
+          const modelLink = row.result_url && row.result_url !== '?' 
+            ? `<a href="${row.result_url}" target="_blank">${row.model}</a>` 
+            : row.model;
+          const youtubeLink = row.video_url && row.video_url !== '?' 
+            ? `<a href="${row.video_url}" target="_blank">YouTube</a>` 
+            : '—';
           
-          let rankDisplay = '';
-          if (isRankedEntry) {
-            rankDisplay = rankCounter.toString();
-            rankCounter++;
-          } else {
-            rankDisplay = '??';
-          }
-          
-          // Model hyperlink: result_url -> links to result page
-          const modelLink = (m.result_url && m.result_url !== '?' && m.result_url !== '') 
-            ? `<a href="${escapeHtml(m.result_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(m.model)}</a>` 
-            : escapeHtml(m.model);
-          
-          // YouTube link: just "youtube" linking to video_url
-          let youtubeHtml = '—';
-          if (m.video_url && m.video_url !== '?' && m.video_url !== '') {
-            youtubeHtml = `<a href="${escapeHtml(m.video_url)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;">▶ youtube</a>`;
-          }
-          
-          const scoreDisplay = (isRankedEntry && m.numericScore !== null) 
-            ? m.numericScore.toFixed(1) 
-            : (m.overall_score || '??');
-          
-          // Helper for field fallback
-          const getField = (val) => (val && val !== '?' && val !== '') ? val : '—';
-          
-          const speedVal = getField(m.speed);
-          const attemptsVal = getField(m.one_shot_attempts);
-          const designVal = getField(m.design);
-          const archVal = getField(m.architecture);
-          const codeVal = getField(m.code_quality);
-          const featuresVal = getField(m.feature_complete);
-          const perfVal = getField(m.performance);
-          const accessVal = getField(m.accessibility);
-          const bestVal = getField(m.best_practices);
-          const valueVal = getField(m.value);
-          
-          const rowClass = !isRankedEntry ? 'unranked-row' : '';
-          
-          html += `<tr class="${rowClass}">
-            <td class="rank">${rankDisplay}</td>
+          html += `<tr>
+            <td class="rank">${rank}</td>
             <td>${modelLink}</td>
-            <td class="score">${escapeHtml(scoreDisplay)}</td>
-            <td>${youtubeHtml}</td>
-            <td>${escapeHtml(speedVal)}</td>
-            <td>${escapeHtml(attemptsVal)}</td>
-            <td>${escapeHtml(designVal)}</td>
-            <td>${escapeHtml(archVal)}</td>
-            <td>${escapeHtml(codeVal)}</td>
-            <td>${escapeHtml(featuresVal)}</td>
-            <td>${escapeHtml(perfVal)}</td>
-            <td>${escapeHtml(accessVal)}</td>
-            <td>${escapeHtml(bestVal)}</td>
-            <td>${escapeHtml(valueVal)}</td>
-           </tr>`;
-        }
+            <td class="score">${row.overall_score}</td>
+            <td>${youtubeLink}</td>
+            <td>${row.speed}</td>
+            <td>${row.one_shot_attempts}</td>
+            <td>${row.design}</td>
+            <td>${row.architecture}</td>
+            <td>${row.code_quality}</td>
+            <td>${row.feature_complete}</td>
+            <td>${row.performance}</td>
+            <td>${row.accessibility}</td>
+            <td>${row.best_practices}</td>
+            <td>${row.value}</td>
+          </tr>`;
+        });
         
         tbody.innerHTML = html;
-        
-      } catch (err) {
-        console.error('Leaderboard load error:', err);
-        tbody.innerHTML = `<tr><td colspan="14" class="error-state">❌ Failed to load leaderboard: ${err.message}. Make sure resultsleaderboard.csv exists in the /docs/ folder.</td></tr>`;
+      } catch (error) {
+        console.error('Error loading leaderboard:', error);
+        document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="14">Error loading data</td></tr>';
       }
     }
     
-    // Robust CSV parser that handles quotes and line breaks
-    function parseCSV(csvText) {
-      const rows = [];
-      let currentRow = [];
-      let currentField = '';
-      let inQuotes = false;
-      let i = 0;
-      const len = csvText.length;
+    // Simple CSV parser
+    function parseCSV(text) {
+      const lines = text.split('\n');
+      const result = [];
       
-      while (i < len) {
-        const ch = csvText[i];
+      for (let line of lines) {
+        if (!line.trim()) continue;
         
-        if (inQuotes) {
-          if (ch === '"') {
-            // Check for escaped double quote
-            if (i + 1 < len && csvText[i+1] === '"') {
-              currentField += '"';
-              i++;
-            } else {
-              inQuotes = false;
-            }
+        const row = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            row.push(current.trim());
+            current = '';
           } else {
-            currentField += ch;
-          }
-        } else {
-          if (ch === '"') {
-            inQuotes = true;
-          } else if (ch === ',') {
-            currentRow.push(currentField.trim());
-            currentField = '';
-          } else if (ch === '\n') {
-            currentRow.push(currentField.trim());
-            if (currentRow.length > 0 || (currentRow.length === 1 && currentRow[0] !== '')) {
-              rows.push(currentRow);
-            }
-            currentRow = [];
-            currentField = '';
-          } else if (ch === '\r') {
-            // Skip carriage return, handle next line feed
-            if (i + 1 < len && csvText[i+1] === '\n') {
-              i++;
-            }
-            currentRow.push(currentField.trim());
-            if (currentRow.length > 0 || (currentRow.length === 1 && currentRow[0] !== '')) {
-              rows.push(currentRow);
-            }
-            currentRow = [];
-            currentField = '';
-          } else {
-            currentField += ch;
+            current += char;
           }
         }
-        i++;
+        
+        row.push(current.trim());
+        result.push(row);
       }
       
-      // Push last field
-      if (currentField !== '' || currentRow.length > 0) {
-        currentRow.push(currentField.trim());
-        rows.push(currentRow);
-      }
-      
-      // Clean up empty rows
-      return rows.filter(row => row.length > 0 && !(row.length === 1 && row[0] === ''));
-    }
-    
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-      });
+      return result;
     }
     
     // Load on page load
-    document.addEventListener('DOMContentLoaded', loadLeaderboard);
+    loadLeaderboard();
   </script>
+
 </body>
 </html>
