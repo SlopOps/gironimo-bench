@@ -58,7 +58,7 @@
 
     .logo { font-weight: 700; }
 
-    /* GitHub button styling - mobile friendly replacement for the pill */
+    /* GitHub button styling */
     .github-btn {
       display: inline-flex;
       align-items: center;
@@ -155,10 +155,19 @@
       backdrop-filter: blur(10px);
     }
 
+    /* Leaderboard wrapper with scrolling */
+    .leaderboard-wrapper {
+      overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 16px;
+      font-size: 14px;
     }
 
     th, td {
@@ -171,6 +180,10 @@
       color: var(--muted);
       font-size: 12px;
       text-transform: uppercase;
+      background: rgba(11, 15, 25, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     td a {
@@ -191,53 +204,18 @@
       font-weight: 600;
     }
 
-    /* Scrollable table body - max 10 rows */
-    #leaderboard-table {
-      display: block;
-    }
-
-    #leaderboard-table thead {
-      display: table;
-      width: 100%;
-      table-layout: fixed;
-    }
-
-    #leaderboard-table tbody {
-      display: block;
-      max-height: 440px;
-      overflow-y: auto;
-    }
-
-    #leaderboard-table tbody tr {
-      display: table;
-      width: 100%;
-      table-layout: fixed;
-    }
-
-    #leaderboard-table th,
-    #leaderboard-table td {
-      width: 7%;
-    }
-
-    #leaderboard-table th:nth-child(1),
-    #leaderboard-table td:nth-child(1) { width: 6%; }
-    #leaderboard-table th:nth-child(2),
-    #leaderboard-table td:nth-child(2) { width: 15%; }
-    #leaderboard-table th:nth-child(3),
-    #leaderboard-table td:nth-child(3) { width: 8%; }
-    #leaderboard-table th:nth-child(4),
-    #leaderboard-table td:nth-child(4) { width: 10%; }
-
-    #leaderboard-table tbody::-webkit-scrollbar {
+    /* Custom scrollbar */
+    .leaderboard-wrapper::-webkit-scrollbar {
       width: 8px;
+      height: 8px;
     }
 
-    #leaderboard-table tbody::-webkit-scrollbar-track {
+    .leaderboard-wrapper::-webkit-scrollbar-track {
       background: var(--card);
       border-radius: 4px;
     }
 
-    #leaderboard-table tbody::-webkit-scrollbar-thumb {
+    .leaderboard-wrapper::-webkit-scrollbar-thumb {
       background: var(--accent);
       border-radius: 4px;
     }
@@ -278,7 +256,7 @@
 
   <div class="container">
 
-    <!-- NAV with GitHub button instead of pill -->
+    <!-- NAV with GitHub button -->
     <nav aria-label="Primary navigation">
       <div class="logo">GIRONIMO BENCH</div>
       <a href="https://github.com/SlopOps/gironimo-bench" class="github-btn" target="_blank" rel="noopener noreferrer">
@@ -343,31 +321,33 @@
         <h2>Leaderboard</h2>
         <p class="muted">Updated after each evaluation video.</p>
 
-        <table id="leaderboard-table">
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Model</th>
-              <th>Score</th>
-              <th>YouTube</th>
-              <th>Speed</th>
-              <th>1-Shot</th>
-              <th>Design</th>
-              <th>Arch</th>
-              <th>Code</th>
-              <th>Features</th>
-              <th>Perf</th>
-              <th>Access</th>
-              <th>Best Prac</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody id="leaderboard-body">
-            <tr>
-              <td colspan="14">Loading...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="leaderboard-wrapper">
+          <table id="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Model</th>
+                <th>Score</th>
+                <th>YouTube</th>
+                <th>Speed</th>
+                <th>1-Shot</th>
+                <th>Design</th>
+                <th>Arch</th>
+                <th>Code</th>
+                <th>Features</th>
+                <th>Perf</th>
+                <th>Access</th>
+                <th>Best Prac</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <tr>
+                <td colspan="14">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
     </main>
@@ -387,7 +367,7 @@
     // Parse CSV and render leaderboard
     async function loadLeaderboard() {
       try {
-        const response = await fetch('leaderboard.csv');
+        const response = await fetch('results/leaderboard.csv');
         const csvText = await response.text();
         const rows = parseCSV(csvText);
         
@@ -444,23 +424,23 @@
             <td>${modelLink}</td>
             <td class="score">${row.overall_score}</td>
             <td>${youtubeLink}</td>
-            <td>${row.speed}</td>
-            <td>${row.one_shot_attempts}</td>
-            <td>${row.design}</td>
-            <td>${row.architecture}</td>
-            <td>${row.code_quality}</td>
-            <td>${row.feature_complete}</td>
-            <td>${row.performance}</td>
-            <td>${row.accessibility}</td>
-            <td>${row.best_practices}</td>
-            <td>${row.value}</td>
+            <td>${row.speed || '—'}</td>
+            <td>${row.one_shot_attempts || '—'}</td>
+            <td>${row.design || '—'}</td>
+            <td>${row.architecture || '—'}</td>
+            <td>${row.code_quality || '—'}</td>
+            <td>${row.feature_complete || '—'}</td>
+            <td>${row.performance || '—'}</td>
+            <td>${row.accessibility || '—'}</td>
+            <td>${row.best_practices || '—'}</td>
+            <td>${row.value || '—'}</td>
           </tr>`;
         });
         
         tbody.innerHTML = html;
       } catch (error) {
         console.error('Error loading leaderboard:', error);
-        document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="14">Error loading data</td></tr>';
+        document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="14">Error loading data. Make sure results/leaderboard.csv exists.</td></tr>';
       }
     }
     
