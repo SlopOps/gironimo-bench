@@ -287,91 +287,129 @@ Missing assets count as a failed attempt in Phase 1 and may be resolved in Phase
 
 ## 📊 How Scoring Works
 
+
+### **Speed (10 pts)**
+
+| Amount of time to finish result | Score |
+| --------------------------------- | ----- |
+| <5s | 10 |
+| 5s-10s | 9 |
+| 10s-30s | 8 |
+| 30s-1m | 7 |
+| 1m-2m | 6 |
+| 2m-4m | 5 |
+| 4m-7m | 4 |
+| 7m-10m | 3 |
+| 10m-20m | 2 |
+| 20m+ | 1 |
+
 ### **One-Shot Attempts (10 pts)**
 
-| Attempts to Deploy (Phase 1 only) | Score |
+| Amount of time to finish result | Score |
 | --------------------------------- | ----- |
 | 1 | 10 |
 | 2 | 8 |
 | 3 | 6 |
 | 4 | 4 |
-| Failed within limit | 0 |
+| 5 | 2 |
+| 6+ | 1 |
 
 ---
 
-### **Gironimo Bench Completion (10 pts)**
+### **Design (10 pts)**
 
-| Outcome | Score |
-| ------- | ----- |
-| Fully deploys within Phase 1 | 10 |
-| Deploys only after Phase 2 | 6 |
-| Never deploys | 0 |
-
----
-
-### **GitHub Pages Deployment Requirement (v1 Specific)**
-
-Successful deployment to GitHub Pages is **required** for scoring in all categories except One-Shot Attempts and Completion. A site that does not deploy receives a maximum score of 4 across all quality categories, regardless of implementation quality.
-
-| Deployment Outcome | Maximum Possible Score |
-| ------------------ | ---------------------- |
-| Deploys successfully | 100 (full scoring) |
-| Does not deploy | 40 (capped: only attempts/completion count) |
-
-This ensures the benchmark tests real-world deliverability, not just code that "looks right" in the response.
-
----
-
-### **Quality-Based Categories**
-
-All remaining categories (Design, Architecture, Code Quality, etc.) are evaluated based on the **final working version**, even if achieved during Phase 2.
-
-This separates:
-
-* **Efficiency** (how quickly the model succeeds)
-* **Capability** (how good the final result is)
-
----
-
-## ⚖️ Subjective Scoring Guidelines
-
-Some categories involve human judgment. To ensure consistency, the following scoring anchors are used:
-
-### **Design (0–10)**
-
-* **0–3:** Broken, unusable, or visually chaotic
-* **4–6:** Functional but basic, minimal polish
-* **7–8:** Clean, consistent, professional
+Desktop and Mobile
 * **9–10:** Exceptional polish, cohesive, memorable, surprising
+* **7–8:** Clean, consistent, professional
+* **4–6:** Functional but basic, minimal polish
+* **1–3:** Broken, unusable, or visually chaotic
 
 ---
 
-### **Architecture (0–10)**
+### **Architecture (10 pts)**
 
-* **0–3:** Disorganized, unclear structure, poor separation of concerns
-* **4–6:** Basic structure, some organization, limited maintainability
-* **7–8:** Well-structured, maintainable, clear separation of concerns
 * **9–10:** Thoughtful design, scalable, strong engineering decisions
+* **7–8:** Well-structured, maintainable, clear separation of concerns
+* **4–6:** Basic structure, some organization, limited maintainability
+* **1–3:** Disorganized, unclear structure, poor separation of concerns
 
 ---
 
-### **Code Quality (0–10)**
+### **Code Quality (10 pts)**
 
-* **0–3:** Hard to read, fragile, or error-prone
-* **4–6:** Functional but inconsistent or minimally documented
-* **7–8:** Clean, readable, reasonably well-structured
 * **9–10:** Highly readable, robust, and well-organized
+* **7–8:** Clean, readable, reasonably well-structured
+* **4–6:** Functional but inconsistent or minimally documented
+* **1–3:** Hard to read, fragile, or error-prone
 
 ---
 
-### **Tech Value & Trade-offs (0–10)**
+### **Feature Completeness (10 pts)**
 
-* **0–3:** Poor practices or inappropriate tech choices
-* **4–6:** Acceptable but not well-justified
-* **7–8:** Good balance of simplicity and capability
-* **9–10:** Excellent trade-offs and strong real-world value
+* **9–10:** All features work as required
+* **7–8:** 4/5 features exist with minor errors
+* **4–6:** 3/5 fratures exist with some buggs
+* **1–3:** 2 or less features exist
 
 ---
+
+### **Performance (10 pts)**
+
+| Lighthouse Score | Score |
+| --------------------------------- | ----- |
+| 100 | 10 |
+| 90-100 | 9 |
+| 80-90 | 8 |
+| 70-80 | 7 |
+| 60-70 | 6 |
+| 50-60 | 5 |
+| 40-50 | 4 |
+| 30-40 | 3 |
+| 20-30 | 2 |
+| <20 | 1 |
+
+---
+
+### **Accessibility (10 pts)**
+
+| Lighthouse Score | Score |
+| --------------------------------- | ----- |
+| 100 | 10 |
+| 90-100 | 9 |
+| 80-90 | 8 |
+| 70-80 | 7 |
+| 60-70 | 6 |
+| 50-60 | 5 |
+| 40-50 | 4 |
+| 30-40 | 3 |
+| 20-30 | 2 |
+| <20 | 1 |
+
+---
+
+### **Best Practices (10 pts)**
+
+| Lighthouse Score | Score |
+| --------------------------------- | ----- |
+| 100 | 10 |
+| 90-100 | 9 |
+| 80-90 | 8 |
+| 70-80 | 7 |
+| 60-70 | 6 |
+| 50-60 | 5 |
+| 40-50 | 4 |
+| 30-40 | 3 |
+| 20-30 | 2 |
+| <20 | 1 |
+
+---
+
+### **Overall (100 pts)**
+- Sum of all 10 categories. Max 100
+
+---
+
+
 
 ## 🧠 Scoring Philosophy
 
