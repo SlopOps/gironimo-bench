@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <!-- Google tag (gtag.js) -->
@@ -7,11 +7,10 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-Q5R5LECE2Y');
   </script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <title>Gironimo Bench — Real-World LLM Software Engineering Benchmark</title>
   <meta name="description" content="Gironimo Bench evaluates LLMs on real-world software engineering workflows: specification → architecture → implementation → review." />
@@ -36,43 +35,49 @@
                   radial-gradient(900px 600px at 90% 20%, #0b3b4a 0%, transparent 55%),
                   var(--bg);
       color: var(--text);
-      line-height: 1.6;
+      line-height: 1.5;
     }
 
-    a { color: inherit; }
+    a { 
+      color: inherit;
+      text-decoration: none;
+    }
 
     .container {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 0 24px;
+      padding: 0 20px;
     }
 
     nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 24px 0;
+      padding: 20px 0;
     }
 
-    .logo { font-weight: 700; }
+    .logo { 
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
 
     .pill {
-      padding: 8px 14px;
+      padding: 6px 12px;
       border: 1px solid var(--border);
       border-radius: 999px;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
     }
 
     header.hero {
-      padding: 80px 0 40px;
+      padding: 60px 0 32px;
       text-align: center;
     }
 
     h1 {
-      font-size: 52px;
-      line-height: 1.1;
-      margin: 0 0 16px;
+      font-size: 44px;
+      line-height: 1.2;
+      margin: 0 0 12px;
     }
 
     .gradient {
@@ -88,14 +93,16 @@
       justify-content: center;
       gap: 12px;
       margin-top: 24px;
+      flex-wrap: wrap;
     }
 
     .btn {
-      padding: 12px 18px;
-      border-radius: 10px;
+      padding: 10px 18px;
+      border-radius: 40px;
       border: 1px solid var(--border);
       text-decoration: none;
       font-weight: 600;
+      transition: all 0.2s ease;
     }
 
     .btn.primary {
@@ -104,12 +111,8 @@
       color: black;
     }
 
-    main {
-      display: block;
-    }
-
     section {
-      padding: 40px 0;
+      padding: 32px 0;
     }
 
     h2 {
@@ -130,50 +133,147 @@
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 20px;
       padding: 18px;
       backdrop-filter: blur(10px);
+    }
+
+    /* Leaderboard table - mobile first */
+    .leaderboard-wrapper {
+      overflow-x: auto;
+      width: 100%;
+      border-radius: 20px;
+      background: rgba(0,0,0,0.2);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 16px;
+      font-size: 14px;
     }
 
     th, td {
-      padding: 12px;
+      padding: 12px 10px;
       border-bottom: 1px solid var(--border);
       text-align: left;
+      vertical-align: middle;
     }
 
     th {
       color: var(--muted);
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
     }
 
+    /* Rank column styling */
+    .rank-cell {
+      font-weight: 700;
+      width: 48px;
+      color: var(--accent2);
+    }
+
+    /* Model name link */
+    .model-link {
+      font-weight: 600;
+      color: white;
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(255,255,255,0.3);
+    }
+    .model-link:hover {
+      border-bottom-color: var(--accent2);
+    }
+
+    .youtube-link {
+      font-size: 12px;
+      background: rgba(255,255,255,0.08);
+      padding: 4px 10px;
+      border-radius: 30px;
+      display: inline-block;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .youtube-link:hover {
+      background: #ff0000;
+      color: white;
+    }
+
+    /* ?? row styling */
+    .unranked-row {
+      opacity: 0.7;
+    }
+    .unranked-row td:first-child {
+      font-style: italic;
+    }
+
+    /* desktop extra columns hidden on mobile, shown on wider screens */
+    .desktop-col {
+      display: none;
+    }
+
+    /* footer */
     footer {
-      padding: 60px 0;
+      padding: 48px 0 32px;
       text-align: center;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
     }
 
-    @media (max-width: 900px) {
-      .grid { grid-template-columns: 1fr; }
-      h1 { font-size: 38px; }
+    /* responsiveness */
+    @media (max-width: 680px) {
+      .container {
+        padding: 0 16px;
+      }
+      h1 { font-size: 32px; }
+      h2 { font-size: 24px; }
+      th, td { padding: 10px 6px; }
+      .rank-cell { width: 40px; }
+      .youtube-link { padding: 3px 8px; font-size: 11px; }
+    }
+
+    @media (min-width: 901px) {
+      /* On desktop (>=901px) we show extra core columns: attempts, design, architecture, code_quality, feature_complete, performance, accessibility, best_practices, value */
+      .desktop-col {
+        display: table-cell;
+      }
+      th, td {
+        padding: 12px 8px;
+      }
+      .leaderboard-wrapper {
+        overflow-x: auto;
+      }
+      table {
+        min-width: 1000px;
+      }
+    }
+
+    /* loading + error states */
+    .loading-state, .error-state {
+      text-align: center;
+      padding: 48px 20px;
+      background: var(--card);
+      border-radius: 24px;
+      margin: 20px 0;
+    }
+    .error-state {
+      color: #ffa69e;
+    }
+    .small-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 16px;
+      text-align: center;
     }
   </style>
 </head>
-
 <body>
 
   <div class="container">
 
     <!-- NAV -->
     <nav aria-label="Primary navigation">
-      <div class="logo">GIRONIMO BENCH</div>
+      <div class="logo">⚡ GIRONIMO BENCH</div>
       <div class="pill">LLM Engineering Benchmark</div>
     </nav>
 
@@ -198,18 +298,15 @@
       <!-- FEATURES -->
       <section>
         <h2>What It Tests</h2>
-
         <div class="grid">
           <div class="card">
             <h3>Spec → System</h3>
             <p class="muted">Interpret long engineering specifications into working software.</p>
           </div>
-
           <div class="card">
             <h3>Real Engineering</h3>
             <p class="muted">Architecture, maintainability, and deployment readiness matter.</p>
           </div>
-
           <div class="card">
             <h3>Human Scoring</h3>
             <p class="muted">Every run is manually reviewed for consistency and quality.</p>
@@ -226,31 +323,40 @@
         </p>
       </section>
 
-      <!-- LEADERBOARD -->
+      <!-- LEADERBOARD SECTION -->
       <section id="leaderboard">
-        <h2>Leaderboard</h2>
-        <p class="muted">Updated after each evaluation video.</p>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Model</th>
-              <th>Score</th>
-              <th>Attempts</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Coming soon</td>
-              <td>—</td>
-              <td>—</td>
-              <td>In progress</td>
-            </tr>
-          </tbody>
-        </table>
+        <h2>🏆 Leaderboard</h2>
+        <p class="muted">Sorted by total overall score — entries with incomplete data (??) appear at the bottom.</p>
+        
+        <div class="leaderboard-wrapper">
+          <table id="leaderboard-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Model</th>
+                <th class="desktop-col">Score</th>
+                <th>Video</th>
+                <!-- Extra core columns (desktop only) -->
+                <th class="desktop-col">Attempts</th>
+                <th class="desktop-col">Design</th>
+                <th class="desktop-col">Arch.</th>
+                <th class="desktop-col">Code Qual</th>
+                <th class="desktop-col">Feat Compl</th>
+                <th class="desktop-col">Perf</th>
+                <th class="desktop-col">A11y</th>
+                <th class="desktop-col">Best Prac</th>
+                <th class="desktop-col">Value</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <tr><td colspan="12" class="loading-state">Loading benchmark data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="small-note">
+          📊 Overall score = weighted engineering assessment. Rows with "??" are unranked at bottom.
+        </div>
       </section>
-
     </main>
 
     <!-- FOOTER -->
@@ -259,10 +365,289 @@
       <a href="https://github.com/SlopOps" target="_blank">GitHub</a> •
       <a href="https://youtube.com/@SlopOps" target="_blank">YouTube</a>
       <br><br>
-      © 2026 SlopOps
+      © 2026 SlopOps — Real-world LLM benchmark
     </footer>
-
   </div>
 
+  <script>
+    // CSV URL (relative to docs/ folder on GitHub Pages)
+    const CSV_PATH = './resultsleaderboard.csv';
+
+    async function loadLeaderboard() {
+      const tbody = document.getElementById('leaderboard-body');
+      if (!tbody) return;
+      
+      try {
+        tbody.innerHTML = '<tr><td colspan="12" class="loading-state">📡 Fetching latest leaderboard...</td></tr>';
+        
+        const response = await fetch(CSV_PATH);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: Could not load CSV`);
+        }
+        
+        const csvText = await response.text();
+        const rows = parseCSV(csvText);
+        
+        if (rows.length < 2) {
+          tbody.innerHTML = '<tr><td colspan="12" class="error-state">⚠️ No data found in leaderboard.</td></tr>';
+          return;
+        }
+        
+        // Extract headers (first row)
+        const headers = rows[0];
+        // Find column indexes
+        const modelIdx = headers.indexOf('model');
+        const dateIdx = headers.indexOf('date');
+        const videoUrlIdx = headers.indexOf('video_url');
+        const resultUrlIdx = headers.indexOf('result_url');
+        const speedIdx = headers.indexOf('speed');
+        const oneShotAttemptsIdx = headers.indexOf('one_shot_attempts');
+        const designIdx = headers.indexOf('design');
+        const architectureIdx = headers.indexOf('architecture');
+        const codeQualityIdx = headers.indexOf('code_quality');
+        const featureCompleteIdx = headers.indexOf('feature_complete');
+        const performanceIdx = headers.indexOf('performance');
+        const accessibilityIdx = headers.indexOf('accessibility');
+        const bestPracticesIdx = headers.indexOf('best_practices');
+        const valueIdx = headers.indexOf('value');
+        const overallScoreIdx = headers.indexOf('overall_score');
+        
+        // Map data rows (skip header)
+        const models = [];
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row || row.length === 0) continue;
+          
+          const modelName = getField(row, modelIdx) || 'Unknown';
+          const videoUrl = getField(row, videoUrlIdx) || '';
+          const resultUrl = getField(row, resultUrlIdx) || '';
+          const overallScoreRaw = getField(row, overallScoreIdx);
+          const oneShotAttempts = getField(row, oneShotAttemptsIdx);
+          const design = getField(row, designIdx);
+          const architecture = getField(row, architectureIdx);
+          const codeQuality = getField(row, codeQualityIdx);
+          const featureComplete = getField(row, featureCompleteIdx);
+          const performance = getField(row, performanceIdx);
+          const accessibility = getField(row, accessibilityIdx);
+          const bestPractices = getField(row, bestPracticesIdx);
+          const value = getField(row, valueIdx);
+          const dateRaw = getField(row, dateIdx);
+          
+          // Determine if overall_score has "??" or is empty / invalid
+          let overallScoreNum = null;
+          let isUnranked = false;
+          
+          if (overallScoreRaw && overallScoreRaw.trim() !== '' && overallScoreRaw !== '?' && overallScoreRaw !== '??') {
+            const parsed = parseFloat(overallScoreRaw);
+            if (!isNaN(parsed) && isFinite(parsed)) {
+              overallScoreNum = parsed;
+            } else {
+              isUnranked = true;
+            }
+          } else {
+            isUnranked = true;
+          }
+          
+          // Additional: if any other core metric contains '?' it's still ranked if overall_score numeric,
+          // but we only mark unranked when overall_score is "??" or invalid (spec requirement).
+          // Also treat empty overall_score as unranked.
+          if (overallScoreRaw === '??' || overallScoreRaw === '?' || overallScoreRaw === '???' || (overallScoreRaw && overallScoreRaw.toLowerCase().includes('?'))) {
+            isUnranked = true;
+          }
+          if (!overallScoreRaw || overallScoreRaw.trim() === '') {
+            isUnranked = true;
+          }
+          
+          models.push({
+            name: modelName.trim(),
+            videoUrl: videoUrl ? videoUrl.trim() : '',
+            resultUrl: resultUrl ? resultUrl.trim() : '',
+            overallScore: overallScoreNum,
+            isUnranked: isUnranked,
+            oneShotAttempts: oneShotAttempts || '?',
+            design: design || '?',
+            architecture: architecture || '?',
+            codeQuality: codeQuality || '?',
+            featureComplete: featureComplete || '?',
+            performance: performance || '?',
+            accessibility: accessibility || '?',
+            bestPractices: bestPractices || '?',
+            value: value || '?',
+            date: dateRaw || '',
+          });
+        }
+        
+        // SORTING RULES:
+        // 1) Ranked models (isUnranked === false) sorted by overallScore descending (higher score first)
+        // 2) Unranked models (isUnranked === true) go to bottom, keep original order among themselves or stable? We'll preserve input order but ensure at bottom.
+        const rankedModels = models.filter(m => !m.isUnranked && m.overallScore !== null);
+        const unrankedModels = models.filter(m => m.isUnranked || m.overallScore === null);
+        
+        // sort ranked descending by overallScore
+        rankedModels.sort((a, b) => b.overallScore - a.overallScore);
+        
+        // unranked remain in original relative order (as they appear in CSV)
+        // Combine final list
+        const sortedModels = [...rankedModels, ...unrankedModels];
+        
+        // Render table rows
+        if (sortedModels.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="12" class="error-state">📭 No models found in CSV.</td></tr>';
+          return;
+        }
+        
+        let html = '';
+        let rankCounter = 1;
+        
+        for (let idx = 0; idx < sortedModels.length; idx++) {
+          const m = sortedModels[idx];
+          const isRankedEntry = !m.isUnranked && m.overallScore !== null;
+          
+          let rankDisplay = '';
+          if (isRankedEntry) {
+            rankDisplay = rankCounter.toString();
+            rankCounter++;
+          } else {
+            rankDisplay = '??';
+          }
+          
+          // Model hyperlink: if result_url exists, link to that; otherwise fallback to "#"
+          const modelLinkUrl = (m.resultUrl && m.resultUrl.trim() !== '') ? m.resultUrl : '#';
+          const modelLinkTarget = (modelLinkUrl !== '#') ? '_blank' : '_self';
+          
+          // Video link: we want hyperlink that says "youtube" linking to video_url (if exists)
+          let videoLinkHtml = '';
+          if (m.videoUrl && m.videoUrl.trim() !== '' && m.videoUrl !== '#') {
+            videoLinkHtml = `<a href="${escapeHtml(m.videoUrl)}" class="youtube-link" target="_blank" rel="noopener noreferrer">▶ youtube</a>`;
+          } else {
+            videoLinkHtml = `<span class="muted" style="font-size:12px;">—</span>`;
+          }
+          
+          // Overall score display
+          const overallDisplay = (m.overallScore !== null && !m.isUnranked) ? m.overallScore.toFixed(1) : '??';
+          
+          // Determine if row should have unranked class
+          const rowClass = !isRankedEntry ? 'unranked-row' : '';
+          
+          // Desktop columns data (safe fallback)
+          const attemptsDisplay = m.oneShotAttempts || '?';
+          const designDisplay = m.design || '?';
+          const archDisplay = m.architecture || '?';
+          const codeQualityDisplay = m.codeQuality || '?';
+          const featCompleteDisplay = m.featureComplete || '?';
+          const perfDisplay = m.performance || '?';
+          const a11yDisplay = m.accessibility || '?';
+          const bestPracDisplay = m.bestPractices || '?';
+          const valueDisplay = m.value || '?';
+          
+          html += `<tr class="${rowClass}">
+            <td class="rank-cell">${rankDisplay}</td>
+            <td>
+              <a href="${escapeHtml(modelLinkUrl)}" class="model-link" target="${modelLinkTarget}" rel="noopener noreferrer">
+                ${escapeHtml(m.name)}
+              </a>
+            </td>
+            <td class="desktop-col"><strong>${escapeHtml(overallDisplay)}</strong></td>
+            <td>${videoLinkHtml}</td>
+            <td class="desktop-col">${escapeHtml(attemptsDisplay)}</td>
+            <td class="desktop-col">${escapeHtml(designDisplay)}</td>
+            <td class="desktop-col">${escapeHtml(archDisplay)}</td>
+            <td class="desktop-col">${escapeHtml(codeQualityDisplay)}</td>
+            <td class="desktop-col">${escapeHtml(featCompleteDisplay)}</td>
+            <td class="desktop-col">${escapeHtml(perfDisplay)}</td>
+            <td class="desktop-col">${escapeHtml(a11yDisplay)}</td>
+            <td class="desktop-col">${escapeHtml(bestPracDisplay)}</td>
+            <td class="desktop-col">${escapeHtml(valueDisplay)}</td>
+          </tr>`;
+        }
+        
+        tbody.innerHTML = html;
+        
+      } catch (err) {
+        console.error('Leaderboard load error:', err);
+        tbody.innerHTML = `<tr><td colspan="12" class="error-state">❌ Failed to load leaderboard: ${err.message}. Make sure resultsleaderboard.csv exists in /docs/ folder.</td></tr>`;
+      }
+    }
+    
+    // Helper: parse CSV respecting quotes, commas, newlines (simple but robust for our data)
+    function parseCSV(csvText) {
+      const rows = [];
+      let currentRow = [];
+      let currentField = '';
+      let inQuotes = false;
+      let i = 0;
+      const len = csvText.length;
+      
+      while (i < len) {
+        const ch = csvText[i];
+        if (inQuotes) {
+          if (ch === '"') {
+            // check for double quote escape
+            if (i + 1 < len && csvText[i+1] === '"') {
+              currentField += '"';
+              i++;
+            } else {
+              inQuotes = false;
+            }
+          } else {
+            currentField += ch;
+          }
+        } else {
+          if (ch === '"') {
+            inQuotes = true;
+          } else if (ch === ',') {
+            currentRow.push(currentField);
+            currentField = '';
+          } else if (ch === '\n' || (ch === '\r' && (i+1 < len && csvText[i+1] === '\n'))) {
+            // handle CRLF or LF
+            currentRow.push(currentField);
+            if (currentRow.length > 0 || (currentRow.length === 1 && currentRow[0] !== '')) {
+              rows.push(currentRow);
+            }
+            currentRow = [];
+            currentField = '';
+            if (ch === '\r' && i+1 < len && csvText[i+1] === '\n') i++; // skip next char
+          } else {
+            currentField += ch;
+          }
+        }
+        i++;
+      }
+      // push last field
+      if (currentField !== '' || currentRow.length > 0) {
+        currentRow.push(currentField);
+        rows.push(currentRow);
+      }
+      // trim whitespace from each field but keep empty strings
+      for (let r = 0; r < rows.length; r++) {
+        for (let c = 0; c < rows[r].length; c++) {
+          if (typeof rows[r][c] === 'string') {
+            rows[r][c] = rows[r][c].trim();
+          }
+        }
+      }
+      return rows;
+    }
+    
+    function getField(row, idx) {
+      if (idx === -1 || idx >= row.length) return '';
+      return row[idx] !== undefined ? row[idx] : '';
+    }
+    
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+        return c;
+      });
+    }
+    
+    // init when page loads
+    document.addEventListener('DOMContentLoaded', loadLeaderboard);
+  </script>
 </body>
 </html>
