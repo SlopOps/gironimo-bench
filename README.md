@@ -404,6 +404,16 @@ Desktop and Mobile
 
 ---
 
+### **Value (10 pts)**
+
+Desktop and Mobile
+* **9–10:** Free and unlimited
+* **7–8:** Free with limits
+* **4–6:** Cost $ but unlimited
+* **1–3:** Cost $$ and limited
+
+---
+
 ### **Overall (100 pts)**
 - Sum of all 10 categories. Max 100
 
