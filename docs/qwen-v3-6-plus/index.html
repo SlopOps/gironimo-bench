@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gironimo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="app-header">
+    <h1 class="brand">🦒 Gironimo</h1>
+    <div id="theme-toggle" class="theme-provider" role="button" tabindex="0" aria-label="Toggle dark/light theme" aria-pressed="false">
+      <span class="icon" aria-hidden="true">🌓</span>
+    </div>
+  </header>
+
+  <main id="main-content" class="app-grid">
+    <section class="panel philosophy-panel" aria-labelledby="philosophy-title">
+      <h2 id="philosophy-title">Philosophy Explorer</h2>
+      <div class="category-filters" role="group" aria-label="Philosophy category filters">
+        <button class="btn btn-sm" data-filter="all" aria-pressed="true">All</button>
+        <button class="btn btn-sm" data-filter="Practical" aria-pressed="false">Practical</button>
+        <button class="btn btn-sm" data-filter="Philosophical" aria-pressed="false">Philosophical</button>
+        <button class="btn btn-sm" data-filter="Technical" aria-pressed="false">Technical</button>
+      </div>
+      <div id="philosophy-list" role="list" aria-label="Available philosophy statements"></div>
+    </section>
+
+    <section class="panel workflow-panel" aria-labelledby="workflow-title">
+      <h2 id="workflow-title">Workflow Pipeline</h2>
+      <div id="workflow-stages" class="stages" role="list" aria-label="Development stages"></div>
+    </section>
+
+    <section class="panel leaderboard-panel" aria-labelledby="leaderboard-title">
+      <h2 id="leaderboard-title">Model Leaderboard</h2>
+      <div class="leaderboard-controls">
+        <button class="btn btn-sm sort-btn" data-sort="overall_score" aria-pressed="true">Sort by Score ↓</button>
+        <button class="btn btn-sm sort-btn" data-sort="date" aria-pressed="false">Sort by Date ↓</button>
+        <button class="btn btn-sm sort-btn" data-sort="model" aria-pressed="false">Sort A-Z ↓</button>
+      </div>
+      <div id="leaderboard-container" class="leaderboard-container">
+        <table id="leaderboard-table" aria-label="AI Model Performance Metrics">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="mascot-stage" aria-hidden="true"></div>
+
+  <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h2 id="modal-title">Stage Details</h2>
+        <button id="modal-close" class="btn btn-icon" aria-label="Close modal">✕</button>
+      </header>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="notification-tray" aria-live="polite" aria-atomic="true" class="notification-tray"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
