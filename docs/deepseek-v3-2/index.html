@@ -8,219 +8,184 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Google Analytics -->
+    <!-- MODEL BANNER (AUTO FROM CSV) + ANALYTICS -->
+    
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q5R5LECE2Y"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-Q5R5LECE2Y');
+    
+      // 🔧 CHANGE THIS PER PAGE (must match result_url slug)
+      const MODEL_SLUG = "deepseek-v3-2";
     </script>
     
-    <!-- Model Performance Banner -->
     <style>
       .model-banner {
-        background: linear-gradient(135deg, rgba(124,92,255,0.1) 0%, rgba(0,212,255,0.05) 100%);
-        border: 1px solid var(--border, rgba(255,255,255,0.1));
-        border-radius: 16px;
-        padding: 20px 24px;
-        margin-bottom: 32px;
-        backdrop-filter: blur(10px);
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background: linear-gradient(90deg, #7c5cff, #00d4ff);
+        color: #000;
+        font-family: system-ui, sans-serif;
+        border-bottom: 1px solid rgba(0,0,0,0.2);
       }
-      
-      .model-banner h2 {
-        font-size: 20px;
-        margin: 0 0 8px 0;
+    
+      .banner-inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 10px 16px;
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
         flex-wrap: wrap;
       }
-      
-      .model-banner .score-badge {
-        background: linear-gradient(90deg, #7c5cff, #00d4ff);
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: 600;
-        color: #000;
-      }
-      
-      .model-banner .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 12px;
-        margin: 16px 0;
-      }
-      
-      .model-banner .metric {
-        background: rgba(255,255,255,0.05);
-        padding: 8px 12px;
-        border-radius: 10px;
-      }
-      
-      .model-banner .metric-label {
-        font-size: 11px;
-        text-transform: uppercase;
-        color: var(--muted, rgba(232,238,252,0.7));
-        letter-spacing: 0.5px;
-      }
-      
-      .model-banner .metric-value {
-        font-size: 18px;
-        font-weight: 700;
-        margin-top: 4px;
-      }
-      
-      .model-banner .watch-link {
-        display: inline-flex;
+    
+      .banner-left {
+        display: flex;
         align-items: center;
+        gap: 12px;
+      }
+    
+      .banner-model {
+        font-weight: 700;
+        font-size: 16px;
+      }
+    
+      .banner-score {
+        font-weight: 800;
+        font-size: 18px;
+      }
+    
+      .banner-details {
+        display: flex;
         gap: 8px;
-        background: rgba(255,255,255,0.1);
-        padding: 8px 16px;
-        border-radius: 40px;
+        font-size: 12px;
+        flex-wrap: wrap;
+      }
+    
+      .banner-pill {
+        background: rgba(0,0,0,0.15);
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+    
+      .banner-link {
+        font-size: 12px;
+        font-weight: 600;
         text-decoration: none;
-        font-size: 14px;
-        font-weight: 500;
-        margin-top: 12px;
+        background: rgba(0,0,0,0.2);
+        padding: 6px 10px;
+        border-radius: 8px;
       }
-      
-      .model-banner .watch-link:hover {
-        background: rgba(255,255,255,0.2);
+    
+      .banner-link:hover {
+        background: rgba(0,0,0,0.3);
       }
-      
+    
+      /* Mobile */
       @media (max-width: 768px) {
-        .model-banner .metrics-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-        .model-banner h2 {
-          font-size: 18px;
+        .banner-details {
+          display: none;
         }
       }
     </style>
     
+    <div class="model-banner">
+      <div class="banner-inner">
+        
+        <div class="banner-left">
+          <div class="banner-model" id="banner-model">Loading...</div>
+          <div class="banner-score" id="banner-score"></div>
+        </div>
+    
+        <div class="banner-details" id="banner-details"></div>
+    
+        <a href="/#leaderboard" class="banner-link">← Leaderboard</a>
+    
+      </div>
+    </div>
+    
     <script>
-      // Auto-detect model name from folder path
-      const modelPath = window.location.pathname;
-      const modelName = modelPath.split('/').filter(p => p).pop() || modelPath.split('/').slice(-2, -1)[0];
-      
-      // Fetch and display model data
-      async function loadModelBanner() {
+      async function loadBanner() {
         try {
-          const response = await fetch('/results/leaderboard.csv?t=' + Date.now());
-          const csvText = await response.text();
-          
-          // Parse CSV
-          const lines = csvText.split('\n');
-          const headers = lines[0].split(',').map(h => h.trim());
-          
-          let modelData = null;
-          
-          for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-            
-            const values = parseCSVLine(lines[i]);
-            const modelIndex = headers.indexOf('model');
-            
-            if (modelIndex !== -1 && values[modelIndex] && values[modelIndex].toLowerCase() === modelName.toLowerCase()) {
-              modelData = {};
-              headers.forEach((h, idx) => {
-                modelData[h] = values[idx] || '—';
-              });
-              break;
-            }
-          }
-          
-          if (!modelData) {
-            console.log('No data found for model:', modelName);
+          const res = await fetch('/results/leaderboard.csv', { cache: 'no-store' });
+          const text = await res.text();
+          const rows = parseCSV(text);
+    
+          const headers = rows[0];
+          const data = rows.slice(1).map(row => {
+            const obj = {};
+            headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim() || '');
+            return obj;
+          });
+    
+          // Match by result_url
+          const match = data.find(row => {
+            if (!row.result_url) return false;
+            const slug = row.result_url.replace(/\//g, '');
+            return slug === MODEL_SLUG;
+          });
+    
+          if (!match) {
+            document.getElementById('banner-model').textContent = "Model not found";
             return;
           }
-          
-          // Render banner
-          const banner = document.createElement('div');
-          banner.className = 'model-banner';
-          banner.innerHTML = `
-            <h2>
-              🦒 ${escapeHtml(modelData.model)} 
-              <span class="score-badge">Score: ${escapeHtml(modelData.overall_score || '—')}</span>
-            </h2>
-            
-            <div class="metrics-grid">
-              <div class="metric">
-                <div class="metric-label">Design</div>
-                <div class="metric-value">${escapeHtml(modelData.design || '—')}</div>
-              </div>
-              <div class="metric">
-                <div class="metric-label">Architecture</div>
-                <div class="metric-value">${escapeHtml(modelData.architecture || '—')}</div>
-              </div>
-              <div class="metric">
-                <div class="metric-label">Code Quality</div>
-                <div class="metric-value">${escapeHtml(modelData.code_quality || '—')}</div>
-              </div>
-              <div class="metric">
-                <div class="metric-label">Best Practices</div>
-                <div class="metric-value">${escapeHtml(modelData.best_practices || '—')}</div>
-              </div>
-            </div>
-            
-            ${modelData.video_url && modelData.video_url !== '?' ? 
-              `<a href="${escapeHtml(modelData.video_url)}" class="watch-link" target="_blank">
-                ▶️ Watch on YouTube
-              </a>` : ''}
-          `;
-          
-          // Insert at top of main content
-          const container = document.querySelector('.container, main, .app-container, body > :first-child');
-          if (container && container.firstChild) {
-            container.insertBefore(banner, container.firstChild);
-          } else {
-            document.body.insertBefore(banner, document.body.firstChild);
-          }
-          
-        } catch (error) {
-          console.error('Error loading model banner:', error);
+    
+          renderBanner(match);
+    
+        } catch (err) {
+          console.error(err);
+          document.getElementById('banner-model').textContent = "Error loading banner";
         }
       }
-      
-      function parseCSVLine(line) {
-        const result = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-          if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = '';
-          } else {
-            current += char;
-          }
-        }
-        result.push(current.trim());
-        return result;
+    
+      function renderBanner(row) {
+        document.getElementById('banner-model').textContent = row.model;
+        document.getElementById('banner-score').textContent = `Score: ${row.overall_score || '—'}`;
+    
+        const fields = [
+          ["Speed", row.speed],
+          ["1-Shot", row.one_shot_attempts],
+          ["Design", row.design],
+          ["Arch", row.architecture],
+          ["Code", row.code_quality],
+          ["Features", row.feature_complete],
+          ["Perf", row.performance],
+          ["Access", row.accessibility],
+          ["Best", row.best_practices],
+          ["Value", row.value],
+        ];
+    
+        document.getElementById('banner-details').innerHTML = fields
+          .filter(([_, v]) => v && v !== '?' && v !== '??')
+          .map(([k, v]) => `<span class="banner-pill">${k}: ${v}</span>`)
+          .join('');
       }
-      
-      function escapeHtml(str) {
-        if (!str) return '—';
-        return String(str).replace(/[&<>]/g, function(m) {
-          if (m === '&') return '&amp;';
-          if (m === '<') return '&lt;';
-          if (m === '>') return '&gt;';
-          return m;
+    
+      function parseCSV(text) {
+        return text.split('\n').filter(Boolean).map(line => {
+          let row = [];
+          let current = '';
+          let inQuotes = false;
+    
+          for (let char of line) {
+            if (char === '"') inQuotes = !inQuotes;
+            else if (char === ',' && !inQuotes) {
+              row.push(current);
+              current = '';
+            } else current += char;
+          }
+    
+          row.push(current);
+          return row;
         });
       }
-      
-      // Run after page loads
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadModelBanner);
-      } else {
-        loadModelBanner();
-      }
+    
+      loadBanner();
     </script>
-    <!-- End Model Performance Banner -->
     <div id="app" class="app-container">
         <!-- Header with Theme Toggle -->
         <header class="app-header">
