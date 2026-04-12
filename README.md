@@ -406,11 +406,20 @@ Desktop and Mobile
 
 ### **Value (10 pts)**
 
-Desktop and Mobile
+Cloud Models:
 * **9–10:** Free and unlimited
 * **7–8:** Free with limits
 * **4–6:** Cost $ but unlimited
 * **1–3:** Cost $$ and limited
+
+Local Models: (model size) - note you will need more ram for kv cache
+* **10:** <10GB VRAM
+* **8-9:** 10GB - 24GB VRAM
+* **6-7:** 24GB - 32GB VRAM
+* **4-5:** 32GB - 64GB VRAM
+* **2-3:** 64GB - 96GB VRAM
+* **1:** 96+GB VRAM
+
 
 ---
 
