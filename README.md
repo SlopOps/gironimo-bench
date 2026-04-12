@@ -412,7 +412,7 @@ Cloud Models:
 * **4–6:** Cost $ but unlimited
 * **1–3:** Cost $$ and limited
 
-Local Models: (model size) - note you will need more ram for kv cache
+Local Models: (model size + kv cache) - most instances 5-10GB kvcache
 * **10:** <10GB VRAM
 * **8-9:** 10GB - 24GB VRAM
 * **6-7:** 24GB - 32GB VRAM
