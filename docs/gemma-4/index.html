@@ -7,6 +7,176 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-theme="light">
+    
+    <!-- ===== MODEL BANNER (AUTO FROM CSV) ===== -->
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q5R5LECE2Y"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-Q5R5LECE2Y');
+    
+      // 🔧 CHANGE THIS PER PAGE (must match result_url slug in CSV)
+      const MODEL_SLUG = "deepseek-v3-2";
+    </script>
+    
+    <style>
+      .model-banner {
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background: rgba(15, 18, 32, 0.85);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        color: #e8eefc;
+        font-family: system-ui, sans-serif;
+      }
+    
+      .banner-inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+    
+      .banner-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+    
+      .banner-model {
+        font-weight: 600;
+        font-size: 15px;
+        color: #ffffff;
+      }
+    
+      .banner-score {
+        font-weight: 700;
+        font-size: 15px;
+        color: #7c5cff;
+      }
+    
+      .banner-details {
+        display: flex;
+        gap: 8px;
+        font-size: 12px;
+        flex-wrap: wrap;
+        color: rgba(232,238,252,0.75);
+      }
+    
+      .banner-pill {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 4px 8px;
+        border-radius: 6px;
+      }
+    
+      .banner-link {
+        font-size: 12px;
+        font-weight: 500;
+        text-decoration: none;
+        color: rgba(232,238,252,0.8);
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 6px 10px;
+        border-radius: 8px;
+      }
+    
+      .banner-link:hover {
+        background: rgba(255,255,255,0.08);
+      }
+    
+      /* Mobile */
+      @media (max-width: 768px) {
+        .banner-details {
+          display: none;
+        }
+      }
+    </style>
+    
+    <div class="model-banner">
+      <div class="banner-inner">
+        
+        <div class="banner-left">
+          <div class="banner-model" id="banner-model">Loading...</div>
+          <div class="banner-score" id="banner-score"></div>
+        </div>
+    
+        <div class="banner-details" id="banner-details"></div>
+    
+        <a href="/#leaderboard" class="banner-link">← Leaderboard</a>
+    
+      </div>
+    </div>
+    
+    <script>
+    (async function loadBanner() {
+      try {
+        const res = await fetch('/results/leaderboard.csv', { cache: 'no-store' });
+        const text = await res.text();
+    
+        // ✅ Robust CSV parsing (fixes your error)
+        const rows = text.trim().split('\n').map(r => r.split(','));
+        const headers = rows.shift();
+    
+        if (!headers || headers.length < 2) throw new Error("Invalid CSV");
+    
+        const data = rows.map(row => {
+          const obj = {};
+          headers.forEach((h, i) => obj[h.trim()] = (row[i] || '').trim());
+          return obj;
+        });
+    
+        // Find matching model
+        const match = data.find(row => {
+          if (!row.result_url) return false;
+          const slug = row.result_url.replace(/\//g, '');
+          return slug === MODEL_SLUG;
+        });
+    
+        if (!match) {
+          document.getElementById('banner-model').textContent = "Model not found";
+          return;
+        }
+    
+        // Render
+        document.getElementById('banner-model').textContent = match.model;
+        document.getElementById('banner-score').textContent =
+          `Score: ${match.overall_score || '—'}`;
+    
+        const fields = [
+          ["Speed", match.speed],
+          ["1-Shot", match.one_shot_attempts],
+          ["Design", match.design],
+          ["Arch", match.architecture],
+          ["Code", match.code_quality],
+          ["Features", match.feature_complete],
+          ["Perf", match.performance],
+          ["Access", match.accessibility],
+          ["Best", match.best_practices],
+          ["Value", match.value],
+        ];
+    
+        document.getElementById('banner-details').innerHTML = fields
+          .filter(([_, v]) => v && v !== '?' && v !== '??')
+          .map(([k, v]) => `<span class="banner-pill">${k}: ${v}</span>`)
+          .join('');
+    
+      } catch (err) {
+        console.error('Banner error:', err);
+        document.getElementById('banner-model').textContent = "Error loading banner";
+      }
+    })();
+    </script>
+    
+    <!-- ===== END MODEL BANNER ===== -->
+    
     <div id="app">
         <!-- Notification Container -->
         <div id="notification-host" class="notification-host"></div>
