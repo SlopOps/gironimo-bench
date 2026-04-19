@@ -1,243 +1,738 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q5R5LECE2Y"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-Q5R5LECE2Y');
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>Gironimo Bench</title>
+  <title>Gironimo Bench — Real-World LLM Software Engineering Benchmark</title>
+  <meta name="description" content="Gironimo Bench evaluates LLMs on real-world software engineering workflows: specification → architecture → implementation → review." />
 
-<style>
-:root {
-  --bg: #0b0f19;
-  --text: #e8eefc;
-  --muted: rgba(232,238,252,0.7);
-  --accent: #7c5cff;
-  --accent2: #00d4ff;
-  --border: rgba(255,255,255,0.1);
-}
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: rgba(255,255,255,0.06);
+      --text: #e8eefc;
+      --muted: rgba(232,238,252,0.7);
+      --accent: #7c5cff;
+      --accent2: #00d4ff;
+      --border: rgba(255,255,255,0.1);
+    }
 
-body {
-  margin: 0;
-  font-family: system-ui;
-  background: var(--bg);
-  color: var(--text);
-}
+    * { box-sizing: border-box; }
 
-.container {
-  max-width: 1100px;
-  margin: auto;
-  padding: 24px;
-}
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 800px at 20% 0%, #1a1440 0%, transparent 60%),
+                  radial-gradient(900px 600px at 90% 20%, #0b3b4a 0%, transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+    a { color: inherit; }
 
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid var(--border);
-}
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
 
-th {
-  text-align: left;
-  color: var(--muted);
-  font-size: 12px;
-}
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 0;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
 
-.rank { color: var(--accent); font-weight: 700; }
-.score { font-weight: 600; }
+    .logo { font-weight: 700; }
 
-a { color: var(--accent2); text-decoration: none; }
+    /* GitHub button styling */
+    .github-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    
+    .github-btn:hover {
+      background: rgba(255,255,255,0.15);
+      border-color: rgba(255,255,255,0.3);
+    }
+    
+    .github-icon {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
 
-.info-icon {
-  margin-left: 6px;
-  font-size: 11px;
-  opacity: 0.6;
-  cursor: pointer;
-}
-.info-icon:hover { opacity: 1; }
+    header.hero {
+      padding: 80px 0 40px;
+      text-align: center;
+    }
 
-.tooltip {
-  position: fixed;
-  background: #111827;
-  border: 1px solid var(--border);
-  padding: 12px;
-  border-radius: 10px;
-  display: none;
-  max-width: 280px;
-  z-index: 9999;
-}
-</style>
+    h1 {
+      font-size: 52px;
+      line-height: 1.1;
+      margin: 0 0 16px;
+    }
+
+    .gradient {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .muted { color: var(--muted); }
+
+    .cta {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      padding: 12px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .btn.primary {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border: none;
+      color: black;
+    }
+
+    main {
+      display: block;
+    }
+
+    section {
+      padding: 40px 0;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    h3 {
+      margin-top: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    /* Leaderboard wrapper with scrolling */
+    .leaderboard-wrapper {
+      overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      background: rgba(11, 15, 25, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    td a {
+      color: var(--accent2);
+      text-decoration: none;
+    }
+
+    td a:hover {
+      text-decoration: underline;
+    }
+
+    .rank {
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .score {
+      font-weight: 600;
+    }
+
+    /* info icon tooltip styles */
+    .info-icon {
+      margin-left: 6px;
+      font-size: 11px;
+      opacity: 0.6;
+      cursor: pointer;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .info-icon:hover { opacity: 1; }
+
+    .tooltip {
+      position: fixed;
+      background: #111827;
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 10px;
+      display: none;
+      max-width: 280px;
+      z-index: 9999;
+      font-size: 13px;
+      line-height: 1.5;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .tooltip a {
+      color: var(--accent2);
+    }
+
+    /* Custom scrollbar */
+    .leaderboard-wrapper::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .leaderboard-wrapper::-webkit-scrollbar-track {
+      background: var(--card);
+      border-radius: 4px;
+    }
+
+    .leaderboard-wrapper::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 4px;
+    }
+
+    /* Mobile styles */
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 38px; }
+      
+      /* On mobile, show only Rank, Model, Score, YouTube (first 4 columns) */
+      th:nth-child(n+5),
+      td:nth-child(n+5) {
+        display: none;
+      }
+      
+      th:nth-child(4),
+      td:nth-child(4) {
+        display: table-cell;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 38px; }
+    }
+
+    footer {
+      padding: 60px 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    
+    .last-updated {
+      font-size: 12px;
+      margin-top: 8px;
+    }
+  </style>
 </head>
 
 <body>
-<div class="container">
 
-<h2>Leaderboard</h2>
-<p id="last-updated"></p>
+  <div class="container">
 
-<table>
-<thead>
-<tr>
-<th>Rank</th>
-<th>Model</th>
-<th>Score</th>
-<th>YouTube</th>
-</tr>
-</thead>
-<tbody id="body"></tbody>
-</table>
+    <!-- NAV with GitHub button -->
+    <nav aria-label="Primary navigation">
+      <div class="logo">GIRONIMO BENCH</div>
+      <a href="https://github.com/SlopOps/gironimo-bench" class="github-btn" target="_blank" rel="noopener noreferrer">
+        <svg class="github-icon" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        <span>GitHub</span>
+      </a>
+    </nav>
 
-</div>
+    <!-- MAIN LANDMARK -->
+    <main>
 
-<div id="tooltip" class="tooltip"></div>
+      <!-- HERO -->
+      <header class="hero">
+        <h1>
+          Benchmarking AI on <span class="gradient">real software engineering</span>
+        </h1>
+        <p class="muted">
+          Gironimo Bench evaluates how well language models turn a single specification into a production-ready system.
+        </p>
 
-<script>
-const tooltip = document.getElementById('tooltip');
-let activeIcon = null;
+        <div class="cta">
+          <a class="btn primary" href="#leaderboard">View Leaderboard</a>
+          <a class="btn" href="https://youtube.com/@SlopOps" target="_blank" rel="noopener">Watch Episodes</a>
+        </div>
+      </header>
 
-let deploymentData = {};
-let leaderboardData = [];
+      <!-- FEATURES -->
+      <section>
+        <h2>What It Tests</h2>
 
-/* ---------- CSV ---------- */
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  const headers = lines[0].split(',');
+        <div class="grid">
+          <div class="card">
+            <h3>Spec → System</h3>
+            <p class="muted">Interpret long engineering specifications into working software.</p>
+          </div>
 
-  return lines.slice(1).map(line => {
-    const vals = line.split(',');
-    const obj = {};
-    headers.forEach((h,i)=> obj[h.trim()] = vals[i]?.trim() || '');
-    return obj;
-  });
-}
+          <div class="card">
+            <h3>Real Engineering</h3>
+            <p class="muted">Architecture, maintainability, and deployment readiness matter.</p>
+          </div>
 
-/* ---------- helpers ---------- */
-function escapeHtml(str) {
-  if (!str) return '—';
-  return str.replace(/[&<>]/g, m => ({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;'
-  }[m]));
-}
+          <div class="card">
+            <h3>Human Scoring</h3>
+            <p class="muted">Every run is manually reviewed for consistency and quality.</p>
+          </div>
+        </div>
+      </section>
 
-/* ---------- TOOLTIP ---------- */
-function showTooltip(icon) {
-  const model = icon.dataset.model;
-  const d = deploymentData[model];
-  if (!d) return;
+      <!-- DIFFERENTIATION -->
+      <section>
+        <h2>Why It's Different</h2>
+        <p class="muted">
+          Unlike toy benchmarks, Gironimo Bench evaluates full system delivery:
+          from specification interpretation to deployable production code.
+        </p>
+      </section>
 
-  tooltip.innerHTML = `
-    <div><b>Provider:</b> ${d.provider || '—'}</div>
-    <div><b>Interface:</b> ${d.interface || '—'}</div>
-    <div><b>Reasoning:</b> ${d.reasoning || '—'}</div>
-    <div><b>Company:</b> ${d.company || '—'}</div>
-    ${d.link ? `<a href="${d.link}" target="_blank">link ↗</a>` : ''}
-  `;
+      <!-- LEADERBOARD SECTION (integrated with tooltip + deployments) -->
+      <section id="leaderboard">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h2 style="margin-bottom: 0;">Leaderboard</h2>
+          </div>
+        </div>
+        <p class="muted">Updated after each evaluation video. <span class="info-icon" id="global-info" data-model="global" style="font-size:12px;">ⓘ Hover for details</span></p>
+        <p class="last-updated muted" id="last-updated"></p>
 
-  tooltip.style.display = 'block';
-  tooltip.style.visibility = 'hidden';
+        <div class="leaderboard-wrapper">
+          <table id="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Model</th>
+                <th>Score</th>
+                <th>YouTube</th>
+                <th>Speed</th>
+                <th>1-Shot</th>
+                <th>Design</th>
+                <th>Arch</th>
+                <th>Code</th>
+                <th>Features</th>
+                <th>Perf</th>
+                <th>Access</th>
+                <th>Best Prac</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <tr>
+                <td colspan="14">Loading leaderboard...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-  // force layout
-  tooltip.offsetHeight;
+    </main>
 
-  const r = icon.getBoundingClientRect();
-  const t = tooltip.getBoundingClientRect();
+    <!-- FOOTER -->
+    <footer>
+      Built by <strong>SlopOps</strong> •
+      <a href="https://github.com/SlopOps" target="_blank">GitHub</a> •
+      <a href="https://youtube.com/@SlopOps" target="_blank">YouTube</a>
+      <br><br>
+      © 2026 SlopOps
+    </footer>
 
-  let left = r.left;
-  let top = r.bottom + 8;
+  </div>
 
-  if (left + t.width > window.innerWidth)
-    left = window.innerWidth - t.width - 10;
+  <!-- Tooltip container (fixed) -->
+  <div id="tooltip" class="tooltip"></div>
 
-  if (top + t.height > window.innerHeight)
-    top = r.top - t.height - 8;
+  <script>
+    // --------------------------------------------------------------
+    // 1. Global data stores
+    // --------------------------------------------------------------
+    let deploymentData = {};        // key: model name (raw) -> provider, interface, reasoning, company, link
+    let leaderboardRows = [];       // raw parsed rows from leaderboard.csv (objects)
+    let currentLeaderboardData = []; // enriched and sorted data for rendering
 
-  tooltip.style.left = left + 'px';
-  tooltip.style.top = top + 'px';
-  tooltip.style.visibility = 'visible';
-}
+    // Tooltip elements & state
+    const tooltip = document.getElementById('tooltip');
+    let activeIcon = null;
 
-function hideTooltip() {
-  tooltip.style.display = 'none';
-  activeIcon = null;
-}
+    // Helper: escape HTML
+    function escapeHtml(str) {
+      if (!str || str === '—') return '—';
+      return String(str).replace(/[&<>]/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;'
+      }[m]));
+    }
 
-/* click handler */
-document.addEventListener('click', e => {
-  const icon = e.target.closest('.info-icon');
+    // Helper: parse CSV (handles quotes and basic commas)
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length === 0) return [];
+      const result = [];
+      for (let line of lines) {
+        if (!line.trim()) continue;
+        const row = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            inQuotes = !inQuotes;
+          } else if (ch === ',' && !inQuotes) {
+            row.push(current.trim());
+            current = '';
+          } else {
+            current += ch;
+          }
+        }
+        row.push(current.trim());
+        result.push(row);
+      }
+      return result;
+    }
 
-  if (icon) {
-    e.stopPropagation();
+    // Convert CSV rows to array of objects using first row as headers
+    function csvToObjects(rows) {
+      if (!rows.length) return [];
+      const headers = rows[0].map(h => h.trim());
+      return rows.slice(1).map(row => {
+        const obj = {};
+        headers.forEach((h, idx) => {
+          obj[h] = (row[idx] !== undefined) ? row[idx].trim() : '';
+        });
+        return obj;
+      });
+    }
 
-    if (activeIcon === icon) return hideTooltip();
+    // --------------------------------------------------------------
+    // 2. Load deployments.csv (provides tooltip details)
+    // --------------------------------------------------------------
+    async function loadDeployments() {
+      try {
+        const resp = await fetch('results/deployments.csv', { cache: 'no-store' });
+        if (resp.ok) {
+          const text = await resp.text();
+          const rows = parseCSV(text);
+          const objects = csvToObjects(rows);
+          objects.forEach(item => {
+            if (item.model) {
+              deploymentData[item.model] = {
+                provider: item.provider || '—',
+                interface: item.interface || '—',
+                reasoning: item.reasoning || '—',
+                company: item.company || '—',
+                link: item.link || ''
+              };
+            }
+          });
+        } else {
+          console.warn('deployments.csv not found, tooltips will be limited');
+        }
+      } catch (err) {
+        console.warn('Could not load deployments.csv', err);
+      }
+    }
 
-    activeIcon = icon;
-    showTooltip(icon);
-    return;
-  }
+    // --------------------------------------------------------------
+    // 3. Load leaderboard.csv, sort, combine with deployment info
+    // --------------------------------------------------------------
+    async function loadLeaderboard(bypassCache = true) {
+      const tbody = document.getElementById('leaderboard-body');
+      const lastUpdatedSpan = document.getElementById('last-updated');
+      
+      try {
+        tbody.innerHTML = '<tr><td colspan="14">Loading leaderboard...</td></tr>';
+        
+        let url = 'results/leaderboard.csv';
+        if (bypassCache) url += '?t=' + Date.now();
+        
+        const response = await fetch(url, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        });
+        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const csvText = await response.text();
+        const lastModified = response.headers.get('last-modified');
+        if (lastModified) {
+          lastUpdatedSpan.textContent = `Last updated: ${new Date(lastModified).toLocaleString()}`;
+        } else {
+          lastUpdatedSpan.textContent = `Loaded: ${new Date().toLocaleString()}`;
+        }
+        
+        const rows = parseCSV(csvText);
+        if (rows.length < 2) throw new Error('Insufficient data');
+        
+        const headers = rows[0];
+        const rawData = rows.slice(1).map(row => {
+          const obj = {};
+          headers.forEach((h, i) => {
+            let val = (row[i] !== undefined) ? row[i].trim() : '';
+            obj[h.trim()] = val;
+          });
+          return obj;
+        }).filter(item => item.model && item.model !== '');
+        
+        // Separate ranked (valid overall_score) vs unranked
+        const ranked = [];
+        const unranked = [];
+        rawData.forEach(item => {
+          const scoreRaw = item.overall_score;
+          if (scoreRaw && scoreRaw !== '??' && scoreRaw !== '?' && !isNaN(parseFloat(scoreRaw))) {
+            ranked.push(item);
+          } else {
+            unranked.push(item);
+          }
+        });
+        
+        // Sort ranked descending by overall_score
+        ranked.sort((a,b) => parseFloat(b.overall_score) - parseFloat(a.overall_score));
+        const sortedAll = [...ranked, ...unranked];
+        currentLeaderboardData = sortedAll;
+        
+        // Render table with tooltip icons and lowercase model link
+        let html = '';
+        sortedAll.forEach((row, idx) => {
+          const isRanked = idx < ranked.length;
+          const rank = isRanked ? (idx + 1).toString() : '—';
+          const rawModelName = row.model || '';
+          // --- LINK: lowercase model name for file structure ---
+          // Convert to lowercase, but keep extension? We just need model/index.html
+          const lowerModelSlug = rawModelName.toLowerCase();
+          // Build link: {lowercase_model}/index.html
+          const modelLink = rawModelName 
+            ? `<a href="${lowerModelSlug}/index.html">${escapeHtml(rawModelName)}</a>`
+            : '—';
+          
+          // YouTube link from video_url column
+          const youtubeLink = (row.video_url && row.video_url !== '?' && row.video_url !== '')
+            ? `<a href="${row.video_url}" target="_blank" rel="noopener">YouTube</a>`
+            : '—';
+          
+          // Score display with optional info icon (if deployment metadata exists)
+          const scoreValue = row.overall_score && row.overall_score !== '?' ? row.overall_score : '—';
+          const hasDeployInfo = deploymentData[rawModelName] !== undefined;
+          const infoIconHtml = hasDeployInfo 
+            ? `<span class="info-icon" data-model="${escapeHtml(rawModelName).replace(/"/g, '&quot;')}">ⓘ</span>` 
+            : '';
+          
+          // All other columns (using exact CSV field names)
+          const speed = row.speed || '—';
+          const oneShot = row.one_shot_attempts || '—';
+          const design = row.design || '—';
+          const arch = row.architecture || '—';
+          const codeQuality = row.code_quality || '—';
+          const features = row.feature_complete || '—';
+          const perf = row.performance || '—';
+          const access = row.accessibility || '—';
+          const bestPrac = row.best_practices || '—';
+          const value = row.value || '—';
+          
+          html += `<tr>
+            <td class="rank">${rank}</td>
+            <td>${modelLink}</td>
+            <td class="score">${escapeHtml(scoreValue)}${infoIconHtml}</td>
+            <td>${youtubeLink}</td>
+            <td>${escapeHtml(speed)}</td>
+            <td>${escapeHtml(oneShot)}</td>
+            <td>${escapeHtml(design)}</td>
+            <td>${escapeHtml(arch)}</td>
+            <td>${escapeHtml(codeQuality)}</td>
+            <td>${escapeHtml(features)}</td>
+            <td>${escapeHtml(perf)}</td>
+            <td>${escapeHtml(access)}</td>
+            <td>${escapeHtml(bestPrac)}</td>
+            <td>${escapeHtml(value)}</td>
+          </tr>`;
+        });
+        
+        tbody.innerHTML = html;
+        attachTooltipListeners(); // rebind after DOM update
+      } catch (err) {
+        console.error('Leaderboard load error:', err);
+        tbody.innerHTML = `<tr><td colspan="14" style="color:#ffa69e;">Error loading data: ${err.message}. Ensure results/leaderboard.csv exists.</td></tr>`;
+        lastUpdatedSpan.textContent = 'Failed to load data';
+      }
+    }
 
-  if (!tooltip.contains(e.target)) hideTooltip();
-});
-
-/* ---------- LOAD ---------- */
-async function load() {
-  // deployments
-  try {
-    const t = await (await fetch('results/deployments.csv')).text();
-    parseCSV(t).forEach(r => deploymentData[r.model] = r);
-  } catch {}
-
-  // leaderboard
-  const res = await fetch('results/leaderboard.csv');
-  const text = await res.text();
-  leaderboardData = parseCSV(text);
-
-  render();
-}
-
-/* ---------- RENDER ---------- */
-function render() {
-  const body = document.getElementById('body');
-
-  leaderboardData.sort((a,b)=>
-    parseFloat(b.overall_score||0) - parseFloat(a.overall_score||0)
-  );
-
-  body.innerHTML = leaderboardData.map((row,i)=>{
-
-    const model = row.model || '';
-    const score = row.overall_score || '—';
-
-    // ✅ FIX: use RAW model name (no slugify)
-    const modelLink = model
-      ? `<a href="${model}/index.html">${escapeHtml(model)}</a>`
-      : '—';
-
-    // ✅ FIX: raw dataset (no escape)
-    const icon = deploymentData[model]
-      ? `<span class="info-icon" data-model="${model}">ⓘ</span>`
-      : '';
-
-    const yt = row.video_url
-      ? `<a href="${row.video_url}" target="_blank">YouTube</a>`
-      : '—';
-
-    return `
-      <tr>
-        <td class="rank">${i+1}</td>
-        <td>${modelLink}</td>
-        <td class="score">${score}${icon}</td>
-        <td>${yt}</td>
-      </tr>
-    `;
-  }).join('');
-}
-
-load();
-</script>
-
+    // --------------------------------------------------------------
+    // 4. Tooltip logic (identical to your working version)
+    // --------------------------------------------------------------
+    function showTooltip(iconEl) {
+      const modelName = iconEl.dataset.model;
+      if (!modelName) return;
+      
+      // special global tooltip hint? just in case
+      if (modelName === 'global') {
+        tooltip.innerHTML = `<div><b>ℹ️ Info</b></div><div>Hover over ⓘ next to each model score to see deployment details (provider, interface, etc.)</div>`;
+        tooltip.style.display = 'block';
+        tooltip.style.visibility = 'hidden';
+        tooltip.offsetHeight;
+        const rect = iconEl.getBoundingClientRect();
+        let left = rect.left;
+        let top = rect.bottom + 8;
+        const tRect = tooltip.getBoundingClientRect();
+        if (left + tRect.width > window.innerWidth) left = window.innerWidth - tRect.width - 10;
+        if (top + tRect.height > window.innerHeight) top = rect.top - tRect.height - 8;
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+        tooltip.style.visibility = 'visible';
+        return;
+      }
+      
+      const d = deploymentData[modelName];
+      if (!d) {
+        tooltip.innerHTML = `<div><b>${escapeHtml(modelName)}</b></div><div>No additional deployment info available.</div>`;
+      } else {
+        tooltip.innerHTML = `
+          <div><b>${escapeHtml(modelName)}</b></div>
+          <div><b>Provider:</b> ${escapeHtml(d.provider)}</div>
+          <div><b>Interface:</b> ${escapeHtml(d.interface)}</div>
+          <div><b>Reasoning:</b> ${escapeHtml(d.reasoning)}</div>
+          <div><b>Company:</b> ${escapeHtml(d.company)}</div>
+          ${d.link ? `<div><a href="${escapeHtml(d.link)}" target="_blank" rel="noopener">Link ↗</a></div>` : ''}
+        `;
+      }
+      
+      tooltip.style.display = 'block';
+      tooltip.style.visibility = 'hidden';
+      tooltip.offsetHeight;
+      
+      const rect = iconEl.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      let left = rect.left;
+      let top = rect.bottom + 8;
+      
+      if (left + tooltipRect.width > window.innerWidth) {
+        left = window.innerWidth - tooltipRect.width - 10;
+      }
+      if (top + tooltipRect.height > window.innerHeight) {
+        top = rect.top - tooltipRect.height - 8;
+      }
+      
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = top + 'px';
+      tooltip.style.visibility = 'visible';
+    }
+    
+    function hideTooltip() {
+      tooltip.style.display = 'none';
+      activeIcon = null;
+    }
+    
+    function attachTooltipListeners() {
+      // Remove any previous global listeners to avoid duplicates, but we'll handle via delegation.
+      // We'll set up event delegation on document for .info-icon
+    }
+    
+    // Global click & hover management (delegation)
+    document.addEventListener('click', (e) => {
+      const icon = e.target.closest('.info-icon');
+      if (icon) {
+        e.stopPropagation();
+        if (activeIcon === icon) {
+          hideTooltip();
+          return;
+        }
+        if (activeIcon) hideTooltip();
+        activeIcon = icon;
+        showTooltip(icon);
+        return;
+      }
+      if (!tooltip.contains(e.target)) {
+        hideTooltip();
+      }
+    });
+    
+    // Optional: hide on scroll or resize
+    window.addEventListener('scroll', () => hideTooltip());
+    window.addEventListener('resize', () => hideTooltip());
+    
+    // --------------------------------------------------------------
+    // 5. Initialization: load deployments then leaderboard
+    // --------------------------------------------------------------
+    async function init() {
+      await loadDeployments();
+      await loadLeaderboard(true);
+      // Also attach any extra hover behavior for global info (already covered)
+      const globalInfo = document.getElementById('global-info');
+      if (globalInfo) {
+        globalInfo.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (activeIcon === globalInfo) {
+            hideTooltip();
+            return;
+          }
+          if (activeIcon) hideTooltip();
+          activeIcon = globalInfo;
+          showTooltip(globalInfo);
+        });
+      }
+    }
+    
+    init();
+  </script>
 </body>
 </html>
