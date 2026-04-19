@@ -382,10 +382,15 @@ function parseCSV(text) {
 
 /* ---------- helpers ---------- */
 function escapeHtml(str) {
-  if (!str) return '';
+  if (!str || str === '?') return '-';
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+function formatValue(val) {
+  if (!val || val === '?' || val.trim() === '') return '-';
+  return escapeHtml(val);
 }
 
 function showTooltip(iconEl) {
@@ -396,14 +401,14 @@ function showTooltip(iconEl) {
   activeIcon = iconEl;
 
   tooltip.innerHTML = `
-    <div><strong>Provider:</strong> ${escapeHtml(d.provider)}</div>
-    <div><strong>Interface:</strong> ${escapeHtml(d.interface)}</div>
-    <div><strong>Reasoning:</strong> ${escapeHtml(d.reasoning)}</div>
-    <div><strong>Quantization:</strong> ${escapeHtml(d.quantization)}</div>
-    <div><strong>Country:</strong> ${escapeHtml(d.country)}</div>
-    <div><strong>Company:</strong> ${escapeHtml(d.company)}</div>
+    <div><strong>Provider:</strong> ${formatValue(d.provider)}</div>
+    <div><strong>Interface:</strong> ${formatValue(d.interface)}</div>
+    <div><strong>Reasoning:</strong> ${formatValue(d.reasoning)}</div>
+    <div><strong>Quantization:</strong> ${formatValue(d.quantization)}</div>
+    <div><strong>Country:</strong> ${formatValue(d.country)}</div>
+    <div><strong>Company:</strong> ${formatValue(d.company)}</div>
     <div style="margin-top:8px;">
-      <a href="${d.link}"
+      <a href="${d.link || '#'}"
          target="_blank"
          rel="noopener noreferrer"
          style="color:#00d4ff;text-decoration:none;font-weight:700;">
@@ -528,36 +533,33 @@ window.addEventListener('scroll', () => {
 /* ---------- Load CSVs and render ---------- */
 async function loadData() {
   try {
-    // Load deployments.csv for tooltip data
-    const deploymentsRes = await fetch('results/deployments.csv');
-    if (deploymentsRes.ok) {
-      const text = await deploymentsRes.text();
-      const { rows } = parseCSV(text);
-      deploymentData = {};
-      for (const row of rows) {
-        if (row.model) {
-          deploymentData[row.model] = row;
+    // Load deployments.csv for tooltip data (optional)
+    try {
+      const deploymentsRes = await fetch('results/deployments.csv');
+      if (deploymentsRes.ok) {
+        const text = await deploymentsRes.text();
+        const { rows } = parseCSV(text);
+        deploymentData = {};
+        for (const row of rows) {
+          if (row.model) {
+            deploymentData[row.model] = row;
+          }
         }
       }
+    } catch (e) {
+      console.log('deployments.csv not found or failed to load - tooltips will be disabled');
     }
 
-    // Load leaderboard.csv for table data (adjust filename as needed)
+    // Load leaderboard.csv for table data
     const leaderboardRes = await fetch('results/leaderboard.csv');
-    if (leaderboardRes.ok) {
-      const text = await leaderboardRes.text();
-      const { rows } = parseCSV(text);
-      leaderboardData = rows;
-      renderLeaderboard();
-    } else {
-      // Fallback: try results.csv as alternative
-      const fallbackRes = await fetch('results/results.csv');
-      if (fallbackRes.ok) {
-        const text = await fallbackRes.text();
-        const { rows } = parseCSV(text);
-        leaderboardData = rows;
-        renderLeaderboard();
-      }
+    if (!leaderboardRes.ok) {
+      throw new Error('leaderboard.csv not found');
     }
+    
+    const text = await leaderboardRes.text();
+    const { rows } = parseCSV(text);
+    leaderboardData = rows;
+    renderLeaderboard();
 
     // Update last updated timestamp
     const lastUpdated = document.getElementById('last-updated');
@@ -568,7 +570,7 @@ async function loadData() {
   } catch (err) {
     console.error('Failed to load CSV data:', err);
     document.getElementById('leaderboard-body').innerHTML = 
-      '<tr><td colspan="14" style="text-align:center;color:var(--muted);">Error loading data. Ensure results/deployments.csv and results/leaderboard.csv exist.</td></tr>';
+      '<tr><td colspan="14" style="text-align:center;color:var(--muted);">Error loading data. Ensure results/leaderboard.csv exists.</td></tr>';
   }
 }
 
@@ -576,17 +578,26 @@ function renderLeaderboard() {
   const tbody = document.getElementById('leaderboard-body');
   if (!tbody || leaderboardData.length === 0) return;
 
-  tbody.innerHTML = leaderboardData.map((row, idx) => {
-    const model = escapeHtml(row.model || 'Unknown');
-    const score = escapeHtml(row.score || '-');
-    const youtube = row.youtube ? `<a href="${escapeHtml(row.youtube)}" target="_blank" rel="noopener">Watch</a>` : '-';
+  // Sort by overall_score descending (handle ? values)
+  const sorted = [...leaderboardData].sort((a, b) => {
+    const scoreA = parseFloat(a.overall_score) || -1;
+    const scoreB = parseFloat(b.overall_score) || -1;
+    return scoreB - scoreA;
+  });
+
+  tbody.innerHTML = sorted.map((row, idx) => {
+    const model = formatValue(row.model);
+    const score = formatValue(row.overall_score);
+    const youtube = row.video_url && row.video_url !== '?' 
+      ? `<a href="${escapeHtml(row.video_url)}" target="_blank" rel="noopener">Watch</a>` 
+      : '-';
     
-    // Info icon for deployment details
+    // Info icon for deployment details (only if we have data for this model)
     const infoIcon = deploymentData[row.model] 
       ? `<span class="info-icon" data-model="${escapeHtml(row.model)}" title="View deployment details">(i)</span>` 
       : '';
     
-    const modelCell = `${model}${infoIcon}`;
+    const modelCell = `${model}${infoIcon ? ' ' + infoIcon : ''}`;
 
     return `
       <tr>
@@ -594,16 +605,16 @@ function renderLeaderboard() {
         <td>${modelCell}</td>
         <td class="score">${score}</td>
         <td>${youtube}</td>
-        <td>${escapeHtml(row.speed || '-')}</td>
-        <td>${escapeHtml(row['1-shot'] || row['1-Shot'] || '-')}</td>
-        <td>${escapeHtml(row.design || '-')}</td>
-        <td>${escapeHtml(row.arch || '-')}</td>
-        <td>${escapeHtml(row.code || '-')}</td>
-        <td>${escapeHtml(row.features || '-')}</td>
-        <td>${escapeHtml(row.perf || '-')}</td>
-        <td>${escapeHtml(row.access || '-')}</td>
-        <td>${escapeHtml(row['best-prac'] || row['Best Prac'] || '-')}</td>
-        <td>${escapeHtml(row.value || '-')}</td>
+        <td>${formatValue(row.speed)}</td>
+        <td>${formatValue(row.one_shot_attempts)}</td>
+        <td>${formatValue(row.design)}</td>
+        <td>${formatValue(row.architecture)}</td>
+        <td>${formatValue(row.code_quality)}</td>
+        <td>${formatValue(row.feature_complete)}</td>
+        <td>${formatValue(row.performance)}</td>
+        <td>${formatValue(row.accessibility)}</td>
+        <td>${formatValue(row.best_practices)}</td>
+        <td>${formatValue(row.value)}</td>
       </tr>
     `;
   }).join('');
