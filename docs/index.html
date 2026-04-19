@@ -356,8 +356,9 @@ function parseCSV(text) {
     for (let i = 0; i < line.length; i++) {
       const c = line[i];
 
-      if (c === '"') inQuotes = !inQuotes;
-      else if (c === ',' && !inQuotes) {
+      if (c === '"') {
+        inQuotes = !inQuotes;
+      } else if (c === ',' && !inQuotes) {
         row.push(cur.trim());
         cur = '';
       } else {
@@ -373,67 +374,106 @@ function parseCSV(text) {
 }
 
 async function loadDeployments() {
-  const res = await fetch('results/deployments.csv?t=' + Date.now());
-  const text = await res.text();
+  try {
+    const res = await fetch('results/deployments.csv?t=' + Date.now(), {
+      cache: 'no-store'
+    });
 
-  const rows = parseCSV(text);
-  const headers = rows[0];
+    const text = await res.text();
+    const rows = parseCSV(text);
+    const headers = rows[0];
 
-  rows.slice(1).forEach(r => {
-    const obj = {};
-    headers.forEach((h,i)=>obj[h.trim()] = (r[i]||'').trim());
-    deploymentData[obj.model] = obj;
-  });
+    rows.slice(1).forEach(r => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h.trim()] = (r[i] || '').trim());
+      deploymentData[obj.model] = obj;
+    });
+
+  } catch (e) {
+    console.error('deployments.csv failed to load', e);
+  }
 }
 
 async function loadLeaderboard() {
   const tbody = document.getElementById('leaderboard-body');
+  const updated = document.getElementById('last-updated');
 
-  const res = await fetch('results/leaderboard.csv?t=' + Date.now());
-  const text = await res.text();
+  try {
+    const res = await fetch('results/leaderboard.csv?t=' + Date.now(), {
+      cache: 'no-store'
+    });
 
-  const rows = parseCSV(text);
-  const headers = rows[0];
+    const text = await res.text();
 
-  const data = rows.slice(1).map(r => {
-    const obj = {};
-    headers.forEach((h,i)=>obj[h.trim()] = (r[i]||'').trim());
-    return obj;
-  });
+    const lm = res.headers.get('last-modified');
+    updated.textContent = lm
+      ? 'Last updated: ' + new Date(lm).toLocaleString()
+      : '';
 
-  let html = '';
+    const rows = parseCSV(text);
+    const headers = rows[0];
 
-  data.forEach((row,index) => {
-    html += `
+    let data = rows.slice(1).map(r => {
+      const obj = {};
+      headers.forEach((h,i) => obj[h.trim()] = (r[i] || '').trim());
+      return obj;
+    });
+
+    const ranked = [];
+    const unranked = [];
+
+    data.forEach(row => {
+      const score = row.overall_score;
+      if (score && score !== '??' && !isNaN(parseFloat(score))) ranked.push(row);
+      else unranked.push(row);
+    });
+
+    ranked.sort((a,b)=>parseFloat(b.overall_score)-parseFloat(a.overall_score));
+
+    const sorted = [...ranked, ...unranked];
+
+    let html = '';
+
+    sorted.forEach((row, index) => {
+      const isRanked = index < ranked.length;
+      const rank = isRanked ? index + 1 : '—';
+
+      const modelLink = row.result_url
+        ? `<a href="${row.result_url}" target="_blank">${escapeHtml(row.model)}</a>`
+        : escapeHtml(row.model);
+
+      const youtubeLink = row.video_url && row.video_url !== '?'
+        ? `<a href="${row.video_url}" target="_blank">YouTube</a>`
+        : '—';
+
+      html += `
       <tr>
-        <td>${index+1}</td>
-        <td>${row.model}</td>
+        <td class="rank">${rank}</td>
+        <td>${modelLink}</td>
         <td class="score">
-          ${row.overall_score}
-          <span class="info-icon" data-model="${row.model}">ⓘ</span>
+          ${escapeHtml(row.overall_score || '—')}
+          <span class="info-icon" data-model="${escapeHtml(row.model)}">ⓘ</span>
         </td>
-        <td><a href="${row.video_url}" target="_blank">YouTube</a></td>
-        <td>${row.speed}</td>
-        <td>${row.one_shot_attempts}</td>
-        <td>${row.design}</td>
-        <td>${row.architecture}</td>
-        <td>${row.code_quality}</td>
-        <td>${row.feature_complete}</td>
-        <td>${row.performance}</td>
-        <td>${row.accessibility}</td>
-        <td>${row.best_practices}</td>
-        <td>${row.value}</td>
-      </tr>
-    `;
-  });
+        <td>${youtubeLink}</td>
+        <td>${escapeHtml(row.speed)}</td>
+        <td>${escapeHtml(row.one_shot_attempts)}</td>
+        <td>${escapeHtml(row.design)}</td>
+        <td>${escapeHtml(row.architecture)}</td>
+        <td>${escapeHtml(row.code_quality)}</td>
+        <td>${escapeHtml(row.feature_complete)}</td>
+        <td>${escapeHtml(row.performance)}</td>
+        <td>${escapeHtml(row.accessibility)}</td>
+        <td>${escapeHtml(row.best_practices)}</td>
+        <td>${escapeHtml(row.value)}</td>
+      </tr>`;
+    });
 
-  tbody.innerHTML = html;
+    tbody.innerHTML = html;
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="14">Failed to load leaderboard</td></tr>`;
+  }
 }
-
-(async function init() {
-  await loadDeployments();
-  await loadLeaderboard();
-})();
 
 const tooltip = document.getElementById('tooltip');
 let activeIcon = null;
