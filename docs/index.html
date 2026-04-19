@@ -171,7 +171,7 @@
       color: var(--muted);
       font-size: 12px;
       text-transform: uppercase;
-      font-weight: 700; /* ← ADDED: bold headers */
+      font-weight: 700;
       background: rgba(11,15,25,0.95);
       position: sticky;
       top: 0;
@@ -220,7 +220,7 @@
       line-height: 1.45;
       box-shadow: 0 10px 30px rgba(0,0,0,.35);
       display: none;
-      pointer-events: auto; /* ← CHANGED: was 'none', now allows clicking links */
+      pointer-events: auto;
     }
 
     .leaderboard-wrapper::-webkit-scrollbar {
@@ -335,7 +335,7 @@
 
 <script>
 let deploymentData = {};
-let hideTimeout = null; /* ← ADDED: for delayed tooltip hide */
+let hideTimeout = null;
 
 function escapeHtml(str) {
   if (!str) return '—';
@@ -479,12 +479,12 @@ async function loadLeaderboard() {
 
 const tooltip = document.getElementById('tooltip');
 
-/* ← ADDED: helper functions for tooltip delay */
 function scheduleHide() {
   hideTimeout = setTimeout(() => {
     tooltip.style.display = 'none';
-  }, 150);
+  }, 200);
 }
+
 function cancelHide() {
   if (hideTimeout) clearTimeout(hideTimeout);
 }
@@ -496,17 +496,16 @@ document.addEventListener('mouseover', e => {
   const d = deploymentData[model];
   if (!d) return;
 
-  cancelHide(); /* ← ADDED */
+  cancelHide();
 
   tooltip.innerHTML = `
-    <strong>${model}</strong><br>
     Provider: ${d.provider}<br>
     Interface: ${d.interface}<br>
     Reasoning: ${d.reasoning}<br>
     Quantization: ${d.quantization}<br>
     Country: ${d.country}<br>
     Company: ${d.company}<br>
-    <a href="${d.link}" target="_blank" style="color:#00d4ff;font-weight:700;">Link ↗</a> /* ← CHANGED: "Open" → "Link ↗" + bold */
+    <a href="${d.link}" target="_blank" style="color:#00d4ff;font-weight:700;">Link ↗</a>
   `;
 
   tooltip.style.display = 'block';
@@ -520,7 +519,6 @@ document.addEventListener('mousemove', e => {
 });
 
 document.addEventListener('mouseout', e => {
-  /* ← CHANGED: only hide if leaving both icon AND tooltip */
   if (e.target.classList.contains('info-icon')) {
     if (!tooltip.contains(e.relatedTarget)) {
       scheduleHide();
@@ -528,7 +526,6 @@ document.addEventListener('mouseout', e => {
   }
 });
 
-/* ← ADDED: keep tooltip open when hovering over it */
 tooltip.addEventListener('mouseenter', cancelHide);
 tooltip.addEventListener('mouseleave', scheduleHide);
 
