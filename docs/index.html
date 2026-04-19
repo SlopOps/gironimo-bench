@@ -50,14 +50,12 @@
 
     nav {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       padding: 24px 0;
       flex-wrap: wrap;
       gap: 12px;
     }
-
-    .logo { font-weight: 700; }
 
     .github-btn {
       display: inline-flex;
@@ -171,6 +169,7 @@
       color: var(--muted);
       font-size: 12px;
       text-transform: uppercase;
+      font-weight: 700;
       background: rgba(11,15,25,0.95);
       position: sticky;
       top: 0;
@@ -219,7 +218,7 @@
       line-height: 1.45;
       box-shadow: 0 10px 30px rgba(0,0,0,.35);
       display: none;
-      pointer-events: none;
+      pointer-events: auto;
     }
 
     .leaderboard-wrapper::-webkit-scrollbar {
@@ -265,8 +264,6 @@
 <div class="container">
 
 <nav>
-  <div class="logo">GIRONIMO BENCH</div>
-
   <a href="https://github.com/SlopOps/gironimo-bench"
      class="github-btn"
      target="_blank"
@@ -333,188 +330,287 @@
 <div class="tooltip" id="tooltip"></div>
 
 <script>
+const tooltip = document.getElementById('tooltip');
+let activeIcon = null;
+let hideTimeout = null;
+const isTouchDevice =
+  ('ontouchstart' in window) ||
+  navigator.maxTouchPoints > 0;
+
+// Global data stores
 let deploymentData = {};
+let leaderboardData = [];
 
-function escapeHtml(str) {
-  if (!str) return '—';
-  return String(str).replace(/[&<>]/g, m => ({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;'
-  }[m]));
-}
-
+/* ---------- CSV Parser ---------- */
 function parseCSV(text) {
-  const lines = text.split('\n').filter(x => x.trim());
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return { headers: [], rows: [] };
+  
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
   const rows = [];
-
-  for (let line of lines) {
-    let row = [];
-    let cur = '';
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    // Simple CSV parse handling quoted values with commas
+    const values = [];
+    let current = '';
     let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-
-      if (c === '"') {
+    
+    for (let char of line) {
+      if (char === '"') {
         inQuotes = !inQuotes;
-      } else if (c === ',' && !inQuotes) {
-        row.push(cur.trim());
-        cur = '';
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim().replace(/^"|"$/g, ''));
+        current = '';
       } else {
-        cur += c;
+        current += char;
       }
     }
-
-    row.push(cur.trim());
+    values.push(current.trim().replace(/^"|"$/g, ''));
+    
+    const row = {};
+    headers.forEach((h, idx) => {
+      row[h] = values[idx] || '';
+    });
     rows.push(row);
   }
-
-  return rows;
+  
+  return { headers, rows };
 }
 
-async function loadDeployments() {
-  try {
-    const res = await fetch('results/deployments.csv?t=' + Date.now(), {
-      cache: 'no-store'
-    });
-
-    const text = await res.text();
-    const rows = parseCSV(text);
-    const headers = rows[0];
-
-    rows.slice(1).forEach(r => {
-      const obj = {};
-      headers.forEach((h, i) => obj[h.trim()] = (r[i] || '').trim());
-      deploymentData[obj.model] = obj;
-    });
-
-  } catch (e) {
-    console.error('deployments.csv failed to load', e);
-  }
+/* ---------- helpers ---------- */
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
-async function loadLeaderboard() {
-  const tbody = document.getElementById('leaderboard-body');
-  const updated = document.getElementById('last-updated');
-
-  try {
-    const res = await fetch('results/leaderboard.csv?t=' + Date.now(), {
-      cache: 'no-store'
-    });
-
-    const text = await res.text();
-
-    const lm = res.headers.get('last-modified');
-    updated.textContent = lm
-      ? 'Last updated: ' + new Date(lm).toLocaleString()
-      : '';
-
-    const rows = parseCSV(text);
-    const headers = rows[0];
-
-    let data = rows.slice(1).map(r => {
-      const obj = {};
-      headers.forEach((h,i) => obj[h.trim()] = (r[i] || '').trim());
-      return obj;
-    });
-
-    const ranked = [];
-    const unranked = [];
-
-    data.forEach(row => {
-      const score = row.overall_score;
-      if (score && score !== '??' && !isNaN(parseFloat(score))) ranked.push(row);
-      else unranked.push(row);
-    });
-
-    ranked.sort((a,b)=>parseFloat(b.overall_score)-parseFloat(a.overall_score));
-
-    const sorted = [...ranked, ...unranked];
-
-    let html = '';
-
-    sorted.forEach((row, index) => {
-      const isRanked = index < ranked.length;
-      const rank = isRanked ? index + 1 : '—';
-
-      const modelLink = row.result_url
-        ? `<a href="${row.result_url}" target="_blank">${escapeHtml(row.model)}</a>`
-        : escapeHtml(row.model);
-
-      const youtubeLink = row.video_url && row.video_url !== '?'
-        ? `<a href="${row.video_url}" target="_blank">YouTube</a>`
-        : '—';
-
-      html += `
-      <tr>
-        <td class="rank">${rank}</td>
-        <td>${modelLink}</td>
-        <td class="score">
-          ${escapeHtml(row.overall_score || '—')}
-          <span class="info-icon" data-model="${escapeHtml(row.model)}">ⓘ</span>
-        </td>
-        <td>${youtubeLink}</td>
-        <td>${escapeHtml(row.speed)}</td>
-        <td>${escapeHtml(row.one_shot_attempts)}</td>
-        <td>${escapeHtml(row.design)}</td>
-        <td>${escapeHtml(row.architecture)}</td>
-        <td>${escapeHtml(row.code_quality)}</td>
-        <td>${escapeHtml(row.feature_complete)}</td>
-        <td>${escapeHtml(row.performance)}</td>
-        <td>${escapeHtml(row.accessibility)}</td>
-        <td>${escapeHtml(row.best_practices)}</td>
-        <td>${escapeHtml(row.value)}</td>
-      </tr>`;
-    });
-
-    tbody.innerHTML = html;
-
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="14">Failed to load leaderboard</td></tr>`;
-  }
-}
-
-const tooltip = document.getElementById('tooltip');
-
-document.addEventListener('mouseover', e => {
-  if (!e.target.classList.contains('info-icon')) return;
-
-  const model = e.target.dataset.model;
+function showTooltip(iconEl) {
+  const model = iconEl.dataset.model;
   const d = deploymentData[model];
   if (!d) return;
 
+  activeIcon = iconEl;
+
   tooltip.innerHTML = `
-    <strong>${model}</strong><br>
-    Provider: ${d.provider}<br>
-    Interface: ${d.interface}<br>
-    Reasoning: ${d.reasoning}<br>
-    Quantization: ${d.quantization}<br>
-    Country: ${d.country}<br>
-    Company: ${d.company}<br>
-    <a href="${d.link}" target="_blank" style="color:#00d4ff;">Open</a>
+    <div><strong>Provider:</strong> ${escapeHtml(d.provider)}</div>
+    <div><strong>Interface:</strong> ${escapeHtml(d.interface)}</div>
+    <div><strong>Reasoning:</strong> ${escapeHtml(d.reasoning)}</div>
+    <div><strong>Quantization:</strong> ${escapeHtml(d.quantization)}</div>
+    <div><strong>Country:</strong> ${escapeHtml(d.country)}</div>
+    <div><strong>Company:</strong> ${escapeHtml(d.company)}</div>
+    <div style="margin-top:8px;">
+      <a href="${d.link}"
+         target="_blank"
+         rel="noopener noreferrer"
+         style="color:#00d4ff;text-decoration:none;font-weight:700;">
+         Link ↗
+      </a>
+    </div>
   `;
 
   tooltip.style.display = 'block';
-});
+  tooltip.style.pointerEvents = 'auto';
 
-document.addEventListener('mousemove', e => {
-  if (tooltip.style.display === 'block') {
-    tooltip.style.left = (e.clientX + 14) + 'px';
-    tooltip.style.top = (e.clientY + 14) + 'px';
+  positionTooltip(iconEl);
+}
+
+function hideTooltip() {
+  tooltip.style.display = 'none';
+  tooltip.style.pointerEvents = 'none';
+  activeIcon = null;
+}
+
+function positionTooltip(iconEl) {
+  const iconRect = iconEl.getBoundingClientRect();
+
+  tooltip.style.left = '-9999px';
+  tooltip.style.top = '-9999px';
+
+  const tipRect = tooltip.getBoundingClientRect();
+
+  let left = iconRect.left + (iconRect.width / 2) - (tipRect.width / 2);
+  let top = iconRect.bottom + 10;
+
+  if (left < 8) left = 8;
+  if (left + tipRect.width > window.innerWidth - 8) {
+    left = window.innerWidth - tipRect.width - 8;
+  }
+
+  if (top + tipRect.height > window.innerHeight - 8) {
+    top = iconRect.top - tipRect.height - 10;
+  }
+
+  if (top < 8) top = 8;
+
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+
+function scheduleHide() {
+  hideTimeout = setTimeout(() => {
+    hideTooltip();
+  }, 150);
+}
+
+function cancelHide() {
+  if (hideTimeout) clearTimeout(hideTimeout);
+}
+
+/* ---------- desktop hover + tooltip interaction ---------- */
+document.addEventListener('mouseover', e => {
+  if (isTouchDevice) return;
+  if (e.target.classList.contains('info-icon')) {
+    cancelHide();
+    showTooltip(e.target);
+  }
+  if (e.target === tooltip || tooltip.contains(e.target)) {
+    cancelHide();
   }
 });
 
 document.addEventListener('mouseout', e => {
+  if (isTouchDevice) return;
   if (e.target.classList.contains('info-icon')) {
-    tooltip.style.display = 'none';
+    if (!tooltip.contains(e.relatedTarget)) {
+      scheduleHide();
+    }
+  }
+  if (e.target === tooltip) {
+    if (!e.relatedTarget?.classList.contains('info-icon')) {
+      scheduleHide();
+    }
   }
 });
 
-(async function init() {
-  await loadDeployments();
-  await loadLeaderboard();
-})();
+tooltip.addEventListener('mouseenter', cancelHide);
+tooltip.addEventListener('mouseleave', scheduleHide);
+
+/* ---------- click support (desktop + mobile) ---------- */
+document.addEventListener('click', e => {
+  const clickedIcon = e.target.classList.contains('info-icon');
+  const clickedTooltip = tooltip.contains(e.target);
+
+  if (clickedIcon) {
+    e.preventDefault();
+    cancelHide();
+    if (activeIcon === e.target && tooltip.style.display === 'block') {
+      hideTooltip();
+    } else {
+      showTooltip(e.target);
+    }
+    return;
+  }
+
+  if (clickedTooltip) {
+    return;
+  }
+
+  hideTooltip();
+});
+
+/* ---------- reposition ---------- */
+window.addEventListener('resize', () => {
+  if (activeIcon && tooltip.style.display === 'block') {
+    positionTooltip(activeIcon);
+  }
+});
+
+window.addEventListener('scroll', () => {
+  if (activeIcon && tooltip.style.display === 'block') {
+    positionTooltip(activeIcon);
+  }
+});
+
+/* ---------- Load CSVs and render ---------- */
+async function loadData() {
+  try {
+    // Load deployments.csv for tooltip data
+    const deploymentsRes = await fetch('results/deployments.csv');
+    if (deploymentsRes.ok) {
+      const text = await deploymentsRes.text();
+      const { rows } = parseCSV(text);
+      deploymentData = {};
+      for (const row of rows) {
+        if (row.model) {
+          deploymentData[row.model] = row;
+        }
+      }
+    }
+
+    // Load leaderboard.csv for table data (adjust filename as needed)
+    const leaderboardRes = await fetch('results/leaderboard.csv');
+    if (leaderboardRes.ok) {
+      const text = await leaderboardRes.text();
+      const { rows } = parseCSV(text);
+      leaderboardData = rows;
+      renderLeaderboard();
+    } else {
+      // Fallback: try results.csv as alternative
+      const fallbackRes = await fetch('results/results.csv');
+      if (fallbackRes.ok) {
+        const text = await fallbackRes.text();
+        const { rows } = parseCSV(text);
+        leaderboardData = rows;
+        renderLeaderboard();
+      }
+    }
+
+    // Update last updated timestamp
+    const lastUpdated = document.getElementById('last-updated');
+    if (lastUpdated) {
+      lastUpdated.textContent = 'Last updated: ' + new Date().toLocaleDateString();
+    }
+
+  } catch (err) {
+    console.error('Failed to load CSV data:', err);
+    document.getElementById('leaderboard-body').innerHTML = 
+      '<tr><td colspan="14" style="text-align:center;color:var(--muted);">Error loading data. Ensure results/deployments.csv and results/leaderboard.csv exist.</td></tr>';
+  }
+}
+
+function renderLeaderboard() {
+  const tbody = document.getElementById('leaderboard-body');
+  if (!tbody || leaderboardData.length === 0) return;
+
+  tbody.innerHTML = leaderboardData.map((row, idx) => {
+    const model = escapeHtml(row.model || 'Unknown');
+    const score = escapeHtml(row.score || '-');
+    const youtube = row.youtube ? `<a href="${escapeHtml(row.youtube)}" target="_blank" rel="noopener">Watch</a>` : '-';
+    
+    // Info icon for deployment details
+    const infoIcon = deploymentData[row.model] 
+      ? `<span class="info-icon" data-model="${escapeHtml(row.model)}" title="View deployment details">(i)</span>` 
+      : '';
+    
+    const modelCell = `${model}${infoIcon}`;
+
+    return `
+      <tr>
+        <td class="rank">${idx + 1}</td>
+        <td>${modelCell}</td>
+        <td class="score">${score}</td>
+        <td>${youtube}</td>
+        <td>${escapeHtml(row.speed || '-')}</td>
+        <td>${escapeHtml(row['1-shot'] || row['1-Shot'] || '-')}</td>
+        <td>${escapeHtml(row.design || '-')}</td>
+        <td>${escapeHtml(row.arch || '-')}</td>
+        <td>${escapeHtml(row.code || '-')}</td>
+        <td>${escapeHtml(row.features || '-')}</td>
+        <td>${escapeHtml(row.perf || '-')}</td>
+        <td>${escapeHtml(row.access || '-')}</td>
+        <td>${escapeHtml(row['best-prac'] || row['Best Prac'] || '-')}</td>
+        <td>${escapeHtml(row.value || '-')}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', loadData);
 </script>
 
 </body>
