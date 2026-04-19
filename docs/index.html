@@ -50,14 +50,12 @@
 
     nav {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       padding: 24px 0;
       flex-wrap: wrap;
       gap: 12px;
     }
-
-    .logo { font-weight: 700; }
 
     .github-btn {
       display: inline-flex;
@@ -196,60 +194,71 @@
     }
 
     .info-icon {
-      margin-left: 6px;
-      font-size: 12px;
-      color: var(--muted);
+      margin-left: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(124,92,255,0.15);
+      padding: 2px 6px;
+      border-radius: 20px;
       cursor: pointer;
       user-select: none;
       display: inline-block;
-      transition: color 0.2s ease;
+      transition: all 0.2s ease;
+      font-family: monospace;
     }
 
     .info-icon:hover {
-      color: var(--accent2);
+      background: var(--accent);
+      color: white;
     }
 
     .tooltip {
       position: fixed;
       z-index: 9999;
       max-width: 320px;
-      padding: 12px;
+      padding: 14px;
       border-radius: 12px;
-      background: #111827;
+      background: #0f1420;
       border: 1px solid var(--border);
       color: white;
       font-size: 13px;
       line-height: 1.5;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
       display: none;
       pointer-events: auto;
-      backdrop-filter: blur(8px);
-      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(12px);
+      background: rgba(15, 20, 32, 0.98);
     }
 
-    .tooltip p {
-      margin: 0 0 8px 0;
-    }
-    .tooltip p:last-child {
-      margin-bottom: 0;
-    }
     .tooltip strong {
       font-weight: 700;
-      color: var(--accent2);
-      margin-right: 6px;
+      color: var(--accent);
+      margin-right: 8px;
     }
+
+    .tooltip-row {
+      margin-bottom: 8px;
+    }
+
+    .tooltip-row:last-of-type {
+      margin-bottom: 0;
+    }
+
     .tooltip-link {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       margin-top: 10px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(255,255,255,0.15);
+      padding-top: 10px;
+      border-top: 1px solid rgba(124,92,255,0.3);
       font-weight: 600;
       text-decoration: none;
       color: var(--accent2) !important;
-      width: 100%;
-      text-align: center;
       transition: opacity 0.2s;
+      font-size: 12px;
     }
+
     .tooltip-link:hover {
       opacity: 0.85;
       text-decoration: underline;
@@ -298,8 +307,6 @@
 <div class="container">
 
 <nav>
-  <div class="logo">GIRONIMO BENCH</div>
-
   <a href="https://github.com/SlopOps/gironimo-bench"
      class="github-btn"
      target="_blank"
@@ -349,7 +356,7 @@
       </tr>
       </thead>
       <tbody id="leaderboard-body">
-        <tr><td colspan="14">Loading...</td></tr>
+      <tr><td colspan="14">Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -366,158 +373,142 @@
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-let deploymentData = {};
+const tooltip = document.getElementById('tooltip');
+let activeIcon = null;
 let hideTimeout = null;
-let currentTooltipModel = null;
 
-function escapeHtml(str) {
-  if (!str) return '—';
-  return String(str).replace(/[&<>]/g, m => ({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;'
-  }[m]));
-}
+// Global data stores
+let deploymentData = {};
+let leaderboardData = [];
 
+/* ---------- CSV Parser (robust) ---------- */
 function parseCSV(text) {
-  const lines = text.split('\n').filter(x => x.trim());
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return { headers: [], rows: [] };
+  
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
   const rows = [];
-
-  for (let line of lines) {
-    let row = [];
-    let cur = '';
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const values = [];
+    let current = '';
     let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-
-      if (c === '"') {
+    
+    for (let char of line) {
+      if (char === '"') {
         inQuotes = !inQuotes;
-      } else if (c === ',' && !inQuotes) {
-        row.push(cur.trim());
-        cur = '';
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim().replace(/^"|"$/g, ''));
+        current = '';
       } else {
-        cur += c;
+        current += char;
       }
     }
-
-    row.push(cur.trim());
+    values.push(current.trim().replace(/^"|"$/g, ''));
+    
+    const row = {};
+    headers.forEach((h, idx) => {
+      row[h] = values[idx] || '';
+    });
     rows.push(row);
   }
-
-  return rows;
+  
+  return { headers, rows };
 }
 
-async function loadDeployments() {
-  try {
-    const res = await fetch('results/deployments.csv?t=' + Date.now(), {
-      cache: 'no-store'
-    });
+/* ---------- helpers ---------- */
+function escapeHtml(str) {
+  if (!str || str === '?') return '—';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
 
-    const text = await res.text();
-    const rows = parseCSV(text);
-    const headers = rows[0];
+function formatValue(val) {
+  if (!val || val === '?' || val.trim() === '') return '—';
+  return escapeHtml(val);
+}
 
-    rows.slice(1).forEach(r => {
-      const obj = {};
-      headers.forEach((h, i) => obj[h.trim()] = (r[i] || '').trim());
-      deploymentData[obj.model] = obj;
-    });
+/* ---------- Tooltip with bold purple labels and "lnl ↗" link ---------- */
+function showTooltip(iconEl) {
+  const model = iconEl.dataset.model;
+  const d = deploymentData[model];
+  if (!d) return;
 
-  } catch (e) {
-    console.error('deployments.csv failed to load', e);
+  activeIcon = iconEl;
+
+  // Helper to get value or dash
+  const getVal = (field) => (field && field !== '' && field !== '?') ? escapeHtml(field) : '—';
+  
+  const provider = getVal(d.provider);
+  const interfaceVal = getVal(d.interface);
+  const reasoning = getVal(d.reasoning);
+  const quantization = getVal(d.quantization);
+  const country = getVal(d.country);
+  const company = getVal(d.company);
+  const linkUrl = (d.link && d.link !== '' && d.link !== '?') ? d.link : null;
+
+  let html = `
+    <div class="tooltip-row"><strong>Provider:</strong> ${provider}</div>
+    <div class="tooltip-row"><strong>Interface:</strong> ${interfaceVal}</div>
+    <div class="tooltip-row"><strong>Reasoning:</strong> ${reasoning}</div>
+    <div class="tooltip-row"><strong>Quantization:</strong> ${quantization}</div>
+    <div class="tooltip-row"><strong>Country:</strong> ${country}</div>
+    <div class="tooltip-row"><strong>Company:</strong> ${company}</div>
+  `;
+
+  if (linkUrl) {
+    html += `<a href="${linkUrl}" class="tooltip-link" target="_blank" rel="noopener noreferrer">lnl ↗</a>`;
+  } else {
+    html += `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(124,92,255,0.3); text-align: center; font-size: 11px; color: var(--muted);">— no link —</div>`;
   }
+
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'block';
+  tooltip.style.pointerEvents = 'auto';
+  positionTooltip(iconEl);
 }
 
-async function loadLeaderboard() {
-  const tbody = document.getElementById('leaderboard-body');
-  const updated = document.getElementById('last-updated');
+function hideTooltip() {
+  tooltip.style.display = 'none';
+  tooltip.style.pointerEvents = 'none';
+  activeIcon = null;
+}
 
-  try {
-    const res = await fetch('results/leaderboard.csv?t=' + Date.now(), {
-      cache: 'no-store'
-    });
-
-    const text = await res.text();
-
-    const lm = res.headers.get('last-modified');
-    updated.textContent = lm
-      ? 'Last updated: ' + new Date(lm).toLocaleString()
-      : '';
-
-    const rows = parseCSV(text);
-    const headers = rows[0];
-
-    let data = rows.slice(1).map(r => {
-      const obj = {};
-      headers.forEach((h,i) => obj[h.trim()] = (r[i] || '').trim());
-      return obj;
-    });
-
-    const ranked = [];
-    const unranked = [];
-
-    data.forEach(row => {
-      const score = row.overall_score;
-      if (score && score !== '??' && !isNaN(parseFloat(score))) ranked.push(row);
-      else unranked.push(row);
-    });
-
-    ranked.sort((a,b)=>parseFloat(b.overall_score)-parseFloat(a.overall_score));
-
-    const sorted = [...ranked, ...unranked];
-
-    let html = '';
-
-    sorted.forEach((row, index) => {
-      const isRanked = index < ranked.length;
-      const rank = isRanked ? index + 1 : '—';
-
-      const modelLink = row.result_url
-        ? `<a href="${row.result_url}" target="_blank">${escapeHtml(row.model)}</a>`
-        : escapeHtml(row.model);
-
-      const youtubeLink = row.video_url && row.video_url !== '?'
-        ? `<a href="${row.video_url}" target="_blank">YouTube</a>`
-        : '—';
-
-      html += `
-      <tr>
-        <td class="rank">${rank}</td>
-        <td>${modelLink}</td>
-        <td class="score">
-          ${escapeHtml(row.overall_score || '—')}
-          <span class="info-icon" data-model="${escapeHtml(row.model)}">ⓘ</span>
-        </td>
-        <td>${youtubeLink}</td>
-        <td>${escapeHtml(row.speed)}</td>
-        <td>${escapeHtml(row.one_shot_attempts)}</td>
-        <td>${escapeHtml(row.design)}</td>
-        <td>${escapeHtml(row.architecture)}</td>
-        <td>${escapeHtml(row.code_quality)}</td>
-        <td>${escapeHtml(row.feature_complete)}</td>
-        <td>${escapeHtml(row.performance)}</td>
-        <td>${escapeHtml(row.accessibility)}</td>
-        <td>${escapeHtml(row.best_practices)}</td>
-        <td>${escapeHtml(row.value)}</td>
-      </tr>`;
-    });
-
-    tbody.innerHTML = html;
-
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="14">Failed to load leaderboard</td></tr>`;
+function positionTooltip(iconEl) {
+  const iconRect = iconEl.getBoundingClientRect();
+  // Temporarily offscreen to measure
+  tooltip.style.left = '-9999px';
+  tooltip.style.top = '-9999px';
+  
+  const tipRect = tooltip.getBoundingClientRect();
+  
+  let left = iconRect.left + (iconRect.width / 2) - (tipRect.width / 2);
+  let top = iconRect.bottom + 10;
+  
+  // Boundaries
+  if (left < 8) left = 8;
+  if (left + tipRect.width > window.innerWidth - 8) {
+    left = window.innerWidth - tipRect.width - 8;
   }
+  
+  if (top + tipRect.height > window.innerHeight - 8) {
+    top = iconRect.top - tipRect.height - 10;
+  }
+  if (top < 8) top = 8;
+  
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
 }
-
-const tooltip = document.getElementById('tooltip');
 
 function scheduleHide() {
   if (hideTimeout) clearTimeout(hideTimeout);
   hideTimeout = setTimeout(() => {
-    tooltip.style.display = 'none';
-    currentTooltipModel = null;
-  }, 250);
+    hideTooltip();
+  }, 200);
 }
 
 function cancelHide() {
@@ -527,172 +518,202 @@ function cancelHide() {
   }
 }
 
-function buildTooltipContent(model) {
-  const d = deploymentData[model];
-  if (!d) return '<div style="padding: 4px 0;">No deployment details available.</div>';
-
-  // Helper to safely get value with fallback '—'
-  const val = (field) => (field && field !== '') ? escapeHtml(field) : '—';
-  const linkUrl = d.link && d.link !== '' && d.link !== '?' ? d.link : null;
-
-  // Build rows with bold labels
-  let content = `
-    <p><strong>Provider:</strong> ${val(d.provider)}</p>
-    <p><strong>Interface:</strong> ${val(d.interface)}</p>
-    <p><strong>Reasoning:</strong> ${val(d.reasoning)}</p>
-    <p><strong>Quantization:</strong> ${val(d.quantization)}</p>
-    <p><strong>Country:</strong> ${val(d.country)}</p>
-    <p><strong>Company:</strong> ${val(d.company)}</p>
-  `;
-
-  if (linkUrl) {
-    content += `<a href="${linkUrl}" class="tooltip-link" target="_blank" rel="noopener noreferrer">🔗 View deployment details →</a>`;
-  } else {
-    content += `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.15); text-align: center; color: var(--muted);">— no external link —</div>`;
-  }
-
-  return content;
-}
-
-function positionTooltipNearElement(element, clientX, clientY) {
-  // Use mouse coordinates for natural following; fallback to element position if needed.
-  let left = clientX + 16;
-  let top = clientY + 16;
-
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  const tooltipRect = tooltip.getBoundingClientRect();
-
-  // If tooltip not yet rendered, we can't measure. Use a reasonable guess.
-  const estimatedWidth = 300;
-  const estimatedHeight = 220;
-
-  const actualWidth = tooltipRect.width || estimatedWidth;
-  const actualHeight = tooltipRect.height || estimatedHeight;
-
-  if (left + actualWidth > viewportWidth - 8) {
-    left = clientX - actualWidth - 8;
-  }
-  if (left < 8) left = 8;
-
-  if (top + actualHeight > viewportHeight - 8) {
-    top = clientY - actualHeight - 8;
-  }
-  if (top < 8) top = 8;
-
-  tooltip.style.left = left + 'px';
-  tooltip.style.top = top + 'px';
-}
-
-let activeIcon = null;
-
+/* ---------- Desktop hover + click handling (works reliably) ---------- */
+// Hover to show
 document.addEventListener('mouseover', e => {
-  if (!e.target.classList.contains('info-icon')) return;
-
-  const model = e.target.dataset.model;
-  if (!model) return;
-  const deploymentInfo = deploymentData[model];
-  if (!deploymentInfo) return;
-
-  cancelHide();
-  activeIcon = e.target;
-
-  // Only rebuild if model changed
-  if (currentTooltipModel !== model) {
-    const newContent = buildTooltipContent(model);
-    tooltip.innerHTML = newContent;
-    currentTooltipModel = model;
+  if (e.target.classList.contains('info-icon')) {
+    cancelHide();
+    showTooltip(e.target);
   }
-
-  tooltip.style.display = 'block';
-  positionTooltipNearElement(e.target, e.clientX, e.clientY);
-});
-
-// Update position on mousemove for smooth following, but keep stable when hovering link inside tooltip
-document.addEventListener('mousemove', e => {
-  if (tooltip.style.display === 'block') {
-    // If mouse moves inside tooltip area, don't reposition aggressively to avoid flicker,
-    // but reposition if mouse is not hovering tooltip? Actually, simpler: reposition only if target is info-icon.
-    // For better UX, reposition while moving if the trigger is the icon OR if the mouse is not inside tooltip.
-    const isOverTooltip = tooltip.matches(':hover');
-    if (!isOverTooltip || e.target.classList.contains('info-icon')) {
-      // but avoid reposition when inside tooltip link to keep click area stable.
-      if (!isOverTooltip) {
-        positionTooltipNearElement(e.target, e.clientX, e.clientY);
-      } else if (e.target.classList.contains('info-icon')) {
-        positionTooltipNearElement(e.target, e.clientX, e.clientY);
-      }
-    }
+  // Keep tooltip open when hovering over it
+  if (e.target === tooltip || tooltip.contains(e.target)) {
+    cancelHide();
   }
 });
 
+// Hide on mouseout unless moving to tooltip
 document.addEventListener('mouseout', e => {
   if (e.target.classList.contains('info-icon')) {
-    // delay hide to allow moving to tooltip
-    if (!tooltip.contains(e.relatedTarget)) {
+    const related = e.relatedTarget;
+    if (!tooltip.contains(related)) {
       scheduleHide();
     }
   }
-});
-
-// Keep tooltip visible when hovering over tooltip itself
-tooltip.addEventListener('mouseenter', () => {
-  cancelHide();
-});
-
-tooltip.addEventListener('mouseleave', () => {
-  scheduleHide();
-});
-
-// Also handle click on info-icon: ensures that if any link inside tooltip is desired,
-// the tooltip remains open and user can click links. The tooltip links are fully clickable.
-// Additionally, clicking the info icon will toggle/show tooltip, but our mouseover already does.
-// For safety, prevent accidental hide on click.
-document.addEventListener('click', e => {
-  const infoIcon = e.target.closest('.info-icon');
-  if (infoIcon) {
-    e.stopPropagation();
-    cancelHide();
-    const model = infoIcon.dataset.model;
-    if (model && deploymentData[model]) {
-      const newContent = buildTooltipContent(model);
-      tooltip.innerHTML = newContent;
-      currentTooltipModel = model;
-      tooltip.style.display = 'block';
-      positionTooltipNearElement(infoIcon, e.clientX, e.clientY);
-    }
-  } else if (!tooltip.contains(e.target)) {
-    // Click outside tooltip and not on info-icon => hide tooltip
+  if (e.target === tooltip && !tooltip.contains(e.relatedTarget)) {
     scheduleHide();
   }
 });
 
-// Ensure tooltip does not disappear when clicking the link inside
+// Keep tooltip alive when hovering tooltip itself
+tooltip.addEventListener('mouseenter', cancelHide);
+tooltip.addEventListener('mouseleave', scheduleHide);
+
+/* ---------- CLICK SUPPORT: click on info-icon toggles, links inside tooltip work ---------- */
+document.addEventListener('click', e => {
+  const clickedIcon = e.target.classList.contains('info-icon');
+  const clickedInsideTooltip = tooltip.contains(e.target);
+  
+  if (clickedIcon) {
+    e.preventDefault();
+    e.stopPropagation();
+    cancelHide();
+    // Toggle: if same icon and tooltip visible, hide it; else show fresh
+    if (activeIcon === e.target && tooltip.style.display === 'block') {
+      hideTooltip();
+    } else {
+      showTooltip(e.target);
+    }
+    return;
+  }
+  
+  // If click is inside tooltip, allow link navigation, don't close
+  if (clickedInsideTooltip) {
+    // Let the link do its job; keep tooltip open
+    return;
+  }
+  
+  // Click anywhere else: close tooltip
+  hideTooltip();
+});
+
+// Prevent tooltip from closing when clicking the link itself (bubbling handled)
 tooltip.addEventListener('click', (e) => {
-  e.stopPropagation();  // allow link navigation, but keep tooltip open? We don't want it to close when clicking link.
-  // Actually we want link to work. No hide.
-  cancelHide();
+  e.stopPropagation(); // Ensure click doesn't bubble to document to trigger hide
 });
 
-// Adjust on scroll / resize to reposition if tooltip is visible
-window.addEventListener('scroll', () => {
-  if (tooltip.style.display === 'block' && activeIcon) {
-    const rect = activeIcon.getBoundingClientRect();
-    positionTooltipNearElement(activeIcon, rect.left + rect.width/2, rect.bottom);
-  }
-});
-
+// Reposition on scroll/resize
 window.addEventListener('resize', () => {
-  if (tooltip.style.display === 'block' && activeIcon) {
-    const rect = activeIcon.getBoundingClientRect();
-    positionTooltipNearElement(activeIcon, rect.left + rect.width/2, rect.bottom);
+  if (activeIcon && tooltip.style.display === 'block') {
+    positionTooltip(activeIcon);
   }
 });
 
-(async function init() {
-  await loadDeployments();
-  await loadLeaderboard();
-})();
+window.addEventListener('scroll', () => {
+  if (activeIcon && tooltip.style.display === 'block') {
+    positionTooltip(activeIcon);
+  }
+});
+
+/* ---------- Load CSVs and render leaderboard ---------- */
+async function loadData() {
+  try {
+    // Load deployments.csv for tooltip data
+    try {
+      const deploymentsRes = await fetch('results/deployments.csv?t=' + Date.now());
+      if (deploymentsRes.ok) {
+        const text = await deploymentsRes.text();
+        const { rows } = parseCSV(text);
+        deploymentData = {};
+        for (const row of rows) {
+          if (row.model) {
+            deploymentData[row.model] = row;
+          }
+        }
+      } else {
+        console.log('deployments.csv not found');
+      }
+    } catch (e) {
+      console.log('deployments.csv failed to load', e);
+    }
+
+    // Load leaderboard.csv
+    const leaderboardRes = await fetch('results/leaderboard.csv?t=' + Date.now());
+    if (!leaderboardRes.ok) throw new Error('leaderboard.csv not found');
+    
+    const text = await leaderboardRes.text();
+    const { rows } = parseCSV(text);
+    leaderboardData = rows;
+    renderLeaderboard();
+
+    // Update last updated timestamp from file if available
+    const lastModified = leaderboardRes.headers.get('last-modified');
+    const lastUpdatedEl = document.getElementById('last-updated');
+    if (lastUpdatedEl) {
+      if (lastModified) {
+        lastUpdatedEl.textContent = 'Last updated: ' + new Date(lastModified).toLocaleString();
+      } else {
+        lastUpdatedEl.textContent = 'Last updated: ' + new Date().toLocaleDateString();
+      }
+    }
+
+  } catch (err) {
+    console.error('Failed to load CSV data:', err);
+    const tbody = document.getElementById('leaderboard-body');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--muted);">Error loading data. Ensure results/leaderboard.csv exists.</td></tr>';
+    }
+  }
+}
+
+function renderLeaderboard() {
+  const tbody = document.getElementById('leaderboard-body');
+  if (!tbody || leaderboardData.length === 0) {
+    if (leaderboardData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="14">No data found</td></tr>';
+    }
+    return;
+  }
+
+  // Sort by overall_score descending, models without score go to bottom
+  const sorted = [...leaderboardData].sort((a, b) => {
+    const scoreA = parseFloat(a.overall_score);
+    const scoreB = parseFloat(b.overall_score);
+    if (isNaN(scoreA) && isNaN(scoreB)) return 0;
+    if (isNaN(scoreA)) return 1;
+    if (isNaN(scoreB)) return -1;
+    return scoreB - scoreA;
+  });
+
+  // Separate ranked (numeric score) vs unranked for info icon logic
+  const rankedModels = new Set();
+  sorted.forEach(row => {
+    const score = parseFloat(row.overall_score);
+    if (!isNaN(score)) rankedModels.add(row.model);
+  });
+
+  tbody.innerHTML = sorted.map((row, idx) => {
+    const modelName = formatValue(row.model);
+    const scoreVal = formatValue(row.overall_score);
+    const hasNumericScore = !isNaN(parseFloat(row.overall_score));
+    const rankDisplay = hasNumericScore ? idx + 1 : '—';
+    
+    // YouTube link
+    const youtubeLink = (row.video_url && row.video_url !== '?' && row.video_url !== '')
+      ? `<a href="${escapeHtml(row.video_url)}" target="_blank" rel="noopener">YouTube</a>`
+      : '—';
+    
+    // Info icon: ONLY show for ranked models (have a numeric score AND have deployment data)
+    // Also ensure the model exists in deploymentData to avoid empty tooltips
+    const showInfoIcon = hasNumericScore && deploymentData[row.model];
+    const infoIconHtml = showInfoIcon 
+      ? `<span class="info-icon" data-model="${escapeHtml(row.model)}" title="View deployment details">ⓘ</span>` 
+      : '';
+    
+    const modelCell = `${modelName} ${infoIconHtml}`;
+
+    return `
+      <tr>
+        <td class="rank">${rankDisplay}</td>
+        <td>${modelCell}</td>
+        <td class="score">${scoreVal}</td>
+        <td>${youtubeLink}</td>
+        <td>${formatValue(row.speed)}</td>
+        <td>${formatValue(row.one_shot_attempts)}</td>
+        <td>${formatValue(row.design)}</td>
+        <td>${formatValue(row.architecture)}</td>
+        <td>${formatValue(row.code_quality)}</td>
+        <td>${formatValue(row.feature_complete)}</td>
+        <td>${formatValue(row.performance)}</td>
+        <td>${formatValue(row.accessibility)}</td>
+        <td>${formatValue(row.best_practices)}</td>
+        <td>${formatValue(row.value)}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', loadData);
 </script>
 
 </body>
