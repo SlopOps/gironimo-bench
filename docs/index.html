@@ -592,9 +592,12 @@
           const isRanked = idx < ranked.length;
           const rank = isRanked ? (idx + 1).toString() : '—';
           const rawModelName = row.model || '';
-          const lowerModelSlug = rawModelName.toLowerCase();
-          const modelLink = rawModelName 
-            ? `<a href="${lowerModelSlug}/index.html">${escapeHtml(rawModelName)}</a>`
+          const resultUrl = row.result_url || '';
+          
+          const modelLink = rawModelName
+            ? (resultUrl && resultUrl !== '?'
+                ? `<a href="${resultUrl}" target="_blank" rel="noopener">${escapeHtml(rawModelName)}</a>`
+                : `${escapeHtml(rawModelName)}`)
             : '—';
           
           const youtubeLink = (row.video_url && row.video_url !== '?' && row.video_url !== '')
