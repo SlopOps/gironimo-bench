@@ -201,6 +201,8 @@
       color: var(--muted);
       cursor: pointer;
       user-select: none;
+      display: inline-block;
+      transition: color 0.2s ease;
     }
 
     .info-icon:hover {
@@ -217,10 +219,40 @@
       border: 1px solid var(--border);
       color: white;
       font-size: 13px;
-      line-height: 1.45;
+      line-height: 1.5;
       box-shadow: 0 10px 30px rgba(0,0,0,.35);
       display: none;
       pointer-events: auto;
+      backdrop-filter: blur(8px);
+      background: rgba(17, 24, 39, 0.95);
+    }
+
+    .tooltip p {
+      margin: 0 0 8px 0;
+    }
+    .tooltip p:last-child {
+      margin-bottom: 0;
+    }
+    .tooltip strong {
+      font-weight: 700;
+      color: var(--accent2);
+      margin-right: 6px;
+    }
+    .tooltip-link {
+      display: inline-block;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--accent2) !important;
+      width: 100%;
+      text-align: center;
+      transition: opacity 0.2s;
+    }
+    .tooltip-link:hover {
+      opacity: 0.85;
+      text-decoration: underline;
     }
 
     .leaderboard-wrapper::-webkit-scrollbar {
@@ -317,7 +349,7 @@
       </tr>
       </thead>
       <tbody id="leaderboard-body">
-      <tr><td colspan="14">Loading...</td></tr>
+        <tr><td colspan="14">Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -336,6 +368,7 @@
 <script>
 let deploymentData = {};
 let hideTimeout = null;
+let currentTooltipModel = null;
 
 function escapeHtml(str) {
   if (!str) return '—';
@@ -480,54 +513,181 @@ async function loadLeaderboard() {
 const tooltip = document.getElementById('tooltip');
 
 function scheduleHide() {
+  if (hideTimeout) clearTimeout(hideTimeout);
   hideTimeout = setTimeout(() => {
     tooltip.style.display = 'none';
-  }, 200);
+    currentTooltipModel = null;
+  }, 250);
 }
 
 function cancelHide() {
-  if (hideTimeout) clearTimeout(hideTimeout);
+  if (hideTimeout) {
+    clearTimeout(hideTimeout);
+    hideTimeout = null;
+  }
 }
+
+function buildTooltipContent(model) {
+  const d = deploymentData[model];
+  if (!d) return '<div style="padding: 4px 0;">No deployment details available.</div>';
+
+  // Helper to safely get value with fallback '—'
+  const val = (field) => (field && field !== '') ? escapeHtml(field) : '—';
+  const linkUrl = d.link && d.link !== '' && d.link !== '?' ? d.link : null;
+
+  // Build rows with bold labels
+  let content = `
+    <p><strong>Provider:</strong> ${val(d.provider)}</p>
+    <p><strong>Interface:</strong> ${val(d.interface)}</p>
+    <p><strong>Reasoning:</strong> ${val(d.reasoning)}</p>
+    <p><strong>Quantization:</strong> ${val(d.quantization)}</p>
+    <p><strong>Country:</strong> ${val(d.country)}</p>
+    <p><strong>Company:</strong> ${val(d.company)}</p>
+  `;
+
+  if (linkUrl) {
+    content += `<a href="${linkUrl}" class="tooltip-link" target="_blank" rel="noopener noreferrer">🔗 View deployment details →</a>`;
+  } else {
+    content += `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.15); text-align: center; color: var(--muted);">— no external link —</div>`;
+  }
+
+  return content;
+}
+
+function positionTooltipNearElement(element, clientX, clientY) {
+  // Use mouse coordinates for natural following; fallback to element position if needed.
+  let left = clientX + 16;
+  let top = clientY + 16;
+
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const tooltipRect = tooltip.getBoundingClientRect();
+
+  // If tooltip not yet rendered, we can't measure. Use a reasonable guess.
+  const estimatedWidth = 300;
+  const estimatedHeight = 220;
+
+  const actualWidth = tooltipRect.width || estimatedWidth;
+  const actualHeight = tooltipRect.height || estimatedHeight;
+
+  if (left + actualWidth > viewportWidth - 8) {
+    left = clientX - actualWidth - 8;
+  }
+  if (left < 8) left = 8;
+
+  if (top + actualHeight > viewportHeight - 8) {
+    top = clientY - actualHeight - 8;
+  }
+  if (top < 8) top = 8;
+
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+
+let activeIcon = null;
 
 document.addEventListener('mouseover', e => {
   if (!e.target.classList.contains('info-icon')) return;
 
   const model = e.target.dataset.model;
-  const d = deploymentData[model];
-  if (!d) return;
+  if (!model) return;
+  const deploymentInfo = deploymentData[model];
+  if (!deploymentInfo) return;
 
   cancelHide();
+  activeIcon = e.target;
 
-  tooltip.innerHTML = `
-    Provider: ${d.provider}<br>
-    Interface: ${d.interface}<br>
-    Reasoning: ${d.reasoning}<br>
-    Quantization: ${d.quantization}<br>
-    Country: ${d.country}<br>
-    Company: ${d.company}<br>
-    <a href="${d.link}" target="_blank" style="color:#00d4ff;font-weight:700;">Link ↗</a>
-  `;
+  // Only rebuild if model changed
+  if (currentTooltipModel !== model) {
+    const newContent = buildTooltipContent(model);
+    tooltip.innerHTML = newContent;
+    currentTooltipModel = model;
+  }
 
   tooltip.style.display = 'block';
+  positionTooltipNearElement(e.target, e.clientX, e.clientY);
 });
 
+// Update position on mousemove for smooth following, but keep stable when hovering link inside tooltip
 document.addEventListener('mousemove', e => {
   if (tooltip.style.display === 'block') {
-    tooltip.style.left = (e.clientX + 14) + 'px';
-    tooltip.style.top = (e.clientY + 14) + 'px';
+    // If mouse moves inside tooltip area, don't reposition aggressively to avoid flicker,
+    // but reposition if mouse is not hovering tooltip? Actually, simpler: reposition only if target is info-icon.
+    // For better UX, reposition while moving if the trigger is the icon OR if the mouse is not inside tooltip.
+    const isOverTooltip = tooltip.matches(':hover');
+    if (!isOverTooltip || e.target.classList.contains('info-icon')) {
+      // but avoid reposition when inside tooltip link to keep click area stable.
+      if (!isOverTooltip) {
+        positionTooltipNearElement(e.target, e.clientX, e.clientY);
+      } else if (e.target.classList.contains('info-icon')) {
+        positionTooltipNearElement(e.target, e.clientX, e.clientY);
+      }
+    }
   }
 });
 
 document.addEventListener('mouseout', e => {
   if (e.target.classList.contains('info-icon')) {
+    // delay hide to allow moving to tooltip
     if (!tooltip.contains(e.relatedTarget)) {
       scheduleHide();
     }
   }
 });
 
-tooltip.addEventListener('mouseenter', cancelHide);
-tooltip.addEventListener('mouseleave', scheduleHide);
+// Keep tooltip visible when hovering over tooltip itself
+tooltip.addEventListener('mouseenter', () => {
+  cancelHide();
+});
+
+tooltip.addEventListener('mouseleave', () => {
+  scheduleHide();
+});
+
+// Also handle click on info-icon: ensures that if any link inside tooltip is desired,
+// the tooltip remains open and user can click links. The tooltip links are fully clickable.
+// Additionally, clicking the info icon will toggle/show tooltip, but our mouseover already does.
+// For safety, prevent accidental hide on click.
+document.addEventListener('click', e => {
+  const infoIcon = e.target.closest('.info-icon');
+  if (infoIcon) {
+    e.stopPropagation();
+    cancelHide();
+    const model = infoIcon.dataset.model;
+    if (model && deploymentData[model]) {
+      const newContent = buildTooltipContent(model);
+      tooltip.innerHTML = newContent;
+      currentTooltipModel = model;
+      tooltip.style.display = 'block';
+      positionTooltipNearElement(infoIcon, e.clientX, e.clientY);
+    }
+  } else if (!tooltip.contains(e.target)) {
+    // Click outside tooltip and not on info-icon => hide tooltip
+    scheduleHide();
+  }
+});
+
+// Ensure tooltip does not disappear when clicking the link inside
+tooltip.addEventListener('click', (e) => {
+  e.stopPropagation();  // allow link navigation, but keep tooltip open? We don't want it to close when clicking link.
+  // Actually we want link to work. No hide.
+  cancelHide();
+});
+
+// Adjust on scroll / resize to reposition if tooltip is visible
+window.addEventListener('scroll', () => {
+  if (tooltip.style.display === 'block' && activeIcon) {
+    const rect = activeIcon.getBoundingClientRect();
+    positionTooltipNearElement(activeIcon, rect.left + rect.width/2, rect.bottom);
+  }
+});
+
+window.addEventListener('resize', () => {
+  if (tooltip.style.display === 'block' && activeIcon) {
+    const rect = activeIcon.getBoundingClientRect();
+    positionTooltipNearElement(activeIcon, rect.left + rect.width/2, rect.bottom);
+  }
+});
 
 (async function init() {
   await loadDeployments();
