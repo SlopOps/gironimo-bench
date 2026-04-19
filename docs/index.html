@@ -179,16 +179,16 @@
 
     .info-icon {
       margin-left: 6px;
-      font-size: 12px;
-      color: var(--muted);
+      font-size: 11px;
+      opacity: 0.7;
       cursor: pointer;
       user-select: none;
       display: inline-block;
-      transition: color 0.2s ease;
+      transition: opacity 0.2s ease;
     }
 
     .info-icon:hover {
-      color: var(--accent2);
+      opacity: 1;
     }
 
     .tooltip {
@@ -197,7 +197,6 @@
       max-width: 320px;
       padding: 14px;
       border-radius: 12px;
-      background: #0f1420;
       border: 1px solid var(--border);
       color: white;
       font-size: 13px;
@@ -409,7 +408,13 @@ function formatValue(val) {
   return escapeHtml(val);
 }
 
-/* ---------- Tooltip: clean, reliable, bold purple labels, "link ↗" ---------- */
+// Simple slugify for folder paths (spaces -> hyphens, lowercase)
+function slugify(str) {
+  if (!str) return '';
+  return str.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
+/* ---------- Tooltip: fixed positioning with proper measurement ---------- */
 function showTooltip(iconEl) {
   const model = iconEl.dataset.model;
   const d = deploymentData[model];
@@ -442,32 +447,49 @@ function showTooltip(iconEl) {
   }
 
   tooltip.innerHTML = html;
-  tooltip.style.display = 'block';
   
-  // Position relative to the clicked icon
+  // CRITICAL FIX: Show but hide visibility to measure properly
+  tooltip.style.display = 'block';
+  tooltip.style.visibility = 'hidden';
+  
+  // Force layout recalculation before measuring
+  tooltip.offsetHeight;
+  
   const rect = iconEl.getBoundingClientRect();
+  const tipRect = tooltip.getBoundingClientRect();
+  
   let left = rect.left + window.scrollX;
   let top = rect.bottom + window.scrollY + 8;
   
-  // Measure tooltip to adjust boundaries
-  const tipRect = tooltip.getBoundingClientRect();
   const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
   
+  // Horizontal boundary check
   if (left + tipRect.width > viewportWidth - 10) {
     left = viewportWidth - tipRect.width - 10;
   }
   if (left < 10) left = 10;
   
+  // Vertical boundary check - handle bottom overflow
+  const absoluteTop = top - window.scrollY;
+  if (absoluteTop + tipRect.height > viewportHeight - 10) {
+    // Place above the icon instead
+    top = rect.top + window.scrollY - tipRect.height - 8;
+  }
+  if (top < window.scrollY + 10) top = window.scrollY + 10;
+  
   tooltip.style.left = left + 'px';
   tooltip.style.top = top + 'px';
+  tooltip.style.visibility = 'visible';
 }
 
 function hideTooltip() {
   tooltip.style.display = 'none';
+  tooltip.style.visibility = 'visible'; // reset
   activeIcon = null;
 }
 
-/* ---------- SIMPLE CLICK-ONLY TOOLTIP (no hover fragility) ---------- */
+/* ---------- SIMPLE CLICK-ONLY TOOLTIP (reliable, no hover fragility) ---------- */
 document.addEventListener('click', (e) => {
   const icon = e.target.closest('.info-icon');
   
@@ -493,25 +515,34 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Optional: close tooltip on Escape key
+// Close tooltip on Escape key
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && tooltip.style.display === 'block') {
     hideTooltip();
   }
 });
 
-// Reposition on scroll if tooltip is open (keep it near the icon)
+// Reposition on scroll if tooltip is open
 window.addEventListener('scroll', () => {
   if (activeIcon && tooltip.style.display === 'block') {
     const rect = activeIcon.getBoundingClientRect();
+    const tipRect = tooltip.getBoundingClientRect();
     let left = rect.left + window.scrollX;
     let top = rect.bottom + window.scrollY + 8;
-    const tipRect = tooltip.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
     if (left + tipRect.width > viewportWidth - 10) {
       left = viewportWidth - tipRect.width - 10;
     }
     if (left < 10) left = 10;
+    
+    const absoluteTop = top - window.scrollY;
+    if (absoluteTop + tipRect.height > viewportHeight - 10) {
+      top = rect.top + window.scrollY - tipRect.height - 8;
+    }
+    if (top < window.scrollY + 10) top = window.scrollY + 10;
+    
     tooltip.style.left = left + 'px';
     tooltip.style.top = top + 'px';
   }
@@ -520,14 +551,23 @@ window.addEventListener('scroll', () => {
 window.addEventListener('resize', () => {
   if (activeIcon && tooltip.style.display === 'block') {
     const rect = activeIcon.getBoundingClientRect();
+    const tipRect = tooltip.getBoundingClientRect();
     let left = rect.left + window.scrollX;
     let top = rect.bottom + window.scrollY + 8;
-    const tipRect = tooltip.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
     if (left + tipRect.width > viewportWidth - 10) {
       left = viewportWidth - tipRect.width - 10;
     }
     if (left < 10) left = 10;
+    
+    const absoluteTop = top - window.scrollY;
+    if (absoluteTop + tipRect.height > viewportHeight - 10) {
+      top = rect.top + window.scrollY - tipRect.height - 8;
+    }
+    if (top < window.scrollY + 10) top = window.scrollY + 10;
+    
     tooltip.style.left = left + 'px';
     tooltip.style.top = top + 'px';
   }
@@ -603,23 +643,19 @@ function renderLeaderboard() {
     return scoreB - scoreA;
   });
 
-  // Determine which models have numeric scores (ranked)
-  const rankedModels = new Set();
-  sorted.forEach(row => {
-    const score = parseFloat(row.overall_score);
-    if (!isNaN(score)) rankedModels.add(row.model);
-  });
-
   tbody.innerHTML = sorted.map((row, idx) => {
     const rawModel = row.model || '';
-    // Model column links to /model/index.html (folder structure)
-    const modelLink = rawModel
-      ? `<a href="${encodeURIComponent(rawModel)}/index.html">${escapeHtml(rawModel)}</a>`
-      : '—';
-    
-    const scoreVal = formatValue(row.overall_score);
     const hasNumericScore = !isNaN(parseFloat(row.overall_score));
     const rankDisplay = hasNumericScore ? idx + 1 : '—';
+    
+    // Model column: use slugified folder path for clean URLs
+    // e.g., "Claude 3 Opus" -> "claude-3-opus/index.html"
+    const modelSlug = slugify(rawModel);
+    const modelLink = rawModel && modelSlug
+      ? `<a href="${modelSlug}/index.html">${escapeHtml(rawModel)}</a>`
+      : escapeHtml(rawModel);
+    
+    const scoreVal = formatValue(row.overall_score);
     
     // YouTube link
     const youtubeLink = (row.video_url && row.video_url !== '?' && row.video_url !== '')
@@ -627,12 +663,13 @@ function renderLeaderboard() {
       : '—';
     
     // Info icon: ONLY show for ranked models (have numeric score) AND have deployment data
-    const showInfoIcon = hasNumericScore && deploymentData[row.model];
+    // IMPORTANT: Use raw model name for dataset (don't escape)
+    const showInfoIcon = hasNumericScore && deploymentData[rawModel];
     const infoIconHtml = showInfoIcon 
-      ? `<span class="info-icon" data-model="${escapeHtml(row.model)}" title="View deployment details">ⓘ</span>` 
+      ? `<span class="info-icon" data-model="${rawModel.replace(/"/g, '&quot;')}" title="View deployment details">ⓘ</span>` 
       : '';
     
-    // Score cell: score value + inline icon (clean, no wrapper)
+    // Score cell: score value + inline icon
     const scoreCell = `<span class="score">${scoreVal}</span>${infoIconHtml}`;
 
     return `
