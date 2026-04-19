@@ -476,137 +476,45 @@ async function loadLeaderboard() {
 }
 
 const tooltip = document.getElementById('tooltip');
-let activeIcon = null;
-const isTouchDevice =
-  ('ontouchstart' in window) ||
-  navigator.maxTouchPoints > 0;
 
-/* ---------- helpers ---------- */
+document.addEventListener('mouseover', e => {
+  if (!e.target.classList.contains('info-icon')) return;
 
-function showTooltip(iconEl) {
-  const model = iconEl.dataset.model;
+  const model = e.target.dataset.model;
   const d = deploymentData[model];
   if (!d) return;
 
-  activeIcon = iconEl;
-
   tooltip.innerHTML = `
-    <div><strong>Provider:</strong> ${escapeHtml(d.provider)}</div>
-    <div><strong>Interface:</strong> ${escapeHtml(d.interface)}</div>
-    <div><strong>Reasoning:</strong> ${escapeHtml(d.reasoning)}</div>
-    <div><strong>Quantization:</strong> ${escapeHtml(d.quantization)}</div>
-    <div><strong>Country:</strong> ${escapeHtml(d.country)}</div>
-    <div><strong>Company:</strong> ${escapeHtml(d.company)}</div>
-    <div style="margin-top:8px;">
-      <a href="${d.link}"
-         target="_blank"
-         rel="noopener noreferrer"
-         style="color:#00d4ff;text-decoration:none;font-weight:600;">
-         Link
-      </a>
-    </div>
+    <strong>${model}</strong><br>
+    Provider: ${d.provider}<br>
+    Interface: ${d.interface}<br>
+    Reasoning: ${d.reasoning}<br>
+    Quantization: ${d.quantization}<br>
+    Country: ${d.country}<br>
+    Company: ${d.company}<br>
+    <a href="${d.link}" target="_blank" style="color:#00d4ff;">Open</a>
   `;
 
   tooltip.style.display = 'block';
-  tooltip.style.pointerEvents = 'auto';
+});
 
-  positionTooltip(iconEl);
-}
-
-function hideTooltip() {
-  tooltip.style.display = 'none';
-  tooltip.style.pointerEvents = 'none';
-  activeIcon = null;
-}
-
-function positionTooltip(iconEl) {
-  const iconRect = iconEl.getBoundingClientRect();
-
-  tooltip.style.left = '-9999px';
-  tooltip.style.top = '-9999px';
-
-  const tipRect = tooltip.getBoundingClientRect();
-
-  let left = iconRect.left + (iconRect.width / 2) - (tipRect.width / 2);
-  let top = iconRect.bottom + 10;
-
-  if (left < 8) left = 8;
-  if (left + tipRect.width > window.innerWidth - 8) {
-    left = window.innerWidth - tipRect.width - 8;
-  }
-
-  if (top + tipRect.height > window.innerHeight - 8) {
-    top = iconRect.top - tipRect.height - 10;
-  }
-
-  if (top < 8) top = 8;
-
-  tooltip.style.left = left + 'px';
-  tooltip.style.top = top + 'px';
-}
-
-/* ---------- desktop hover ---------- */
-
-document.addEventListener('mouseover', e => {
-  if (isTouchDevice) return;
-
-  if (e.target.classList.contains('info-icon')) {
-    showTooltip(e.target);
+document.addEventListener('mousemove', e => {
+  if (tooltip.style.display === 'block') {
+    tooltip.style.left = (e.clientX + 14) + 'px';
+    tooltip.style.top = (e.clientY + 14) + 'px';
   }
 });
 
 document.addEventListener('mouseout', e => {
-  if (isTouchDevice) return;
-
   if (e.target.classList.contains('info-icon')) {
-    const toEl = e.relatedTarget;
-
-    if (tooltip.contains(toEl)) return;
-    hideTooltip();
+    tooltip.style.display = 'none';
   }
 });
 
-tooltip.addEventListener('mouseleave', () => {
-  if (!isTouchDevice) hideTooltip();
-});
-
-/* ---------- click support (desktop + mobile) ---------- */
-
-document.addEventListener('click', e => {
-  const clickedIcon = e.target.classList.contains('info-icon');
-  const clickedTooltip = tooltip.contains(e.target);
-
-  if (clickedIcon) {
-    e.preventDefault();
-
-    if (activeIcon === e.target && tooltip.style.display === 'block') {
-      hideTooltip();
-    } else {
-      showTooltip(e.target);
-    }
-    return;
-  }
-
-  if (clickedTooltip) {
-    return; // allow clicking Link
-  }
-
-  hideTooltip();
-});
-
-/* ---------- reposition ---------- */
-
-window.addEventListener('resize', () => {
-  if (activeIcon && tooltip.style.display === 'block') {
-    positionTooltip(activeIcon);
-  }
-});
-
-window.addEventListener('scroll', () => {
-  if (activeIcon && tooltip.style.display === 'block') {
-    positionTooltip(activeIcon);
-  }
-});
+(async function init() {
+  await loadDeployments();
+  await loadLeaderboard();
+})();
 </script>
 
 </body>
