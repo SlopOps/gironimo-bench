@@ -9,16 +9,59 @@
     gtag('js', new Date());
     gtag('config', 'G-Q5R5LECE2Y');
   </script>
+  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>Gironimo Bench — Real-World LLM Software Engineering Benchmark</title>
-  <meta name="description" content="Gironimo Bench evaluates LLMs on real-world software engineering workflows: specification → architecture → implementation → review." />
-
-  <!-- Favicon: 150x150 PNG in same directory -->
+  
+  <!-- SEO Meta Tags -->
+  <title>Gironimo Bench — Real-World LLM Software Engineering Benchmark | AI Code Evaluation</title>
+  <meta name="description" content="Gironimo Bench evaluates LLMs on real-world software engineering workflows: specification → architecture → implementation → review. Compare AI coding models." />
+  <meta name="keywords" content="LLM benchmark, AI coding benchmark, software engineering AI, GPT-4 vs Claude, AI code evaluation, model comparison, Gironimo" />
+  <meta name="author" content="SlopOps" />
+  <meta name="robots" content="index, follow" />
+  <meta name="googlebot" content="index, follow" />
+  <link rel="canonical" href="https://gironimo-bench.github.io/" />
+  
+  <!-- Favicon -->
   <link rel="icon" type="image/png" href="slopops.png">
   <link rel="shortcut icon" href="slopops.png">
-
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://gironimo-bench.github.io/" />
+  <meta property="og:title" content="Gironimo Bench — Real-World LLM Software Engineering Benchmark" />
+  <meta property="og:description" content="See how top LLMs perform on real software engineering tasks. From spec to production-ready code." />
+  <meta property="og:image" content="https://gironimo-bench.github.io/slopops.png" />
+  <meta property="og:site_name" content="Gironimo Bench" />
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://gironimo-bench.github.io/" />
+  <meta name="twitter:title" content="Gironimo Bench — Real-World LLM Software Engineering Benchmark" />
+  <meta name="twitter:description" content="Compare AI coding models on real engineering tasks. Updated after each evaluation." />
+  <meta name="twitter:image" content="https://gironimo-bench.github.io/slopops.png" />
+  
+  <!-- Structured Data (JSON-LD) for better search visibility -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Gironimo Bench",
+    "description": "A benchmark evaluating LLMs on real-world software engineering workflows including specification interpretation, architecture design, implementation, and code review.",
+    "url": "https://gironimo-bench.github.io/",
+    "creator": {
+      "@type": "Organization",
+      "name": "SlopOps",
+      "url": "https://github.com/SlopOps"
+    },
+    "keywords": "LLM, AI, benchmark, software engineering, code generation",
+    "datePublished": "2026-01-01",
+    "dateModified": "2026-04-19",
+    "inLanguage": "en",
+    "license": "https://opensource.org/licenses/MIT"
+  }
+  </script>
+  
   <style>
     :root {
       --bg: #0b0f19;
@@ -61,7 +104,6 @@
 
     .logo { font-weight: 700; }
 
-    /* GitHub button styling */
     .github-btn {
       display: inline-flex;
       align-items: center;
@@ -158,7 +200,6 @@
       backdrop-filter: blur(10px);
     }
 
-    /* Leaderboard wrapper with scrolling */
     .leaderboard-wrapper {
       overflow-x: auto;
       max-height: 500px;
@@ -207,7 +248,6 @@
       font-weight: 600;
     }
 
-    /* info icon tooltip styles */
     .info-icon {
       margin-left: 6px;
       font-size: 11px;
@@ -235,7 +275,6 @@
     .tooltip a {
       color: var(--accent2);
     }
-    /* Purple model name in tooltip */
     .tooltip-model-name {
       color: var(--accent);
       font-weight: 700;
@@ -263,33 +302,26 @@
       flex: 1;
     }
 
-    /* Custom scrollbar */
     .leaderboard-wrapper::-webkit-scrollbar {
       width: 8px;
       height: 8px;
     }
-
     .leaderboard-wrapper::-webkit-scrollbar-track {
       background: var(--card);
       border-radius: 4px;
     }
-
     .leaderboard-wrapper::-webkit-scrollbar-thumb {
       background: var(--accent);
       border-radius: 4px;
     }
 
-    /* Mobile styles */
     @media (max-width: 768px) {
       .grid { grid-template-columns: 1fr; }
       h1 { font-size: 38px; }
-      
-      /* On mobile, show only Rank, Model, Score, YouTube (first 4 columns) */
       th:nth-child(n+5),
       td:nth-child(n+5) {
         display: none;
       }
-      
       th:nth-child(4),
       td:nth-child(4) {
         display: table-cell;
@@ -319,7 +351,6 @@
 
   <div class="container">
 
-    <!-- NAV with GitHub button -->
     <nav aria-label="Primary navigation">
       <div class="logo">GIRONIMO BENCH</div>
       <a href="https://github.com/SlopOps/gironimo-bench" class="github-btn" target="_blank" rel="noopener noreferrer">
@@ -330,10 +361,8 @@
       </a>
     </nav>
 
-    <!-- MAIN LANDMARK -->
     <main>
 
-      <!-- HERO -->
       <header class="hero">
         <h1>
           Benchmarking AI on <span class="gradient">real software engineering</span>
@@ -348,21 +377,17 @@
         </div>
       </header>
 
-      <!-- FEATURES -->
       <section>
         <h2>What It Tests</h2>
-
         <div class="grid">
           <div class="card">
             <h3>Spec → System</h3>
             <p class="muted">Interpret long engineering specifications into working software.</p>
           </div>
-
           <div class="card">
             <h3>Real Engineering</h3>
             <p class="muted">Architecture, maintainability, and deployment readiness matter.</p>
           </div>
-
           <div class="card">
             <h3>Human Scoring</h3>
             <p class="muted">Every run is manually reviewed for consistency and quality.</p>
@@ -370,7 +395,6 @@
         </div>
       </section>
 
-      <!-- DIFFERENTIATION -->
       <section>
         <h2>Why It's Different</h2>
         <p class="muted">
@@ -379,7 +403,6 @@
         </p>
       </section>
 
-      <!-- LEADERBOARD SECTION (integrated with tooltip + deployments) -->
       <section id="leaderboard">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
           <div>
@@ -410,9 +433,7 @@
               </tr>
             </thead>
             <tbody id="leaderboard-body">
-              <tr>
-                <td colspan="14">Loading leaderboard...</td>
-              </tr>
+              <tr><td colspan="14">Loading leaderboard...</td></tr>
             </tbody>
           </table>
         </div>
@@ -420,7 +441,6 @@
 
     </main>
 
-    <!-- FOOTER -->
     <footer>
       Built by <strong>SlopOps</strong> •
       <a href="https://github.com/SlopOps" target="_blank">GitHub</a> •
@@ -431,21 +451,15 @@
 
   </div>
 
-  <!-- Tooltip container (fixed) -->
   <div id="tooltip" class="tooltip"></div>
 
   <script>
-    // --------------------------------------------------------------
-    // 1. Global data stores
-    // --------------------------------------------------------------
-    let deploymentData = {};        // key: model name (raw) -> full deployment record with all columns
-    let currentLeaderboardData = []; // enriched and sorted data for rendering
+    let deploymentData = {};
+    let currentLeaderboardData = [];
 
-    // Tooltip elements & state
     const tooltip = document.getElementById('tooltip');
     let activeIcon = null;
 
-    // Helper: escape HTML
     function escapeHtml(str) {
       if (!str || str === '—') return '—';
       return String(str).replace(/[&<>]/g, m => ({
@@ -455,7 +469,6 @@
       }[m]));
     }
 
-    // Helper: parse CSV (handles quotes and basic commas)
     function parseCSV(text) {
       const lines = text.trim().split(/\r?\n/);
       if (lines.length === 0) return [];
@@ -482,7 +495,6 @@
       return result;
     }
 
-    // Convert CSV rows to array of objects using first row as headers
     function csvToObjects(rows) {
       if (!rows.length) return [];
       const headers = rows[0].map(h => h.trim());
@@ -495,10 +507,6 @@
       });
     }
 
-    // --------------------------------------------------------------
-    // 2. Load deployments.csv (provides full tooltip details)
-    // Now stores ALL columns: model, provider, interface, reasoning, link, quantization, country, company
-    // --------------------------------------------------------------
     async function loadDeployments() {
       try {
         const resp = await fetch('results/deployments.csv', { cache: 'no-store' });
@@ -508,7 +516,6 @@
           const objects = csvToObjects(rows);
           objects.forEach(item => {
             if (item.model) {
-              // Store the entire raw object for that model (all fields)
               deploymentData[item.model] = {
                 provider: item.provider || '—',
                 interface: item.interface || '—',
@@ -520,18 +527,12 @@
               };
             }
           });
-          console.log('Deployments loaded:', Object.keys(deploymentData).length);
-        } else {
-          console.warn('deployments.csv not found, tooltips will be limited');
         }
       } catch (err) {
         console.warn('Could not load deployments.csv', err);
       }
     }
 
-    // --------------------------------------------------------------
-    // 3. Load leaderboard.csv, sort, combine with deployment info
-    // --------------------------------------------------------------
     async function loadLeaderboard(bypassCache = true) {
       const tbody = document.getElementById('leaderboard-body');
       const lastUpdatedSpan = document.getElementById('last-updated');
@@ -570,7 +571,6 @@
           return obj;
         }).filter(item => item.model && item.model !== '');
         
-        // Separate ranked (valid overall_score) vs unranked
         const ranked = [];
         const unranked = [];
         rawData.forEach(item => {
@@ -582,84 +582,62 @@
           }
         });
         
-        // Sort ranked descending by overall_score
         ranked.sort((a,b) => parseFloat(b.overall_score) - parseFloat(a.overall_score));
         const sortedAll = [...ranked, ...unranked];
         currentLeaderboardData = sortedAll;
         
-        // Render table with tooltip icons and lowercase model link
         let html = '';
         sortedAll.forEach((row, idx) => {
           const isRanked = idx < ranked.length;
           const rank = isRanked ? (idx + 1).toString() : '—';
           const rawModelName = row.model || '';
-          // --- LINK: lowercase model name for file structure ---
           const lowerModelSlug = rawModelName.toLowerCase();
           const modelLink = rawModelName 
             ? `<a href="${lowerModelSlug}/index.html">${escapeHtml(rawModelName)}</a>`
             : '—';
           
-          // YouTube link from video_url column
           const youtubeLink = (row.video_url && row.video_url !== '?' && row.video_url !== '')
             ? `<a href="${row.video_url}" target="_blank" rel="noopener">YouTube</a>`
             : '—';
           
-          // Score display with optional info icon (if deployment metadata exists)
           const scoreValue = row.overall_score && row.overall_score !== '?' ? row.overall_score : '—';
           const hasDeployInfo = deploymentData[rawModelName] !== undefined;
           const infoIconHtml = hasDeployInfo 
             ? `<span class="info-icon" data-model="${escapeHtml(rawModelName).replace(/"/g, '&quot;')}">ⓘ</span>` 
             : '';
           
-          // All other columns (using exact CSV field names)
-          const speed = row.speed || '—';
-          const oneShot = row.one_shot_attempts || '—';
-          const design = row.design || '—';
-          const arch = row.architecture || '—';
-          const codeQuality = row.code_quality || '—';
-          const features = row.feature_complete || '—';
-          const perf = row.performance || '—';
-          const access = row.accessibility || '—';
-          const bestPrac = row.best_practices || '—';
-          const value = row.value || '—';
-          
           html += `<tr>
             <td class="rank">${rank}</td>
             <td>${modelLink}</td>
             <td class="score">${escapeHtml(scoreValue)}${infoIconHtml}</td>
             <td>${youtubeLink}</td>
-            <td>${escapeHtml(speed)}</td>
-            <td>${escapeHtml(oneShot)}</td>
-            <td>${escapeHtml(design)}</td>
-            <td>${escapeHtml(arch)}</td>
-            <td>${escapeHtml(codeQuality)}</td>
-            <td>${escapeHtml(features)}</td>
-            <td>${escapeHtml(perf)}</td>
-            <td>${escapeHtml(access)}</td>
-            <td>${escapeHtml(bestPrac)}</td>
-            <td>${escapeHtml(value)}</td>
+            <td>${escapeHtml(row.speed || '—')}</td>
+            <td>${escapeHtml(row.one_shot_attempts || '—')}</td>
+            <td>${escapeHtml(row.design || '—')}</td>
+            <td>${escapeHtml(row.architecture || '—')}</td>
+            <td>${escapeHtml(row.code_quality || '—')}</td>
+            <td>${escapeHtml(row.feature_complete || '—')}</td>
+            <td>${escapeHtml(row.performance || '—')}</td>
+            <td>${escapeHtml(row.accessibility || '—')}</td>
+            <td>${escapeHtml(row.best_practices || '—')}</td>
+            <td>${escapeHtml(row.value || '—')}</td>
           </tr>`;
         });
         
         tbody.innerHTML = html;
       } catch (err) {
         console.error('Leaderboard load error:', err);
-        tbody.innerHTML = `<tr><td colspan="14" style="color:#ffa69e;">Error loading data: ${err.message}. Ensure results/leaderboard.csv exists.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="14" style="color:#ffa69e;">Error loading data: ${err.message}</td></tr>`;
         lastUpdatedSpan.textContent = 'Failed to load data';
       }
     }
 
-    // --------------------------------------------------------------
-    // 4. Tooltip logic displaying ALL columns from deployments.csv
-    // Columns: model, provider, interface, reasoning, link, quantization, country, company
-    // --------------------------------------------------------------
     function showTooltip(iconEl) {
       const modelName = iconEl.dataset.model;
       if (!modelName) return;
       
       const d = deploymentData[modelName];
       
-      // Build comprehensive tooltip with all available deployment fields
       if (!d) {
         tooltip.innerHTML = `
           <div><span class="tooltip-model-name">${escapeHtml(modelName)}</span></div>
@@ -667,7 +645,6 @@
           <div class="tooltip-row"><span class="tooltip-label">Info:</span><span class="tooltip-value">No deployment data available</span></div>
         `;
       } else {
-        // Construct rows for each column from deployments.csv
         let rowsHtml = `
           <div><span class="tooltip-model-name">${escapeHtml(modelName)}</span></div>
           <div class="tooltip-divider"></div>
@@ -679,7 +656,6 @@
           <div class="tooltip-row"><span class="tooltip-label">Company:</span><span class="tooltip-value">${escapeHtml(d.company)}</span></div>
         `;
         
-        // Add link if present
         if (d.link && d.link !== '—' && d.link !== '') {
           rowsHtml += `<div class="tooltip-row"><span class="tooltip-label">Link:</span><span class="tooltip-value"><a href="${escapeHtml(d.link)}" target="_blank" rel="noopener">Open ↗</a></span></div>`;
         }
@@ -689,7 +665,6 @@
       
       tooltip.style.display = 'block';
       tooltip.style.visibility = 'hidden';
-      // force layout reflow
       tooltip.offsetHeight;
       
       const rect = iconEl.getBoundingClientRect();
@@ -697,15 +672,12 @@
       let left = rect.left;
       let top = rect.bottom + 8;
       
-      // Adjust horizontal position to prevent overflow
       if (left + tooltipRect.width > window.innerWidth) {
         left = window.innerWidth - tooltipRect.width - 10;
       }
-      // Adjust vertical position if needed
       if (top + tooltipRect.height > window.innerHeight) {
         top = rect.top - tooltipRect.height - 8;
       }
-      // Ensure left isn't negative
       if (left < 10) left = 10;
       
       tooltip.style.left = left + 'px';
@@ -718,7 +690,6 @@
       activeIcon = null;
     }
     
-    // Global click & hover management (delegation) for .info-icon
     document.addEventListener('click', (e) => {
       const icon = e.target.closest('.info-icon');
       if (icon) {
@@ -732,19 +703,14 @@
         showTooltip(icon);
         return;
       }
-      // Hide if click outside tooltip and not on an icon
       if (!tooltip.contains(e.target)) {
         hideTooltip();
       }
     });
     
-    // Also hide on scroll or resize
     window.addEventListener('scroll', () => hideTooltip());
     window.addEventListener('resize', () => hideTooltip());
     
-    // --------------------------------------------------------------
-    // 5. Initialization: load deployments then leaderboard
-    // --------------------------------------------------------------
     async function init() {
       await loadDeployments();
       await loadLeaderboard(true);
