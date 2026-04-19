@@ -231,6 +231,13 @@
     .tooltip a {
       color: var(--accent2);
     }
+    /* Purple model name in tooltip */
+    .tooltip-model-name {
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: inline-block;
+    }
 
     /* Custom scrollbar */
     .leaderboard-wrapper::-webkit-scrollbar {
@@ -355,7 +362,7 @@
             <h2 style="margin-bottom: 0;">Leaderboard</h2>
           </div>
         </div>
-        <p class="muted">Updated after each evaluation video. <span class="info-icon" id="global-info" data-model="global" style="font-size:12px;">ⓘ Hover for details</span></p>
+        <p class="muted">Updated after each evaluation video.</p>
         <p class="last-updated muted" id="last-updated"></p>
 
         <div class="leaderboard-wrapper">
@@ -408,7 +415,6 @@
     // 1. Global data stores
     // --------------------------------------------------------------
     let deploymentData = {};        // key: model name (raw) -> provider, interface, reasoning, company, link
-    let leaderboardRows = [];       // raw parsed rows from leaderboard.csv (objects)
     let currentLeaderboardData = []; // enriched and sorted data for rendering
 
     // Tooltip elements & state
@@ -559,9 +565,7 @@
           const rank = isRanked ? (idx + 1).toString() : '—';
           const rawModelName = row.model || '';
           // --- LINK: lowercase model name for file structure ---
-          // Convert to lowercase, but keep extension? We just need model/index.html
           const lowerModelSlug = rawModelName.toLowerCase();
-          // Build link: {lowercase_model}/index.html
           const modelLink = rawModelName 
             ? `<a href="${lowerModelSlug}/index.html">${escapeHtml(rawModelName)}</a>`
             : '—';
@@ -609,7 +613,6 @@
         });
         
         tbody.innerHTML = html;
-        attachTooltipListeners(); // rebind after DOM update
       } catch (err) {
         console.error('Leaderboard load error:', err);
         tbody.innerHTML = `<tr><td colspan="14" style="color:#ffa69e;">Error loading data: ${err.message}. Ensure results/leaderboard.csv exists.</td></tr>`;
@@ -618,36 +621,22 @@
     }
 
     // --------------------------------------------------------------
-    // 4. Tooltip logic (identical to your working version)
+    // 4. Tooltip logic with purple model name
     // --------------------------------------------------------------
     function showTooltip(iconEl) {
       const modelName = iconEl.dataset.model;
       if (!modelName) return;
       
-      // special global tooltip hint? just in case
-      if (modelName === 'global') {
-        tooltip.innerHTML = `<div><b>ℹ️ Info</b></div><div>Hover over ⓘ next to each model score to see deployment details (provider, interface, etc.)</div>`;
-        tooltip.style.display = 'block';
-        tooltip.style.visibility = 'hidden';
-        tooltip.offsetHeight;
-        const rect = iconEl.getBoundingClientRect();
-        let left = rect.left;
-        let top = rect.bottom + 8;
-        const tRect = tooltip.getBoundingClientRect();
-        if (left + tRect.width > window.innerWidth) left = window.innerWidth - tRect.width - 10;
-        if (top + tRect.height > window.innerHeight) top = rect.top - tRect.height - 8;
-        tooltip.style.left = left + 'px';
-        tooltip.style.top = top + 'px';
-        tooltip.style.visibility = 'visible';
-        return;
-      }
-      
       const d = deploymentData[modelName];
+      // Build tooltip content with model name styled in purple
       if (!d) {
-        tooltip.innerHTML = `<div><b>${escapeHtml(modelName)}</b></div><div>No additional deployment info available.</div>`;
+        tooltip.innerHTML = `
+          <div><span class="tooltip-model-name">${escapeHtml(modelName)}</span></div>
+          <div>No additional deployment info available.</div>
+        `;
       } else {
         tooltip.innerHTML = `
-          <div><b>${escapeHtml(modelName)}</b></div>
+          <div><span class="tooltip-model-name">${escapeHtml(modelName)}</span></div>
           <div><b>Provider:</b> ${escapeHtml(d.provider)}</div>
           <div><b>Interface:</b> ${escapeHtml(d.interface)}</div>
           <div><b>Reasoning:</b> ${escapeHtml(d.reasoning)}</div>
@@ -658,6 +647,7 @@
       
       tooltip.style.display = 'block';
       tooltip.style.visibility = 'hidden';
+      // force layout reflow
       tooltip.offsetHeight;
       
       const rect = iconEl.getBoundingClientRect();
@@ -682,12 +672,7 @@
       activeIcon = null;
     }
     
-    function attachTooltipListeners() {
-      // Remove any previous global listeners to avoid duplicates, but we'll handle via delegation.
-      // We'll set up event delegation on document for .info-icon
-    }
-    
-    // Global click & hover management (delegation)
+    // Global click & hover management (delegation) for .info-icon
     document.addEventListener('click', (e) => {
       const icon = e.target.closest('.info-icon');
       if (icon) {
@@ -701,6 +686,7 @@
         showTooltip(icon);
         return;
       }
+      // Hide if click outside tooltip and not on an icon
       if (!tooltip.contains(e.target)) {
         hideTooltip();
       }
@@ -716,20 +702,6 @@
     async function init() {
       await loadDeployments();
       await loadLeaderboard(true);
-      // Also attach any extra hover behavior for global info (already covered)
-      const globalInfo = document.getElementById('global-info');
-      if (globalInfo) {
-        globalInfo.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (activeIcon === globalInfo) {
-            hideTooltip();
-            return;
-          }
-          if (activeIcon) hideTooltip();
-          activeIcon = globalInfo;
-          showTooltip(globalInfo);
-        });
-      }
     }
     
     init();
