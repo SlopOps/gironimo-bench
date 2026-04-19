@@ -177,33 +177,18 @@
       white-space: nowrap;
     }
 
-    .score-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
     .info-icon {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--accent);
-      background: rgba(124,92,255,0.15);
-      padding: 2px 6px;
-      border-radius: 20px;
+      margin-left: 6px;
+      font-size: 12px;
+      color: var(--muted);
       cursor: pointer;
       user-select: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      font-family: monospace;
-      line-height: 1;
+      display: inline-block;
+      transition: color 0.2s ease;
     }
 
     .info-icon:hover {
-      background: var(--accent);
-      color: white;
+      color: var(--accent2);
     }
 
     .tooltip {
@@ -368,7 +353,6 @@
 <script>
 const tooltip = document.getElementById('tooltip');
 let activeIcon = null;
-let hideTimeout = null;
 
 // Global data stores
 let deploymentData = {};
@@ -425,23 +409,21 @@ function formatValue(val) {
   return escapeHtml(val);
 }
 
-/* ---------- Tooltip with bold purple labels and "link ↗" ---------- */
+/* ---------- Tooltip: clean, reliable, bold purple labels, "link ↗" ---------- */
 function showTooltip(iconEl) {
   const model = iconEl.dataset.model;
   const d = deploymentData[model];
   if (!d) return;
 
-  activeIcon = iconEl;
-
-  // Helper to get value or dash
-  const getVal = (field) => (field && field !== '' && field !== '?') ? escapeHtml(field) : '—';
+  // Helper: get value or dash
+  const val = (v) => (v && v !== '' && v !== '?' ? escapeHtml(v) : '—');
   
-  const provider = getVal(d.provider);
-  const interfaceVal = getVal(d.interface);
-  const reasoning = getVal(d.reasoning);
-  const quantization = getVal(d.quantization);
-  const country = getVal(d.country);
-  const company = getVal(d.company);
+  const provider = val(d.provider);
+  const interfaceVal = val(d.interface);
+  const reasoning = val(d.reasoning);
+  const quantization = val(d.quantization);
+  const country = val(d.country);
+  const company = val(d.company);
   const linkUrl = (d.link && d.link !== '' && d.link !== '?') ? d.link : null;
 
   let html = `
@@ -461,129 +443,93 @@ function showTooltip(iconEl) {
 
   tooltip.innerHTML = html;
   tooltip.style.display = 'block';
-  tooltip.style.pointerEvents = 'auto';
-  positionTooltip(iconEl);
-}
-
-function hideTooltip() {
-  tooltip.style.display = 'none';
-  tooltip.style.pointerEvents = 'none';
-  activeIcon = null;
-}
-
-function positionTooltip(iconEl) {
-  const iconRect = iconEl.getBoundingClientRect();
-  // Temporarily offscreen to measure
-  tooltip.style.left = '-9999px';
-  tooltip.style.top = '-9999px';
   
+  // Position relative to the clicked icon
+  const rect = iconEl.getBoundingClientRect();
+  let left = rect.left + window.scrollX;
+  let top = rect.bottom + window.scrollY + 8;
+  
+  // Measure tooltip to adjust boundaries
   const tipRect = tooltip.getBoundingClientRect();
+  const viewportWidth = window.innerWidth;
   
-  let left = iconRect.left + (iconRect.width / 2) - (tipRect.width / 2);
-  let top = iconRect.bottom + 10;
-  
-  // Boundaries
-  if (left < 8) left = 8;
-  if (left + tipRect.width > window.innerWidth - 8) {
-    left = window.innerWidth - tipRect.width - 8;
+  if (left + tipRect.width > viewportWidth - 10) {
+    left = viewportWidth - tipRect.width - 10;
   }
-  
-  if (top + tipRect.height > window.innerHeight - 8) {
-    top = iconRect.top - tipRect.height - 10;
-  }
-  if (top < 8) top = 8;
+  if (left < 10) left = 10;
   
   tooltip.style.left = left + 'px';
   tooltip.style.top = top + 'px';
 }
 
-function scheduleHide() {
-  if (hideTimeout) clearTimeout(hideTimeout);
-  hideTimeout = setTimeout(() => {
-    hideTooltip();
-  }, 200);
+function hideTooltip() {
+  tooltip.style.display = 'none';
+  activeIcon = null;
 }
 
-function cancelHide() {
-  if (hideTimeout) {
-    clearTimeout(hideTimeout);
-    hideTimeout = null;
-  }
-}
-
-/* ---------- Desktop hover + click handling (works reliably) ---------- */
-// Hover to show
-document.addEventListener('mouseover', e => {
-  if (e.target.classList.contains('info-icon')) {
-    cancelHide();
-    showTooltip(e.target);
-  }
-  // Keep tooltip open when hovering over it
-  if (e.target === tooltip || tooltip.contains(e.target)) {
-    cancelHide();
-  }
-});
-
-// Hide on mouseout unless moving to tooltip
-document.addEventListener('mouseout', e => {
-  if (e.target.classList.contains('info-icon')) {
-    const related = e.relatedTarget;
-    if (!tooltip.contains(related)) {
-      scheduleHide();
-    }
-  }
-  if (e.target === tooltip && !tooltip.contains(e.relatedTarget)) {
-    scheduleHide();
-  }
-});
-
-// Keep tooltip alive when hovering tooltip itself
-tooltip.addEventListener('mouseenter', cancelHide);
-tooltip.addEventListener('mouseleave', scheduleHide);
-
-/* ---------- CLICK SUPPORT: click on info-icon toggles, links inside tooltip work ---------- */
-document.addEventListener('click', e => {
-  const clickedIcon = e.target.classList.contains('info-icon');
-  const clickedInsideTooltip = tooltip.contains(e.target);
+/* ---------- SIMPLE CLICK-ONLY TOOLTIP (no hover fragility) ---------- */
+document.addEventListener('click', (e) => {
+  const icon = e.target.closest('.info-icon');
   
-  if (clickedIcon) {
-    e.preventDefault();
+  // Clicked on an info icon
+  if (icon) {
     e.stopPropagation();
-    cancelHide();
-    // Toggle: if same icon and tooltip visible, hide it; else show fresh
-    if (activeIcon === e.target && tooltip.style.display === 'block') {
+    
+    // If same icon is already open, close it
+    if (activeIcon === icon && tooltip.style.display === 'block') {
       hideTooltip();
-    } else {
-      showTooltip(e.target);
+      return;
     }
+    
+    // Otherwise show new tooltip
+    activeIcon = icon;
+    showTooltip(icon);
     return;
   }
   
-  // If click is inside tooltip, allow link navigation, don't close
-  if (clickedInsideTooltip) {
-    // Let the link do its job; keep tooltip open
-    return;
-  }
-  
-  // Click anywhere else: close tooltip
-  hideTooltip();
-});
-
-// Prevent tooltip from closing when clicking the link itself (bubbling handled)
-tooltip.addEventListener('click', (e) => {
-  e.stopPropagation(); // Ensure click doesn't bubble to document to trigger hide
-});
-
-// Reposition on scroll/resize
-window.addEventListener('resize', () => {
-  if (activeIcon && tooltip.style.display === 'block') {
-    positionTooltip(activeIcon);
+  // Clicked anywhere else (not on icon and not inside tooltip) closes tooltip
+  if (!tooltip.contains(e.target)) {
+    hideTooltip();
   }
 });
 
+// Optional: close tooltip on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && tooltip.style.display === 'block') {
+    hideTooltip();
+  }
+});
+
+// Reposition on scroll if tooltip is open (keep it near the icon)
 window.addEventListener('scroll', () => {
   if (activeIcon && tooltip.style.display === 'block') {
-    positionTooltip(activeIcon);
+    const rect = activeIcon.getBoundingClientRect();
+    let left = rect.left + window.scrollX;
+    let top = rect.bottom + window.scrollY + 8;
+    const tipRect = tooltip.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    if (left + tipRect.width > viewportWidth - 10) {
+      left = viewportWidth - tipRect.width - 10;
+    }
+    if (left < 10) left = 10;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  }
+});
+
+window.addEventListener('resize', () => {
+  if (activeIcon && tooltip.style.display === 'block') {
+    const rect = activeIcon.getBoundingClientRect();
+    let left = rect.left + window.scrollX;
+    let top = rect.bottom + window.scrollY + 8;
+    const tipRect = tooltip.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    if (left + tipRect.width > viewportWidth - 10) {
+      left = viewportWidth - tipRect.width - 10;
+    }
+    if (left < 10) left = 10;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
   }
 });
 
@@ -618,7 +564,7 @@ async function loadData() {
     leaderboardData = rows;
     renderLeaderboard();
 
-    // Update last updated timestamp from file if available
+    // Update last updated timestamp
     const lastModified = leaderboardRes.headers.get('last-modified');
     const lastUpdatedEl = document.getElementById('last-updated');
     if (lastUpdatedEl) {
@@ -665,7 +611,12 @@ function renderLeaderboard() {
   });
 
   tbody.innerHTML = sorted.map((row, idx) => {
-    const modelName = formatValue(row.model);
+    const rawModel = row.model || '';
+    // Model column links to /model/index.html (folder structure)
+    const modelLink = rawModel
+      ? `<a href="${encodeURIComponent(rawModel)}/index.html">${escapeHtml(rawModel)}</a>`
+      : '—';
+    
     const scoreVal = formatValue(row.overall_score);
     const hasNumericScore = !isNaN(parseFloat(row.overall_score));
     const rankDisplay = hasNumericScore ? idx + 1 : '—';
@@ -676,21 +627,18 @@ function renderLeaderboard() {
       : '—';
     
     // Info icon: ONLY show for ranked models (have numeric score) AND have deployment data
-    // Place it next to the score, not next to model name
     const showInfoIcon = hasNumericScore && deploymentData[row.model];
     const infoIconHtml = showInfoIcon 
       ? `<span class="info-icon" data-model="${escapeHtml(row.model)}" title="View deployment details">ⓘ</span>` 
       : '';
     
-    // Score cell with wrapper to contain both score value and icon
-    const scoreCell = showInfoIcon
-      ? `<div class="score-wrapper"><span class="score">${scoreVal}</span>${infoIconHtml}</div>`
-      : `<span class="score">${scoreVal}</span>`;
+    // Score cell: score value + inline icon (clean, no wrapper)
+    const scoreCell = `<span class="score">${scoreVal}</span>${infoIconHtml}`;
 
     return `
       <tr>
         <td class="rank">${rankDisplay}</td>
-        <td>${modelName}</td>
+        <td>${modelLink}</td>
         <td>${scoreCell}</td>
         <td>${youtubeLink}</td>
         <td>${formatValue(row.speed)}</td>
