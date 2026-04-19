@@ -1,0 +1,6 @@
+model,provider,mode,runtime,quantization,hardware,context,date_tested,notes
+Deepseek-3.2,
+Gemma-4,
+Qwen-3.6-Plus,
+ChatGPT-5.3,
+Kimi-2.5
