@@ -333,6 +333,107 @@
 <div class="tooltip" id="tooltip"></div>
 
 <script>
+let deploymentData = {};
+
+function escapeHtml(str) {
+  if (!str) return '—';
+  return String(str).replace(/[&<>]/g, m => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;'
+  }[m]));
+}
+
+function parseCSV(text) {
+  const lines = text.split('\n').filter(x => x.trim());
+  const rows = [];
+
+  for (let line of lines) {
+    let row = [];
+    let cur = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+
+      if (c === '"') inQuotes = !inQuotes;
+      else if (c === ',' && !inQuotes) {
+        row.push(cur.trim());
+        cur = '';
+      } else {
+        cur += c;
+      }
+    }
+
+    row.push(cur.trim());
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+async function loadDeployments() {
+  const res = await fetch('results/deployments.csv?t=' + Date.now());
+  const text = await res.text();
+
+  const rows = parseCSV(text);
+  const headers = rows[0];
+
+  rows.slice(1).forEach(r => {
+    const obj = {};
+    headers.forEach((h,i)=>obj[h.trim()] = (r[i]||'').trim());
+    deploymentData[obj.model] = obj;
+  });
+}
+
+async function loadLeaderboard() {
+  const tbody = document.getElementById('leaderboard-body');
+
+  const res = await fetch('results/leaderboard.csv?t=' + Date.now());
+  const text = await res.text();
+
+  const rows = parseCSV(text);
+  const headers = rows[0];
+
+  const data = rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h,i)=>obj[h.trim()] = (r[i]||'').trim());
+    return obj;
+  });
+
+  let html = '';
+
+  data.forEach((row,index) => {
+    html += `
+      <tr>
+        <td>${index+1}</td>
+        <td>${row.model}</td>
+        <td class="score">
+          ${row.overall_score}
+          <span class="info-icon" data-model="${row.model}">ⓘ</span>
+        </td>
+        <td><a href="${row.video_url}" target="_blank">YouTube</a></td>
+        <td>${row.speed}</td>
+        <td>${row.one_shot_attempts}</td>
+        <td>${row.design}</td>
+        <td>${row.architecture}</td>
+        <td>${row.code_quality}</td>
+        <td>${row.feature_complete}</td>
+        <td>${row.performance}</td>
+        <td>${row.accessibility}</td>
+        <td>${row.best_practices}</td>
+        <td>${row.value}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+}
+
+(async function init() {
+  await loadDeployments();
+  await loadLeaderboard();
+})();
 
 const tooltip = document.getElementById('tooltip');
 let activeIcon = null;
