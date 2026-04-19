@@ -175,7 +175,7 @@ Future versions may introduce new challenges or scoring refinements.
 | *Coming soon* | – | – | – | – |
 
 > Scores are **curated by hand**, not automated. Leaderboard updates after each SlopOps video.  
-> Full leaderboard and detailed breakdowns will be available at: [https://gironimo.ai/bench](https://gironimo.ai/bench) (coming soon)
+> Full leaderboard and detailed breakdowns is available at: [https://gironimo.ai](https://gironimo.ai)
 
 ---
 
