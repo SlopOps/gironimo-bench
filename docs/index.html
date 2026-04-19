@@ -7,9 +7,9 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-Q5R5LECE2Y');
   </script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -32,9 +32,10 @@
     body {
       margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: radial-gradient(1200px 800px at 20% 0%, #1a1440 0%, transparent 60%),
-                  radial-gradient(900px 600px at 90% 20%, #0b3b4a 0%, transparent 55%),
-                  var(--bg);
+      background:
+        radial-gradient(1200px 800px at 20% 0%, #1a1440 0%, transparent 60%),
+        radial-gradient(900px 600px at 90% 20%, #0b3b4a 0%, transparent 55%),
+        var(--bg);
       color: var(--text);
       line-height: 1.6;
     }
@@ -58,7 +59,6 @@
 
     .logo { font-weight: 700; }
 
-    /* GitHub button styling */
     .github-btn {
       display: inline-flex;
       align-items: center;
@@ -72,12 +72,12 @@
       transition: all 0.2s ease;
       text-decoration: none;
     }
-    
+
     .github-btn:hover {
       background: rgba(255,255,255,0.15);
       border-color: rgba(255,255,255,0.3);
     }
-    
+
     .github-icon {
       width: 18px;
       height: 18px;
@@ -124,26 +124,18 @@
       color: black;
     }
 
-    main {
-      display: block;
-    }
-
-    section {
-      padding: 40px 0;
-    }
+    section { padding: 40px 0; }
 
     h2 {
       font-size: 28px;
       margin-bottom: 12px;
     }
 
-    h3 {
-      margin-top: 0;
-    }
+    h3 { margin-top: 0; }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3,1fr);
       gap: 16px;
     }
 
@@ -155,7 +147,6 @@
       backdrop-filter: blur(10px);
     }
 
-    /* Leaderboard wrapper with scrolling */
     .leaderboard-wrapper {
       overflow-x: auto;
       max-height: 500px;
@@ -180,7 +171,7 @@
       color: var(--muted);
       font-size: 12px;
       text-transform: uppercase;
-      background: rgba(11, 15, 25, 0.95);
+      background: rgba(11,15,25,0.95);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -191,9 +182,7 @@
       text-decoration: none;
     }
 
-    td a:hover {
-      text-decoration: underline;
-    }
+    td a:hover { text-decoration: underline; }
 
     .rank {
       font-weight: 700;
@@ -202,17 +191,40 @@
 
     .score {
       font-weight: 600;
+      white-space: nowrap;
     }
 
-    /* Custom scrollbar */
+    .info-icon {
+      margin-left: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .info-icon:hover {
+      color: var(--accent2);
+    }
+
+    .tooltip {
+      position: fixed;
+      z-index: 9999;
+      max-width: 320px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #111827;
+      border: 1px solid var(--border);
+      color: white;
+      font-size: 13px;
+      line-height: 1.45;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      display: none;
+      pointer-events: none;
+    }
+
     .leaderboard-wrapper::-webkit-scrollbar {
       width: 8px;
       height: 8px;
-    }
-
-    .leaderboard-wrapper::-webkit-scrollbar-track {
-      background: var(--card);
-      border-radius: 4px;
     }
 
     .leaderboard-wrapper::-webkit-scrollbar-thumb {
@@ -220,27 +232,19 @@
       border-radius: 4px;
     }
 
-    /* Mobile styles */
     @media (max-width: 768px) {
       .grid { grid-template-columns: 1fr; }
       h1 { font-size: 38px; }
-      
-      /* Hide all columns except Rank, Model, Score, and YouTube on mobile */
+
       th:nth-child(n+5),
       td:nth-child(n+5) {
         display: none;
       }
-      
-      /* Keep YouTube column visible (4th column) */
+
       th:nth-child(4),
       td:nth-child(4) {
         display: table-cell;
       }
-    }
-
-    @media (max-width: 900px) {
-      .grid { grid-template-columns: 1fr; }
-      h1 { font-size: 38px; }
     }
 
     footer {
@@ -249,7 +253,7 @@
       color: var(--muted);
       font-size: 14px;
     }
-    
+
     .last-updated {
       font-size: 12px;
       margin-top: 8px;
@@ -258,282 +262,260 @@
 </head>
 
 <body>
+<div class="container">
 
-  <div class="container">
+<nav>
+  <div class="logo">GIRONIMO BENCH</div>
 
-    <!-- NAV with GitHub button -->
-    <nav aria-label="Primary navigation">
-      <div class="logo">GIRONIMO BENCH</div>
-      <a href="https://github.com/SlopOps/gironimo-bench" class="github-btn" target="_blank" rel="noopener noreferrer">
-        <svg class="github-icon" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-        </svg>
-        <span>GitHub</span>
-      </a>
-    </nav>
+  <a href="https://github.com/SlopOps/gironimo-bench"
+     class="github-btn"
+     target="_blank"
+     rel="noopener noreferrer">
+    <svg class="github-icon" viewBox="0 0 16 16">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    <span>GitHub</span>
+  </a>
+</nav>
 
-    <!-- MAIN LANDMARK -->
-    <main>
+<header class="hero">
+  <h1>Benchmarking AI on <span class="gradient">real software engineering</span></h1>
+  <p class="muted">
+    Gironimo Bench evaluates how well language models turn a single specification into a production-ready system.
+  </p>
 
-      <!-- HERO -->
-      <header class="hero">
-        <h1>
-          Benchmarking AI on <span class="gradient">real software engineering</span>
-        </h1>
-        <p class="muted">
-          Gironimo Bench evaluates how well language models turn a single specification into a production-ready system.
-        </p>
-
-        <div class="cta">
-          <a class="btn primary" href="#leaderboard">View Leaderboard</a>
-          <a class="btn" href="https://youtube.com/@SlopOps" target="_blank" rel="noopener">Watch Episodes</a>
-        </div>
-      </header>
-
-      <!-- FEATURES -->
-      <section>
-        <h2>What It Tests</h2>
-
-        <div class="grid">
-          <div class="card">
-            <h3>Spec → System</h3>
-            <p class="muted">Interpret long engineering specifications into working software.</p>
-          </div>
-
-          <div class="card">
-            <h3>Real Engineering</h3>
-            <p class="muted">Architecture, maintainability, and deployment readiness matter.</p>
-          </div>
-
-          <div class="card">
-            <h3>Human Scoring</h3>
-            <p class="muted">Every run is manually reviewed for consistency and quality.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- DIFFERENTIATION -->
-      <section>
-        <h2>Why It's Different</h2>
-        <p class="muted">
-          Unlike toy benchmarks, Gironimo Bench evaluates full system delivery:
-          from specification interpretation to deployable production code.
-        </p>
-      </section>
-
-      <!-- LEADERBOARD -->
-      <section id="leaderboard">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-          <div>
-            <h2 style="margin-bottom: 0;">Leaderboard</h2>
-          </div>
-        </div>
-        <p class="muted">Updated after each evaluation video.</p>
-        <p class="last-updated muted" id="last-updated"></p>
-
-        <div class="leaderboard-wrapper">
-          <table id="leaderboard-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Model</th>
-                <th>Score</th>
-                <th>YouTube</th>
-                <th>Speed</th>
-                <th>1-Shot</th>
-                <th>Design</th>
-                <th>Arch</th>
-                <th>Code</th>
-                <th>Features</th>
-                <th>Perf</th>
-                <th>Access</th>
-                <th>Best Prac</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody id="leaderboard-body">
-              <tr>
-                <td colspan="14">Loading...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-    </main>
-
-    <!-- FOOTER -->
-    <footer>
-      Built by <strong>SlopOps</strong> •
-      <a href="https://github.com/SlopOps" target="_blank">GitHub</a> •
-      <a href="https://youtube.com/@SlopOps" target="_blank">YouTube</a>
-      <br><br>
-      © 2026 SlopOps
-    </footer>
-
+  <div class="cta">
+    <a class="btn primary" href="#leaderboard">View Leaderboard</a>
+    <a class="btn" href="https://youtube.com/@SlopOps" target="_blank">Watch Episodes</a>
   </div>
+</header>
 
-  <script>
-    let currentData = null;
-    
-    // Parse CSV and render leaderboard
-    async function loadLeaderboard(bypassCache = false) {
-      const tbody = document.getElementById('leaderboard-body');
-      const lastUpdatedSpan = document.getElementById('last-updated');
-      
-      try {
-        tbody.innerHTML = '<tr><td colspan="14">Loading...</td></tr>';
-        
-        // Add cache-busting timestamp
-        let url = 'results/leaderboard.csv';
-        if (bypassCache) {
-          url += '?t=' + Date.now();
-        }
-        
-        const response = await fetch(url, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const csvText = await response.text();
-        
-        // Show last modified time from response headers if available
-        const lastModified = response.headers.get('last-modified');
-        if (lastModified) {
-          lastUpdatedSpan.textContent = `Last updated: ${new Date(lastModified).toLocaleString()}`;
-        } else {
-          lastUpdatedSpan.textContent = `Loaded: ${new Date().toLocaleString()}`;
-        }
-        
-        const rows = parseCSV(csvText);
-        
-        if (rows.length <= 1) {
-          tbody.innerHTML = '<tr><td colspan="14">No data available</td></tr>';
-          return;
-        }
-        
-        // Parse header and data
-        const headers = rows[0];
-        let data = rows.slice(1).map(row => {
-          const obj = {};
-          headers.forEach((h, i) => {
-            obj[h.trim()] = row[i] ? row[i].trim() : '';
-          });
-          return obj;
-        }).filter(row => row.model && row.model !== '');
-        
-        // Separate ranked and unranked entries
-        const ranked = [];
-        const unranked = [];
-        
-        data.forEach(row => {
-          const score = row.overall_score;
-          if (score && score !== '??' && score !== '?' && !isNaN(parseFloat(score))) {
-            ranked.push(row);
-          } else {
-            unranked.push(row);
-          }
-        });
-        
-        // Sort ranked by overall_score (descending)
-        ranked.sort((a, b) => parseFloat(b.overall_score) - parseFloat(a.overall_score));
-        
-        // Combine: ranked first, then unranked
-        const sortedData = [...ranked, ...unranked];
-        currentData = sortedData;
-        
-        // Render table
-        let html = '';
-        
-        sortedData.forEach((row, index) => {
-          const isRanked = index < ranked.length;
-          const rank = isRanked ? index + 1 : '—';
-          const modelLink = row.result_url && row.result_url !== '?' && row.result_url !== '' 
-            ? `<a href="${row.result_url}" target="_blank">${escapeHtml(row.model)}</a>` 
-            : escapeHtml(row.model);
-          const youtubeLink = row.video_url && row.video_url !== '?' && row.video_url !== '' 
-            ? `<a href="${row.video_url}" target="_blank">YouTube</a>` 
-            : '—';
-          
-          html += `<tr>
-            <td class="rank">${rank}</td>
-            <td>${modelLink}</td>
-            <td class="score">${escapeHtml(row.overall_score || '—')}</td>
-            <td>${youtubeLink}</td>
-            <td>${escapeHtml(row.speed || '—')}</td>
-            <td>${escapeHtml(row.one_shot_attempts || '—')}</td>
-            <td>${escapeHtml(row.design || '—')}</td>
-            <td>${escapeHtml(row.architecture || '—')}</td>
-            <td>${escapeHtml(row.code_quality || '—')}</td>
-            <td>${escapeHtml(row.feature_complete || '—')}</td>
-            <td>${escapeHtml(row.performance || '—')}</td>
-            <td>${escapeHtml(row.accessibility || '—')}</td>
-            <td>${escapeHtml(row.best_practices || '—')}</td>
-            <td>${escapeHtml(row.value || '—')}</td>
-          </tr>`;
-        });
-        
-        tbody.innerHTML = html;
-      } catch (error) {
-        console.error('Error loading leaderboard:', error);
-        tbody.innerHTML = `<tr><td colspan="14" style="color: #ffa69e;">Error loading data: ${error.message}. Make sure results/leaderboard.csv exists.</td></tr>`;
-        lastUpdatedSpan.textContent = 'Failed to load data';
+<section id="leaderboard">
+  <h2>Leaderboard</h2>
+  <p class="muted">Updated after each evaluation video.</p>
+  <p class="last-updated muted" id="last-updated"></p>
+
+  <div class="leaderboard-wrapper">
+    <table>
+      <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Model</th>
+        <th>Score</th>
+        <th>YouTube</th>
+        <th>Speed</th>
+        <th>1-Shot</th>
+        <th>Design</th>
+        <th>Arch</th>
+        <th>Code</th>
+        <th>Features</th>
+        <th>Perf</th>
+        <th>Access</th>
+        <th>Best Prac</th>
+        <th>Value</th>
+      </tr>
+      </thead>
+      <tbody id="leaderboard-body">
+      <tr><td colspan="14">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  Built by <strong>SlopOps</strong> •
+  <a href="https://github.com/SlopOps" target="_blank">GitHub</a> •
+  <a href="https://youtube.com/@SlopOps" target="_blank">YouTube</a>
+</footer>
+
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+let deploymentData = {};
+
+function escapeHtml(str) {
+  if (!str) return '—';
+  return String(str).replace(/[&<>]/g, m => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;'
+  }[m]));
+}
+
+function parseCSV(text) {
+  const lines = text.split('\n').filter(x => x.trim());
+  const rows = [];
+
+  for (let line of lines) {
+    let row = [];
+    let cur = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+
+      if (c === '"') {
+        inQuotes = !inQuotes;
+      } else if (c === ',' && !inQuotes) {
+        row.push(cur.trim());
+        cur = '';
+      } else {
+        cur += c;
       }
     }
-    
-    // Escape HTML to prevent XSS
-    function escapeHtml(str) {
-      if (!str) return '—';
-      return String(str).replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-      });
-    }
-    
-    // Simple CSV parser
-    function parseCSV(text) {
-      const lines = text.split('\n');
-      const result = [];
-      
-      for (let line of lines) {
-        if (!line.trim()) continue;
-        
-        const row = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-          
-          if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
-            row.push(current.trim());
-            current = '';
-          } else {
-            current += char;
-          }
-        }
-        
-        row.push(current.trim());
-        result.push(row);
-      }
-      
-      return result;
-    }
-    
-    // Load on page load with cache busting
-    loadLeaderboard(true);
-  </script>
+
+    row.push(cur.trim());
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+async function loadDeployments() {
+  try {
+    const res = await fetch('results/deployments.csv?t=' + Date.now(), {
+      cache: 'no-store'
+    });
+
+    const text = await res.text();
+    const rows = parseCSV(text);
+    const headers = rows[0];
+
+    rows.slice(1).forEach(r => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h.trim()] = (r[i] || '').trim());
+      deploymentData[obj.model] = obj;
+    });
+
+  } catch (e) {
+    console.error('deployments.csv failed to load', e);
+  }
+}
+
+async function loadLeaderboard() {
+  const tbody = document.getElementById('leaderboard-body');
+  const updated = document.getElementById('last-updated');
+
+  try {
+    const res = await fetch('results/leaderboard.csv?t=' + Date.now(), {
+      cache: 'no-store'
+    });
+
+    const text = await res.text();
+
+    const lm = res.headers.get('last-modified');
+    updated.textContent = lm
+      ? 'Last updated: ' + new Date(lm).toLocaleString()
+      : '';
+
+    const rows = parseCSV(text);
+    const headers = rows[0];
+
+    let data = rows.slice(1).map(r => {
+      const obj = {};
+      headers.forEach((h,i) => obj[h.trim()] = (r[i] || '').trim());
+      return obj;
+    });
+
+    const ranked = [];
+    const unranked = [];
+
+    data.forEach(row => {
+      const score = row.overall_score;
+      if (score && score !== '??' && !isNaN(parseFloat(score))) ranked.push(row);
+      else unranked.push(row);
+    });
+
+    ranked.sort((a,b)=>parseFloat(b.overall_score)-parseFloat(a.overall_score));
+
+    const sorted = [...ranked, ...unranked];
+
+    let html = '';
+
+    sorted.forEach((row, index) => {
+      const isRanked = index < ranked.length;
+      const rank = isRanked ? index + 1 : '—';
+
+      const modelLink = row.result_url
+        ? `<a href="${row.result_url}" target="_blank">${escapeHtml(row.model)}</a>`
+        : escapeHtml(row.model);
+
+      const youtubeLink = row.video_url && row.video_url !== '?'
+        ? `<a href="${row.video_url}" target="_blank">YouTube</a>`
+        : '—';
+
+      html += `
+      <tr>
+        <td class="rank">${rank}</td>
+        <td>${modelLink}</td>
+        <td class="score">
+          ${escapeHtml(row.overall_score || '—')}
+          <span class="info-icon" data-model="${escapeHtml(row.model)}">ⓘ</span>
+        </td>
+        <td>${youtubeLink}</td>
+        <td>${escapeHtml(row.speed)}</td>
+        <td>${escapeHtml(row.one_shot_attempts)}</td>
+        <td>${escapeHtml(row.design)}</td>
+        <td>${escapeHtml(row.architecture)}</td>
+        <td>${escapeHtml(row.code_quality)}</td>
+        <td>${escapeHtml(row.feature_complete)}</td>
+        <td>${escapeHtml(row.performance)}</td>
+        <td>${escapeHtml(row.accessibility)}</td>
+        <td>${escapeHtml(row.best_practices)}</td>
+        <td>${escapeHtml(row.value)}</td>
+      </tr>`;
+    });
+
+    tbody.innerHTML = html;
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="14">Failed to load leaderboard</td></tr>`;
+  }
+}
+
+const tooltip = document.getElementById('tooltip');
+
+document.addEventListener('mouseover', e => {
+  if (!e.target.classList.contains('info-icon')) return;
+
+  const model = e.target.dataset.model;
+  const d = deploymentData[model];
+  if (!d) return;
+
+  tooltip.innerHTML = `
+    <strong>${model}</strong><br>
+    Provider: ${d.provider}<br>
+    Interface: ${d.interface}<br>
+    Reasoning: ${d.reasoning}<br>
+    Quantization: ${d.quantization}<br>
+    Country: ${d.country}<br>
+    Company: ${d.company}<br>
+    <a href="${d.link}" target="_blank" style="color:#00d4ff;">Open</a>
+  `;
+
+  tooltip.style.display = 'block';
+});
+
+document.addEventListener('mousemove', e => {
+  if (tooltip.style.display === 'block') {
+    tooltip.style.left = (e.clientX + 14) + 'px';
+    tooltip.style.top = (e.clientY + 14) + 'px';
+  }
+});
+
+document.addEventListener('mouseout', e => {
+  if (e.target.classList.contains('info-icon')) {
+    tooltip.style.display = 'none';
+  }
+});
+
+(async function init() {
+  await loadDeployments();
+  await loadLeaderboard();
+})();
+</script>
 
 </body>
 </html>
