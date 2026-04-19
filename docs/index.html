@@ -129,22 +129,6 @@
       margin-bottom: 12px;
     }
 
-    h3 { margin-top: 0; }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3,1fr);
-      gap: 16px;
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 18px;
-      backdrop-filter: blur(10px);
-    }
-
     .leaderboard-wrapper {
       overflow-x: auto;
       max-height: 500px;
@@ -193,8 +177,14 @@
       white-space: nowrap;
     }
 
+    .score-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
     .info-icon {
-      margin-left: 8px;
       font-size: 11px;
       font-weight: 600;
       color: var(--accent);
@@ -203,9 +193,12 @@
       border-radius: 20px;
       cursor: pointer;
       user-select: none;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       transition: all 0.2s ease;
       font-family: monospace;
+      line-height: 1;
     }
 
     .info-icon:hover {
@@ -356,21 +349,21 @@
       </tr>
       </thead>
       <tbody id="leaderboard-body">
-      <tr><td colspan="14">Loading...</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
+      <tr><td colspan="14">Loading...<\/td><\/tr>
+      <\/tbody>
+    <\/table>
+  <\/div>
+<\/section>
 
 <footer>
-  Built by <strong>SlopOps</strong> •
-  <a href="https://github.com/SlopOps" target="_blank">GitHub</a> •
-  <a href="https://youtube.com/@SlopOps" target="_blank">YouTube</a>
-</footer>
+  Built by <strong>SlopOps<\/strong> •
+  <a href="https:\/\/github.com\/SlopOps" target="_blank">GitHub<\/a> •
+  <a href="https:\/\/youtube.com\/@SlopOps" target="_blank">YouTube<\/a>
+<\/footer>
 
-</div>
+<\/div>
 
-<div class="tooltip" id="tooltip"></div>
+<div class="tooltip" id="tooltip"><\/div>
 
 <script>
 const tooltip = document.getElementById('tooltip');
@@ -432,7 +425,7 @@ function formatValue(val) {
   return escapeHtml(val);
 }
 
-/* ---------- Tooltip with bold purple labels and "lnl ↗" link ---------- */
+/* ---------- Tooltip with bold purple labels and "link ↗" ---------- */
 function showTooltip(iconEl) {
   const model = iconEl.dataset.model;
   const d = deploymentData[model];
@@ -461,7 +454,7 @@ function showTooltip(iconEl) {
   `;
 
   if (linkUrl) {
-    html += `<a href="${linkUrl}" class="tooltip-link" target="_blank" rel="noopener noreferrer">lnl ↗</a>`;
+    html += `<a href="${linkUrl}" class="tooltip-link" target="_blank" rel="noopener noreferrer">link ↗</a>`;
   } else {
     html += `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(124,92,255,0.3); text-align: center; font-size: 11px; color: var(--muted);">— no link —</div>`;
   }
@@ -664,7 +657,7 @@ function renderLeaderboard() {
     return scoreB - scoreA;
   });
 
-  // Separate ranked (numeric score) vs unranked for info icon logic
+  // Determine which models have numeric scores (ranked)
   const rankedModels = new Set();
   sorted.forEach(row => {
     const score = parseFloat(row.overall_score);
@@ -682,20 +675,23 @@ function renderLeaderboard() {
       ? `<a href="${escapeHtml(row.video_url)}" target="_blank" rel="noopener">YouTube</a>`
       : '—';
     
-    // Info icon: ONLY show for ranked models (have a numeric score AND have deployment data)
-    // Also ensure the model exists in deploymentData to avoid empty tooltips
+    // Info icon: ONLY show for ranked models (have numeric score) AND have deployment data
+    // Place it next to the score, not next to model name
     const showInfoIcon = hasNumericScore && deploymentData[row.model];
     const infoIconHtml = showInfoIcon 
       ? `<span class="info-icon" data-model="${escapeHtml(row.model)}" title="View deployment details">ⓘ</span>` 
       : '';
     
-    const modelCell = `${modelName} ${infoIconHtml}`;
+    // Score cell with wrapper to contain both score value and icon
+    const scoreCell = showInfoIcon
+      ? `<div class="score-wrapper"><span class="score">${scoreVal}</span>${infoIconHtml}</div>`
+      : `<span class="score">${scoreVal}</span>`;
 
     return `
       <tr>
         <td class="rank">${rankDisplay}</td>
-        <td>${modelCell}</td>
-        <td class="score">${scoreVal}</td>
+        <td>${modelName}</td>
+        <td>${scoreCell}</td>
         <td>${youtubeLink}</td>
         <td>${formatValue(row.speed)}</td>
         <td>${formatValue(row.one_shot_attempts)}</td>
