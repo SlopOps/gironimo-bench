@@ -333,188 +333,139 @@
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-let deploymentData = {};
-
-function escapeHtml(str) {
-  if (!str) return '—';
-  return String(str).replace(/[&<>]/g, m => ({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;'
-  }[m]));
-}
-
-function parseCSV(text) {
-  const lines = text.split('\n').filter(x => x.trim());
-  const rows = [];
-
-  for (let line of lines) {
-    let row = [];
-    let cur = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-
-      if (c === '"') {
-        inQuotes = !inQuotes;
-      } else if (c === ',' && !inQuotes) {
-        row.push(cur.trim());
-        cur = '';
-      } else {
-        cur += c;
-      }
-    }
-
-    row.push(cur.trim());
-    rows.push(row);
-  }
-
-  return rows;
-}
-
-async function loadDeployments() {
-  try {
-    const res = await fetch('results/deployments.csv?t=' + Date.now(), {
-      cache: 'no-store'
-    });
-
-    const text = await res.text();
-    const rows = parseCSV(text);
-    const headers = rows[0];
-
-    rows.slice(1).forEach(r => {
-      const obj = {};
-      headers.forEach((h, i) => obj[h.trim()] = (r[i] || '').trim());
-      deploymentData[obj.model] = obj;
-    });
-
-  } catch (e) {
-    console.error('deployments.csv failed to load', e);
-  }
-}
-
-async function loadLeaderboard() {
-  const tbody = document.getElementById('leaderboard-body');
-  const updated = document.getElementById('last-updated');
-
-  try {
-    const res = await fetch('results/leaderboard.csv?t=' + Date.now(), {
-      cache: 'no-store'
-    });
-
-    const text = await res.text();
-
-    const lm = res.headers.get('last-modified');
-    updated.textContent = lm
-      ? 'Last updated: ' + new Date(lm).toLocaleString()
-      : '';
-
-    const rows = parseCSV(text);
-    const headers = rows[0];
-
-    let data = rows.slice(1).map(r => {
-      const obj = {};
-      headers.forEach((h,i) => obj[h.trim()] = (r[i] || '').trim());
-      return obj;
-    });
-
-    const ranked = [];
-    const unranked = [];
-
-    data.forEach(row => {
-      const score = row.overall_score;
-      if (score && score !== '??' && !isNaN(parseFloat(score))) ranked.push(row);
-      else unranked.push(row);
-    });
-
-    ranked.sort((a,b)=>parseFloat(b.overall_score)-parseFloat(a.overall_score));
-
-    const sorted = [...ranked, ...unranked];
-
-    let html = '';
-
-    sorted.forEach((row, index) => {
-      const isRanked = index < ranked.length;
-      const rank = isRanked ? index + 1 : '—';
-
-      const modelLink = row.result_url
-        ? `<a href="${row.result_url}" target="_blank">${escapeHtml(row.model)}</a>`
-        : escapeHtml(row.model);
-
-      const youtubeLink = row.video_url && row.video_url !== '?'
-        ? `<a href="${row.video_url}" target="_blank">YouTube</a>`
-        : '—';
-
-      html += `
-      <tr>
-        <td class="rank">${rank}</td>
-        <td>${modelLink}</td>
-        <td class="score">
-          ${escapeHtml(row.overall_score || '—')}
-          <span class="info-icon" data-model="${escapeHtml(row.model)}">ⓘ</span>
-        </td>
-        <td>${youtubeLink}</td>
-        <td>${escapeHtml(row.speed)}</td>
-        <td>${escapeHtml(row.one_shot_attempts)}</td>
-        <td>${escapeHtml(row.design)}</td>
-        <td>${escapeHtml(row.architecture)}</td>
-        <td>${escapeHtml(row.code_quality)}</td>
-        <td>${escapeHtml(row.feature_complete)}</td>
-        <td>${escapeHtml(row.performance)}</td>
-        <td>${escapeHtml(row.accessibility)}</td>
-        <td>${escapeHtml(row.best_practices)}</td>
-        <td>${escapeHtml(row.value)}</td>
-      </tr>`;
-    });
-
-    tbody.innerHTML = html;
-
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="14">Failed to load leaderboard</td></tr>`;
-  }
-}
 
 const tooltip = document.getElementById('tooltip');
+let activeIcon = null;
+const isTouchDevice =
+  ('ontouchstart' in window) ||
+  navigator.maxTouchPoints > 0;
 
-document.addEventListener('mouseover', e => {
-  if (!e.target.classList.contains('info-icon')) return;
+/* ---------- helpers ---------- */
 
-  const model = e.target.dataset.model;
+function showTooltip(iconEl) {
+  const model = iconEl.dataset.model;
   const d = deploymentData[model];
   if (!d) return;
 
+  activeIcon = iconEl;
+
   tooltip.innerHTML = `
-    <strong>${model}</strong><br>
-    Provider: ${d.provider}<br>
-    Interface: ${d.interface}<br>
-    Reasoning: ${d.reasoning}<br>
-    Quantization: ${d.quantization}<br>
-    Country: ${d.country}<br>
-    Company: ${d.company}<br>
-    <a href="${d.link}" target="_blank" style="color:#00d4ff;">Open</a>
+    <div><strong>Provider:</strong> ${escapeHtml(d.provider)}</div>
+    <div><strong>Interface:</strong> ${escapeHtml(d.interface)}</div>
+    <div><strong>Reasoning:</strong> ${escapeHtml(d.reasoning)}</div>
+    <div><strong>Quantization:</strong> ${escapeHtml(d.quantization)}</div>
+    <div><strong>Country:</strong> ${escapeHtml(d.country)}</div>
+    <div><strong>Company:</strong> ${escapeHtml(d.company)}</div>
+    <div style="margin-top:8px;">
+      <a href="${d.link}"
+         target="_blank"
+         rel="noopener noreferrer"
+         style="color:#00d4ff;text-decoration:none;font-weight:600;">
+         Link
+      </a>
+    </div>
   `;
 
   tooltip.style.display = 'block';
-});
+  tooltip.style.pointerEvents = 'auto';
 
-document.addEventListener('mousemove', e => {
-  if (tooltip.style.display === 'block') {
-    tooltip.style.left = (e.clientX + 14) + 'px';
-    tooltip.style.top = (e.clientY + 14) + 'px';
+  positionTooltip(iconEl);
+}
+
+function hideTooltip() {
+  tooltip.style.display = 'none';
+  tooltip.style.pointerEvents = 'none';
+  activeIcon = null;
+}
+
+function positionTooltip(iconEl) {
+  const iconRect = iconEl.getBoundingClientRect();
+
+  tooltip.style.left = '-9999px';
+  tooltip.style.top = '-9999px';
+
+  const tipRect = tooltip.getBoundingClientRect();
+
+  let left = iconRect.left + (iconRect.width / 2) - (tipRect.width / 2);
+  let top = iconRect.bottom + 10;
+
+  if (left < 8) left = 8;
+  if (left + tipRect.width > window.innerWidth - 8) {
+    left = window.innerWidth - tipRect.width - 8;
+  }
+
+  if (top + tipRect.height > window.innerHeight - 8) {
+    top = iconRect.top - tipRect.height - 10;
+  }
+
+  if (top < 8) top = 8;
+
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+
+/* ---------- desktop hover ---------- */
+
+document.addEventListener('mouseover', e => {
+  if (isTouchDevice) return;
+
+  if (e.target.classList.contains('info-icon')) {
+    showTooltip(e.target);
   }
 });
 
 document.addEventListener('mouseout', e => {
+  if (isTouchDevice) return;
+
   if (e.target.classList.contains('info-icon')) {
-    tooltip.style.display = 'none';
+    const toEl = e.relatedTarget;
+
+    if (tooltip.contains(toEl)) return;
+    hideTooltip();
   }
 });
 
-(async function init() {
-  await loadDeployments();
-  await loadLeaderboard();
-})();
+tooltip.addEventListener('mouseleave', () => {
+  if (!isTouchDevice) hideTooltip();
+});
+
+/* ---------- click support (desktop + mobile) ---------- */
+
+document.addEventListener('click', e => {
+  const clickedIcon = e.target.classList.contains('info-icon');
+  const clickedTooltip = tooltip.contains(e.target);
+
+  if (clickedIcon) {
+    e.preventDefault();
+
+    if (activeIcon === e.target && tooltip.style.display === 'block') {
+      hideTooltip();
+    } else {
+      showTooltip(e.target);
+    }
+    return;
+  }
+
+  if (clickedTooltip) {
+    return; // allow clicking Link
+  }
+
+  hideTooltip();
+});
+
+/* ---------- reposition ---------- */
+
+window.addEventListener('resize', () => {
+  if (activeIcon && tooltip.style.display === 'block') {
+    positionTooltip(activeIcon);
+  }
+});
+
+window.addEventListener('scroll', () => {
+  if (activeIcon && tooltip.style.display === 'block') {
+    positionTooltip(activeIcon);
+  }
+});
 </script>
 
 </body>
