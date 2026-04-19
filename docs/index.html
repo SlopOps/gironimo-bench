@@ -1,483 +1,160 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q5R5LECE2Y"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-Q5R5LECE2Y');
-  </script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gironimo Bench</title>
 
-  <title>Gironimo Bench — Real-World LLM Software Engineering Benchmark</title>
-  <meta name="description" content="Gironimo Bench evaluates LLMs on real-world software engineering workflows: specification → architecture → implementation → review." />
+<style>
+:root {
+  --bg: #0b0f19;
+  --text: #e8eefc;
+  --muted: rgba(232,238,252,0.7);
+  --accent: #7c5cff;
+  --accent2: #00d4ff;
+  --border: rgba(255,255,255,0.1);
+}
 
-  <style>
-    :root {
-      --bg: #0b0f19;
-      --card: rgba(255,255,255,0.06);
-      --text: #e8eefc;
-      --muted: rgba(232,238,252,0.7);
-      --accent: #7c5cff;
-      --accent2: #00d4ff;
-      --border: rgba(255,255,255,0.1);
-    }
+body {
+  margin: 0;
+  font-family: system-ui;
+  background: var(--bg);
+  color: var(--text);
+}
 
-    * { box-sizing: border-box; }
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 24px;
+}
 
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background:
-        radial-gradient(1200px 800px at 20% 0%, #1a1440 0%, transparent 60%),
-        radial-gradient(900px 600px at 90% 20%, #0b3b4a 0%, transparent 55%),
-        var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-    a { color: inherit; }
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
+th {
+  text-align: left;
+  color: var(--muted);
+  font-size: 12px;
+}
 
-    nav {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 24px 0;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
+.rank { color: var(--accent); font-weight: 700; }
+.score { font-weight: 600; }
 
-    .github-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid var(--border);
-      border-radius: 40px;
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      text-decoration: none;
-    }
+a { color: var(--accent2); text-decoration: none; }
 
-    .github-btn:hover {
-      background: rgba(255,255,255,0.15);
-      border-color: rgba(255,255,255,0.3);
-    }
+.info-icon {
+  margin-left: 6px;
+  font-size: 11px;
+  opacity: 0.6;
+  cursor: pointer;
+}
+.info-icon:hover { opacity: 1; }
 
-    .github-icon {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-    }
-
-    header.hero {
-      padding: 80px 0 40px;
-      text-align: center;
-    }
-
-    h1 {
-      font-size: 52px;
-      line-height: 1.1;
-      margin: 0 0 16px;
-    }
-
-    .gradient {
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .muted { color: var(--muted); }
-
-    .cta {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    .btn {
-      padding: 12px 18px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .btn.primary {
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border: none;
-      color: black;
-    }
-
-    section { padding: 40px 0; }
-
-    h2 {
-      font-size: 28px;
-      margin-bottom: 12px;
-    }
-
-    .leaderboard-wrapper {
-      overflow-x: auto;
-      max-height: 500px;
-      overflow-y: auto;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-    }
-
-    th {
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      font-weight: 700;
-      background: rgba(11,15,25,0.95);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    td a {
-      color: var(--accent2);
-      text-decoration: none;
-    }
-
-    td a:hover { text-decoration: underline; }
-
-    .rank {
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .score {
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .info-icon {
-      margin-left: 6px;
-      font-size: 11px;
-      opacity: 0.7;
-      cursor: pointer;
-      user-select: none;
-      display: inline-block;
-      transition: opacity 0.2s ease;
-    }
-
-    .info-icon:hover {
-      opacity: 1;
-    }
-
-    .tooltip {
-      position: fixed;
-      z-index: 9999;
-      max-width: 320px;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      color: white;
-      font-size: 13px;
-      line-height: 1.5;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-      display: none;
-      pointer-events: auto;
-      backdrop-filter: blur(12px);
-      background: rgba(15, 20, 32, 0.98);
-    }
-
-    .tooltip strong {
-      font-weight: 700;
-      color: var(--accent);
-      margin-right: 8px;
-    }
-
-    .tooltip-row {
-      margin-bottom: 8px;
-    }
-
-    .tooltip-row:last-of-type {
-      margin-bottom: 0;
-    }
-
-    .tooltip-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid rgba(124,92,255,0.3);
-      font-weight: 600;
-      text-decoration: none;
-      color: var(--accent2) !important;
-      transition: opacity 0.2s;
-      font-size: 12px;
-    }
-
-    .tooltip-link:hover {
-      opacity: 0.85;
-      text-decoration: underline;
-    }
-
-    .leaderboard-wrapper::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    .leaderboard-wrapper::-webkit-scrollbar-thumb {
-      background: var(--accent);
-      border-radius: 4px;
-    }
-
-    @media (max-width: 768px) {
-      .grid { grid-template-columns: 1fr; }
-      h1 { font-size: 38px; }
-
-      th:nth-child(n+5),
-      td:nth-child(n+5) {
-        display: none;
-      }
-
-      th:nth-child(4),
-      td:nth-child(4) {
-        display: table-cell;
-      }
-    }
-
-    footer {
-      padding: 60px 0;
-      text-align: center;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .last-updated {
-      font-size: 12px;
-      margin-top: 8px;
-    }
-  </style>
+.tooltip {
+  position: fixed;
+  background: #111827;
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 10px;
+  display: none;
+  max-width: 280px;
+  z-index: 9999;
+}
+</style>
 </head>
 
 <body>
 <div class="container">
 
-<nav>
-  <a href="https://github.com/SlopOps/gironimo-bench"
-     class="github-btn"
-     target="_blank"
-     rel="noopener noreferrer">
-    <svg class="github-icon" viewBox="0 0 16 16">
-      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-    </svg>
-    <span>GitHub</span>
-  </a>
-</nav>
+<h2>Leaderboard</h2>
+<p id="last-updated"></p>
 
-<header class="hero">
-  <h1>Benchmarking AI on <span class="gradient">real software engineering</span></h1>
-  <p class="muted">
-    Gironimo Bench evaluates how well language models turn a single specification into a production-ready system.
-  </p>
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Model</th>
+<th>Score</th>
+<th>YouTube</th>
+</tr>
+</thead>
+<tbody id="body"></tbody>
+</table>
 
-  <div class="cta">
-    <a class="btn primary" href="#leaderboard">View Leaderboard</a>
-    <a class="btn" href="https://youtube.com/@SlopOps" target="_blank">Watch Episodes</a>
-  </div>
-</header>
+</div>
 
-<section id="leaderboard">
-  <h2>Leaderboard</h2>
-  <p class="muted">Updated after each evaluation video.</p>
-  <p class="last-updated muted" id="last-updated"></p>
-
-  <div class="leaderboard-wrapper">
-    <table>
-      <thead>
-      <tr>
-        <th>Rank</th>
-        <th>Model</th>
-        <th>Score</th>
-        <th>YouTube</th>
-        <th>Speed</th>
-        <th>1-Shot</th>
-        <th>Design</th>
-        <th>Arch</th>
-        <th>Code</th>
-        <th>Features</th>
-        <th>Perf</th>
-        <th>Access</th>
-        <th>Best Prac</th>
-        <th>Value</th>
-      </tr>
-      </thead>
-      <tbody id="leaderboard-body">
-      <tr><td colspan="14">Loading...<\/td><\/tr>
-      <\/tbody>
-    <\/table>
-  <\/div>
-<\/section>
-
-<footer>
-  Built by <strong>SlopOps<\/strong> •
-  <a href="https:\/\/github.com\/SlopOps" target="_blank">GitHub<\/a> •
-  <a href="https:\/\/youtube.com\/@SlopOps" target="_blank">YouTube<\/a>
-<\/footer>
-
-<\/div>
-
-<div class="tooltip" id="tooltip"><\/div>
+<div id="tooltip" class="tooltip"></div>
 
 <script>
 const tooltip = document.getElementById('tooltip');
 let activeIcon = null;
 
-// Global data stores
 let deploymentData = {};
 let leaderboardData = [];
 
-/* ---------- CSV Parser (robust) ---------- */
+/* ---------- CSV ---------- */
 function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return { headers: [], rows: [] };
-  
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-  const rows = [];
-  
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    
-    const values = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let char of line) {
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        values.push(current.trim().replace(/^"|"$/g, ''));
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    values.push(current.trim().replace(/^"|"$/g, ''));
-    
-    const row = {};
-    headers.forEach((h, idx) => {
-      row[h] = values[idx] || '';
-    });
-    rows.push(row);
-  }
-  
-  return { headers, rows };
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',');
+
+  return lines.slice(1).map(line => {
+    const vals = line.split(',');
+    const obj = {};
+    headers.forEach((h,i)=> obj[h.trim()] = vals[i]?.trim() || '');
+    return obj;
+  });
 }
 
 /* ---------- helpers ---------- */
 function escapeHtml(str) {
-  if (!str || str === '?') return '—';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  if (!str) return '—';
+  return str.replace(/[&<>]/g, m => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;'
+  }[m]));
 }
 
-function formatValue(val) {
-  if (!val || val === '?' || val.trim() === '') return '—';
-  return escapeHtml(val);
-}
-
-// Simple slugify for folder paths (spaces -> hyphens, lowercase)
-function slugify(str) {
-  if (!str) return '';
-  return str.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-}
-
-/* ---------- Tooltip: fixed positioning with proper measurement ---------- */
-function showTooltip(iconEl) {
-  const model = iconEl.dataset.model;
+/* ---------- TOOLTIP ---------- */
+function showTooltip(icon) {
+  const model = icon.dataset.model;
   const d = deploymentData[model];
   if (!d) return;
 
-  // Helper: get value or dash
-  const val = (v) => (v && v !== '' && v !== '?' ? escapeHtml(v) : '—');
-  
-  const provider = val(d.provider);
-  const interfaceVal = val(d.interface);
-  const reasoning = val(d.reasoning);
-  const quantization = val(d.quantization);
-  const country = val(d.country);
-  const company = val(d.company);
-  const linkUrl = (d.link && d.link !== '' && d.link !== '?') ? d.link : null;
-
-  let html = `
-    <div class="tooltip-row"><strong>Provider:</strong> ${provider}</div>
-    <div class="tooltip-row"><strong>Interface:</strong> ${interfaceVal}</div>
-    <div class="tooltip-row"><strong>Reasoning:</strong> ${reasoning}</div>
-    <div class="tooltip-row"><strong>Quantization:</strong> ${quantization}</div>
-    <div class="tooltip-row"><strong>Country:</strong> ${country}</div>
-    <div class="tooltip-row"><strong>Company:</strong> ${company}</div>
+  tooltip.innerHTML = `
+    <div><b>Provider:</b> ${d.provider || '—'}</div>
+    <div><b>Interface:</b> ${d.interface || '—'}</div>
+    <div><b>Reasoning:</b> ${d.reasoning || '—'}</div>
+    <div><b>Company:</b> ${d.company || '—'}</div>
+    ${d.link ? `<a href="${d.link}" target="_blank">link ↗</a>` : ''}
   `;
 
-  if (linkUrl) {
-    html += `<a href="${linkUrl}" class="tooltip-link" target="_blank" rel="noopener noreferrer">link ↗</a>`;
-  } else {
-    html += `<div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(124,92,255,0.3); text-align: center; font-size: 11px; color: var(--muted);">— no link —</div>`;
-  }
-
-  tooltip.innerHTML = html;
-  
-  // CRITICAL FIX: Show but hide visibility to measure properly
   tooltip.style.display = 'block';
   tooltip.style.visibility = 'hidden';
-  
-  // Force layout recalculation before measuring
+
+  // force layout
   tooltip.offsetHeight;
-  
-  const rect = iconEl.getBoundingClientRect();
-  const tipRect = tooltip.getBoundingClientRect();
-  
-  let left = rect.left + window.scrollX;
-  let top = rect.bottom + window.scrollY + 8;
-  
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  
-  // Horizontal boundary check
-  if (left + tipRect.width > viewportWidth - 10) {
-    left = viewportWidth - tipRect.width - 10;
-  }
-  if (left < 10) left = 10;
-  
-  // Vertical boundary check - handle bottom overflow
-  const absoluteTop = top - window.scrollY;
-  if (absoluteTop + tipRect.height > viewportHeight - 10) {
-    // Place above the icon instead
-    top = rect.top + window.scrollY - tipRect.height - 8;
-  }
-  if (top < window.scrollY + 10) top = window.scrollY + 10;
-  
+
+  const r = icon.getBoundingClientRect();
+  const t = tooltip.getBoundingClientRect();
+
+  let left = r.left;
+  let top = r.bottom + 8;
+
+  if (left + t.width > window.innerWidth)
+    left = window.innerWidth - t.width - 10;
+
+  if (top + t.height > window.innerHeight)
+    top = r.top - t.height - 8;
+
   tooltip.style.left = left + 'px';
   tooltip.style.top = top + 'px';
   tooltip.style.visibility = 'visible';
@@ -485,216 +162,81 @@ function showTooltip(iconEl) {
 
 function hideTooltip() {
   tooltip.style.display = 'none';
-  tooltip.style.visibility = 'visible'; // reset
   activeIcon = null;
 }
 
-/* ---------- SIMPLE CLICK-ONLY TOOLTIP (reliable, no hover fragility) ---------- */
-document.addEventListener('click', (e) => {
+/* click handler */
+document.addEventListener('click', e => {
   const icon = e.target.closest('.info-icon');
-  
-  // Clicked on an info icon
+
   if (icon) {
     e.stopPropagation();
-    
-    // If same icon is already open, close it
-    if (activeIcon === icon && tooltip.style.display === 'block') {
-      hideTooltip();
-      return;
-    }
-    
-    // Otherwise show new tooltip
+
+    if (activeIcon === icon) return hideTooltip();
+
     activeIcon = icon;
     showTooltip(icon);
     return;
   }
-  
-  // Clicked anywhere else (not on icon and not inside tooltip) closes tooltip
-  if (!tooltip.contains(e.target)) {
-    hideTooltip();
-  }
+
+  if (!tooltip.contains(e.target)) hideTooltip();
 });
 
-// Close tooltip on Escape key
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && tooltip.style.display === 'block') {
-    hideTooltip();
-  }
-});
-
-// Reposition on scroll if tooltip is open
-window.addEventListener('scroll', () => {
-  if (activeIcon && tooltip.style.display === 'block') {
-    const rect = activeIcon.getBoundingClientRect();
-    const tipRect = tooltip.getBoundingClientRect();
-    let left = rect.left + window.scrollX;
-    let top = rect.bottom + window.scrollY + 8;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
-    if (left + tipRect.width > viewportWidth - 10) {
-      left = viewportWidth - tipRect.width - 10;
-    }
-    if (left < 10) left = 10;
-    
-    const absoluteTop = top - window.scrollY;
-    if (absoluteTop + tipRect.height > viewportHeight - 10) {
-      top = rect.top + window.scrollY - tipRect.height - 8;
-    }
-    if (top < window.scrollY + 10) top = window.scrollY + 10;
-    
-    tooltip.style.left = left + 'px';
-    tooltip.style.top = top + 'px';
-  }
-});
-
-window.addEventListener('resize', () => {
-  if (activeIcon && tooltip.style.display === 'block') {
-    const rect = activeIcon.getBoundingClientRect();
-    const tipRect = tooltip.getBoundingClientRect();
-    let left = rect.left + window.scrollX;
-    let top = rect.bottom + window.scrollY + 8;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
-    if (left + tipRect.width > viewportWidth - 10) {
-      left = viewportWidth - tipRect.width - 10;
-    }
-    if (left < 10) left = 10;
-    
-    const absoluteTop = top - window.scrollY;
-    if (absoluteTop + tipRect.height > viewportHeight - 10) {
-      top = rect.top + window.scrollY - tipRect.height - 8;
-    }
-    if (top < window.scrollY + 10) top = window.scrollY + 10;
-    
-    tooltip.style.left = left + 'px';
-    tooltip.style.top = top + 'px';
-  }
-});
-
-/* ---------- Load CSVs and render leaderboard ---------- */
-async function loadData() {
+/* ---------- LOAD ---------- */
+async function load() {
+  // deployments
   try {
-    // Load deployments.csv for tooltip data
-    try {
-      const deploymentsRes = await fetch('results/deployments.csv?t=' + Date.now());
-      if (deploymentsRes.ok) {
-        const text = await deploymentsRes.text();
-        const { rows } = parseCSV(text);
-        deploymentData = {};
-        for (const row of rows) {
-          if (row.model) {
-            deploymentData[row.model] = row;
-          }
-        }
-      } else {
-        console.log('deployments.csv not found');
-      }
-    } catch (e) {
-      console.log('deployments.csv failed to load', e);
-    }
+    const t = await (await fetch('results/deployments.csv')).text();
+    parseCSV(t).forEach(r => deploymentData[r.model] = r);
+  } catch {}
 
-    // Load leaderboard.csv
-    const leaderboardRes = await fetch('results/leaderboard.csv?t=' + Date.now());
-    if (!leaderboardRes.ok) throw new Error('leaderboard.csv not found');
-    
-    const text = await leaderboardRes.text();
-    const { rows } = parseCSV(text);
-    leaderboardData = rows;
-    renderLeaderboard();
+  // leaderboard
+  const res = await fetch('results/leaderboard.csv');
+  const text = await res.text();
+  leaderboardData = parseCSV(text);
 
-    // Update last updated timestamp
-    const lastModified = leaderboardRes.headers.get('last-modified');
-    const lastUpdatedEl = document.getElementById('last-updated');
-    if (lastUpdatedEl) {
-      if (lastModified) {
-        lastUpdatedEl.textContent = 'Last updated: ' + new Date(lastModified).toLocaleString();
-      } else {
-        lastUpdatedEl.textContent = 'Last updated: ' + new Date().toLocaleDateString();
-      }
-    }
-
-  } catch (err) {
-    console.error('Failed to load CSV data:', err);
-    const tbody = document.getElementById('leaderboard-body');
-    if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--muted);">Error loading data. Ensure results/leaderboard.csv exists.</td></tr>';
-    }
-  }
+  render();
 }
 
-function renderLeaderboard() {
-  const tbody = document.getElementById('leaderboard-body');
-  if (!tbody || leaderboardData.length === 0) {
-    if (leaderboardData.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="14">No data found</td></tr>';
-    }
-    return;
-  }
+/* ---------- RENDER ---------- */
+function render() {
+  const body = document.getElementById('body');
 
-  // Sort by overall_score descending, models without score go to bottom
-  const sorted = [...leaderboardData].sort((a, b) => {
-    const scoreA = parseFloat(a.overall_score);
-    const scoreB = parseFloat(b.overall_score);
-    if (isNaN(scoreA) && isNaN(scoreB)) return 0;
-    if (isNaN(scoreA)) return 1;
-    if (isNaN(scoreB)) return -1;
-    return scoreB - scoreA;
-  });
+  leaderboardData.sort((a,b)=>
+    parseFloat(b.overall_score||0) - parseFloat(a.overall_score||0)
+  );
 
-  tbody.innerHTML = sorted.map((row, idx) => {
-    const rawModel = row.model || '';
-    const hasNumericScore = !isNaN(parseFloat(row.overall_score));
-    const rankDisplay = hasNumericScore ? idx + 1 : '—';
-    
-    // Model column: use slugified folder path for clean URLs
-    // e.g., "Claude 3 Opus" -> "claude-3-opus/index.html"
-    const modelSlug = slugify(rawModel);
-    const modelLink = rawModel && modelSlug
-      ? `<a href="${modelSlug}/index.html">${escapeHtml(rawModel)}</a>`
-      : escapeHtml(rawModel);
-    
-    const scoreVal = formatValue(row.overall_score);
-    
-    // YouTube link
-    const youtubeLink = (row.video_url && row.video_url !== '?' && row.video_url !== '')
-      ? `<a href="${escapeHtml(row.video_url)}" target="_blank" rel="noopener">YouTube</a>`
+  body.innerHTML = leaderboardData.map((row,i)=>{
+
+    const model = row.model || '';
+    const score = row.overall_score || '—';
+
+    // ✅ FIX: use RAW model name (no slugify)
+    const modelLink = model
+      ? `<a href="${model}/index.html">${escapeHtml(model)}</a>`
       : '—';
-    
-    // Info icon: ONLY show for ranked models (have numeric score) AND have deployment data
-    // IMPORTANT: Use raw model name for dataset (don't escape)
-    const showInfoIcon = hasNumericScore && deploymentData[rawModel];
-    const infoIconHtml = showInfoIcon 
-      ? `<span class="info-icon" data-model="${rawModel.replace(/"/g, '&quot;')}" title="View deployment details">ⓘ</span>` 
+
+    // ✅ FIX: raw dataset (no escape)
+    const icon = deploymentData[model]
+      ? `<span class="info-icon" data-model="${model}">ⓘ</span>`
       : '';
-    
-    // Score cell: score value + inline icon
-    const scoreCell = `<span class="score">${scoreVal}</span>${infoIconHtml}`;
+
+    const yt = row.video_url
+      ? `<a href="${row.video_url}" target="_blank">YouTube</a>`
+      : '—';
 
     return `
       <tr>
-        <td class="rank">${rankDisplay}</td>
+        <td class="rank">${i+1}</td>
         <td>${modelLink}</td>
-        <td>${scoreCell}</td>
-        <td>${youtubeLink}</td>
-        <td>${formatValue(row.speed)}</td>
-        <td>${formatValue(row.one_shot_attempts)}</td>
-        <td>${formatValue(row.design)}</td>
-        <td>${formatValue(row.architecture)}</td>
-        <td>${formatValue(row.code_quality)}</td>
-        <td>${formatValue(row.feature_complete)}</td>
-        <td>${formatValue(row.performance)}</td>
-        <td>${formatValue(row.accessibility)}</td>
-        <td>${formatValue(row.best_practices)}</td>
-        <td>${formatValue(row.value)}</td>
+        <td class="score">${score}${icon}</td>
+        <td>${yt}</td>
       </tr>
     `;
   }).join('');
 }
 
-// Initialize on load
-document.addEventListener('DOMContentLoaded', loadData);
+load();
 </script>
 
 </body>
