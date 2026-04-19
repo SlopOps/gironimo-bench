@@ -221,7 +221,7 @@
       padding: 12px;
       border-radius: 10px;
       display: none;
-      max-width: 280px;
+      max-width: 320px;
       z-index: 9999;
       font-size: 13px;
       line-height: 1.5;
@@ -235,8 +235,28 @@
     .tooltip-model-name {
       color: var(--accent);
       font-weight: 700;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       display: inline-block;
+      font-size: 14px;
+    }
+    .tooltip-divider {
+      margin: 8px 0;
+      border-top: 1px solid var(--border);
+    }
+    .tooltip-row {
+      margin-bottom: 4px;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .tooltip-label {
+      font-weight: 600;
+      min-width: 85px;
+      color: var(--muted);
+    }
+    .tooltip-value {
+      color: var(--text);
+      word-break: break-word;
+      flex: 1;
     }
 
     /* Custom scrollbar */
@@ -414,7 +434,7 @@
     // --------------------------------------------------------------
     // 1. Global data stores
     // --------------------------------------------------------------
-    let deploymentData = {};        // key: model name (raw) -> provider, interface, reasoning, company, link
+    let deploymentData = {};        // key: model name (raw) -> full deployment record with all columns
     let currentLeaderboardData = []; // enriched and sorted data for rendering
 
     // Tooltip elements & state
@@ -472,7 +492,8 @@
     }
 
     // --------------------------------------------------------------
-    // 2. Load deployments.csv (provides tooltip details)
+    // 2. Load deployments.csv (provides full tooltip details)
+    // Now stores ALL columns: model, provider, interface, reasoning, link, quantization, country, company
     // --------------------------------------------------------------
     async function loadDeployments() {
       try {
@@ -483,15 +504,19 @@
           const objects = csvToObjects(rows);
           objects.forEach(item => {
             if (item.model) {
+              // Store the entire raw object for that model (all fields)
               deploymentData[item.model] = {
                 provider: item.provider || '—',
                 interface: item.interface || '—',
                 reasoning: item.reasoning || '—',
-                company: item.company || '—',
-                link: item.link || ''
+                link: item.link || '',
+                quantization: item.quantization || '—',
+                country: item.country || '—',
+                company: item.company || '—'
               };
             }
           });
+          console.log('Deployments loaded:', Object.keys(deploymentData).length);
         } else {
           console.warn('deployments.csv not found, tooltips will be limited');
         }
@@ -621,28 +646,41 @@
     }
 
     // --------------------------------------------------------------
-    // 4. Tooltip logic with purple model name
+    // 4. Tooltip logic displaying ALL columns from deployments.csv
+    // Columns: model, provider, interface, reasoning, link, quantization, country, company
     // --------------------------------------------------------------
     function showTooltip(iconEl) {
       const modelName = iconEl.dataset.model;
       if (!modelName) return;
       
       const d = deploymentData[modelName];
-      // Build tooltip content with model name styled in purple
+      
+      // Build comprehensive tooltip with all available deployment fields
       if (!d) {
         tooltip.innerHTML = `
           <div><span class="tooltip-model-name">${escapeHtml(modelName)}</span></div>
-          <div>No additional deployment info available.</div>
+          <div class="tooltip-divider"></div>
+          <div class="tooltip-row"><span class="tooltip-label">Info:</span><span class="tooltip-value">No deployment data available</span></div>
         `;
       } else {
-        tooltip.innerHTML = `
+        // Construct rows for each column from deployments.csv
+        let rowsHtml = `
           <div><span class="tooltip-model-name">${escapeHtml(modelName)}</span></div>
-          <div><b>Provider:</b> ${escapeHtml(d.provider)}</div>
-          <div><b>Interface:</b> ${escapeHtml(d.interface)}</div>
-          <div><b>Reasoning:</b> ${escapeHtml(d.reasoning)}</div>
-          <div><b>Company:</b> ${escapeHtml(d.company)}</div>
-          ${d.link ? `<div><a href="${escapeHtml(d.link)}" target="_blank" rel="noopener">Link ↗</a></div>` : ''}
+          <div class="tooltip-divider"></div>
+          <div class="tooltip-row"><span class="tooltip-label">Provider:</span><span class="tooltip-value">${escapeHtml(d.provider)}</span></div>
+          <div class="tooltip-row"><span class="tooltip-label">Interface:</span><span class="tooltip-value">${escapeHtml(d.interface)}</span></div>
+          <div class="tooltip-row"><span class="tooltip-label">Reasoning:</span><span class="tooltip-value">${escapeHtml(d.reasoning)}</span></div>
+          <div class="tooltip-row"><span class="tooltip-label">Quantization:</span><span class="tooltip-value">${escapeHtml(d.quantization)}</span></div>
+          <div class="tooltip-row"><span class="tooltip-label">Country:</span><span class="tooltip-value">${escapeHtml(d.country)}</span></div>
+          <div class="tooltip-row"><span class="tooltip-label">Company:</span><span class="tooltip-value">${escapeHtml(d.company)}</span></div>
         `;
+        
+        // Add link if present
+        if (d.link && d.link !== '—' && d.link !== '') {
+          rowsHtml += `<div class="tooltip-row"><span class="tooltip-label">Link:</span><span class="tooltip-value"><a href="${escapeHtml(d.link)}" target="_blank" rel="noopener">Open ↗</a></span></div>`;
+        }
+        
+        tooltip.innerHTML = rowsHtml;
       }
       
       tooltip.style.display = 'block';
@@ -655,12 +693,16 @@
       let left = rect.left;
       let top = rect.bottom + 8;
       
+      // Adjust horizontal position to prevent overflow
       if (left + tooltipRect.width > window.innerWidth) {
         left = window.innerWidth - tooltipRect.width - 10;
       }
+      // Adjust vertical position if needed
       if (top + tooltipRect.height > window.innerHeight) {
         top = rect.top - tooltipRect.height - 8;
       }
+      // Ensure left isn't negative
+      if (left < 10) left = 10;
       
       tooltip.style.left = left + 'px';
       tooltip.style.top = top + 'px';
@@ -692,7 +734,7 @@
       }
     });
     
-    // Optional: hide on scroll or resize
+    // Also hide on scroll or resize
     window.addEventListener('scroll', () => hideTooltip());
     window.addEventListener('resize', () => hideTooltip());
     
