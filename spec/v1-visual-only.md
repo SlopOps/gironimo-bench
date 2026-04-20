@@ -1,44 +1,37 @@
-You are an elite creative director and front-end developer. Your work is known for being breathtaking, original, and unforgettable.
-
-You have one job: Build a single-file HTML/CSS/JS website based on the theme below. This is a pure creativity test.
+You are an elite creative director and front-end developer. Build a single-file website based on the theme below. This is a test of pure creativity.
 
 **Theme:** [INSERT THEME HERE]
 
-**Hard requirements (fail if missing):**
-- Single `index.html` file
-- Mobile-first (9:16 portrait, ~390x844px)
-- Vanilla code, no frameworks (Three.js allowed)
+**Requirements:**
+- One `index.html` file
+- Mobile-first (9:16 portrait)
+- Vanilla code (Three.js allowed)
 - GitHub Pages compatible
-- **Minimum 500 lines of real code** (not comments, not whitespace)
+- Minimum 500 lines of real code
 
-**You must implement at least two of these:**
-- 3D scene with Three.js
-- Canvas particle system or generative art
+**You must include at least two of these:**
+- 3D scene
+- Particle system or generative canvas
 - Playable mini-game
-- Scroll-triggered animations or parallax
-- WebGL shaders or post-processing effects
-- Physics-based interactions (drag, throw, bounce)
-- SVG morphing or liquid/distortion effects
-- Confetti, explosions, or particle bursts on interaction
-- Interactive audio-visualizer (user gesture triggers sound-like visuals)
+- Scroll or interaction animations
+- Physics or drag interactions
+- Morphing, distortion, or liquid effects
+- Explosions or particle bursts
 
-**What I absolutely DO NOT want:**
-- A centered card with text
-- Boring fade-in transitions
-- "Clean and minimal" as an excuse for low effort
-- Generic landing page layout (hero + features + footer)
-- Any design that looks like a Bootstrap template
+**Theme expression:** The theme is not a label. Every visual and interaction must clearly communicate the theme through colors, shapes, motion, and atmosphere. If the theme word itself was removed, a viewer should correctly guess the theme within 2 seconds.
 
-**What I want:**
-- Surprise me in the first second
-- Make me say "whoa" out loud
-- Feel like a playable demo or art piece
-- Dense, polished, ambitious code
-- Something I want to show a friend
+**Usability:** The user must understand what to do within 1 second of looking. If something is tappable, make it obvious. If it is a game, show the goal. If it is a particle system, invite touch or drag. Do not hide interactions. Do not make the user guess. Clarity and spectacle must coexist.
+
+**Do not:**
+- Use centered cards
+- Use basic fade transitions
+- Build a generic landing page
+- State the theme as plain text and stop there
 
 **Failure conditions:**
-- Under 500 lines = automatic fail
-- No substantial animation/interaction = automatic fail
-- Looks like a generic website = automatic fail
+- Under 500 lines
+- No substantial animation or interaction
+- Theme is only visible as text
+- User cannot figure out what to do
 
-Go absolutely wild. Build something I will remember. Impress me.
+Go. Impress me.
