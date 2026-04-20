@@ -14,8 +14,13 @@ export const createStore = (initialState = {}) => {
   };
 
   const loadState = () => {
-    const savedState = localStorage.getItem('gironimoState');
-    return savedState ? JSON.parse(savedState) : {};
+    try {
+      const savedState = localStorage.getItem('gironimoState');
+      return savedState ? JSON.parse(savedState) : {};
+    } catch (error) {
+      console.error('Failed to load state:', error);
+      return {};
+    }
   };
 
   state = { ...state, ...loadState() };
