@@ -1,0 +1,2738 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gironimo - AI Model Evaluation Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* CSS Custom Properties - Theme Variables */
+    :root {
+      /* Light Theme (Default) */
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f7fa;
+      --bg-tertiary: #e8ecf1;
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a5568;
+      --text-muted: #718096;
+      --accent-primary: #6366f1;
+      --accent-primary-hover: #4f46e5;
+      --accent-primary-active: #4338ca;
+      --accent-secondary: #8b5cf6;
+      --accent-success: #10b981;
+      --accent-warning: #f59e0b;
+      --accent-error: #ef4444;
+      --border-color: #e2e8f0;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --mascot-fill: #d97706;
+      --mascot-accent: #92400e;
+
+      /* Spacing */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+      --space-7: 48px;
+      --space-8: 64px;
+
+      /* Typography */
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+      /* Transitions */
+      --transition-fast: 150ms ease-out;
+      --transition-normal: 300ms ease-in-out;
+      --transition-slow: 400ms ease-in-out;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #0f0f1a;
+      --bg-secondary: #1a1a2e;
+      --bg-tertiary: #252540;
+      --text-primary: #f5f7fa;
+      --text-secondary: #a0aec0;
+      --text-muted: #718096;
+      --accent-primary: #818cf8;
+      --accent-primary-hover: #6366f1;
+      --accent-primary-active: #4f46e5;
+      --accent-secondary: #a78bfa;
+      --accent-success: #34d399;
+      --accent-warning: #fbbf24;
+      --accent-error: #f87171;
+      --border-color: #2d3748;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+      --mascot-fill: #f59e0b;
+      --mascot-accent: #d97706;
+    }
+
+    /* Reset & Base Styles */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      transition: background-color var(--transition-normal), color var(--transition-normal);
+    }
+
+    /* Focus Styles for Accessibility */
+    :focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* App Container */
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--space-4) var(--space-5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background-color var(--transition-normal), border-color var(--transition-normal);
+    }
+
+    .header__logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .header__title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .header__actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      padding: var(--space-5);
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Section Container */
+    .section {
+      margin-bottom: var(--space-7);
+    }
+
+    .section__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+
+    .section__title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Button Component */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      background-color: var(--accent-primary);
+      color: white;
+      min-height: 40px;
+      min-width: 40px;
+    }
+
+    .btn:hover:not(:disabled) {
+      background-color: var(--accent-primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn:active:not(:disabled) {
+      background-color: var(--accent-primary-active);
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn--secondary {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .btn--secondary:hover:not(:disabled) {
+      background-color: var(--border-color);
+    }
+
+    .btn--ghost {
+      background-color: transparent;
+      color: var(--text-secondary);
+    }
+
+    .btn--ghost:hover:not(:disabled) {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .btn--sm {
+      min-height: 32px;
+      padding: var(--space-1) var(--space-3);
+      font-size: 0.75rem;
+    }
+
+    .btn--lg {
+      min-height: 48px;
+      padding: var(--space-3) var(--space-5);
+      font-size: 1rem;
+    }
+
+    .btn--icon {
+      padding: var(--space-2);
+      min-width: 40px;
+    }
+
+    .btn__spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Card Component */
+    .card {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: var(--space-5);
+      transition: all var(--transition-fast);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent-primary);
+    }
+
+    .card--elevated {
+      box-shadow: var(--shadow-lg);
+      border: none;
+    }
+
+    .card--bordered {
+      background-color: transparent;
+      border: 2px solid var(--border-color);
+    }
+
+    .card__header {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: var(--space-3);
+      color: var(--text-primary);
+    }
+
+    .card__body {
+      color: var(--text-secondary);
+    }
+
+    .card__footer {
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* Philosophy Explorer */
+    .philosophy-panel {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: var(--space-5);
+      margin-bottom: var(--space-5);
+    }
+
+    .philosophy-filters {
+      display: flex;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .philosophy-filter-btn {
+      padding: var(--space-2) var(--space-4);
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .philosophy-filter-btn:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .philosophy-filter-btn--active {
+      background-color: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+
+    .philosophy-statements {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .philosophy-statement {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      background-color: var(--bg-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: 2px solid transparent;
+    }
+
+    .philosophy-statement:hover {
+      background-color: var(--bg-tertiary);
+    }
+
+    .philosophy-statement--selected {
+      border-color: var(--accent-primary);
+      background-color: rgba(99, 102, 241, 0.1);
+    }
+
+    .philosophy-statement__checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-color);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all var(--transition-fast);
+      background-color: var(--bg-primary);
+    }
+
+    .philosophy-statement--selected .philosophy-statement__checkbox {
+      background-color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .philosophy-statement__check-icon {
+      width: 12px;
+      height: 12px;
+      fill: white;
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    .philosophy-statement--selected .philosophy-statement__check-icon {
+      opacity: 1;
+    }
+
+    .philosophy-statement__content {
+      flex: 1;
+    }
+
+    .philosophy-statement__category {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent-primary);
+      margin-bottom: var(--space-1);
+    }
+
+    .philosophy-statement__text {
+      font-size: 0.9375rem;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    /* Workflow System */
+    .workflow-container {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: var(--space-6);
+      overflow-x: auto;
+    }
+
+    .workflow-timeline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-width: 700px;
+      position: relative;
+      padding: var(--space-4) 0;
+    }
+
+    .workflow-timeline::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 40px;
+      right: 40px;
+      height: 4px;
+      background-color: var(--bg-tertiary);
+      transform: translateY(-50%);
+      border-radius: 2px;
+    }
+
+    .workflow-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      cursor: pointer;
+      z-index: 1;
+      transition: transform var(--transition-fast);
+    }
+
+    .workflow-stage:hover {
+      transform: scale(1.05);
+    }
+
+    .workflow-stage__icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg-tertiary);
+      border: 4px solid var(--bg-primary);
+      transition: all var(--transition-normal);
+      font-size: 1.5rem;
+    }
+
+    .workflow-stage--active .workflow-stage__icon {
+      background-color: var(--accent-primary);
+      color: white;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+    }
+
+    .workflow-stage--completed .workflow-stage__icon {
+      background-color: var(--accent-success);
+      color: white;
+    }
+
+    .workflow-stage--gate .workflow-stage__icon {
+      border-radius: 8px;
+      background-color: var(--accent-warning);
+      color: white;
+    }
+
+    .workflow-stage--inactive .workflow-stage__icon {
+      opacity: 0.5;
+    }
+
+    .workflow-stage__label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .workflow-stage--active .workflow-stage__label {
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+
+    .workflow-stage__tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: var(--space-3);
+      min-width: 150px;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-fast);
+      z-index: 10;
+      margin-bottom: var(--space-2);
+    }
+
+    .workflow-stage:hover .workflow-stage__tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Leaderboard Table */
+    .leaderboard-container {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .leaderboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+
+    .leaderboard-filters {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .leaderboard-sort-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: var(--space-2) var(--space-3);
+      background-color: var(--bg-secondary);
+      border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .leaderboard-sort-btn:hover {
+      background-color: var(--bg-tertiary);
+    }
+
+    .leaderboard-sort-btn--active {
+      background-color: var(--accent-primary);
+      color: white;
+    }
+
+    .leaderboard-sort-btn__icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    .leaderboard-table-wrapper {
+      overflow-x: auto;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .leaderboard-table th {
+      text-align: left;
+      padding: var(--space-3) var(--space-4);
+      background-color: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background-color var(--transition-fast);
+      user-select: none;
+    }
+
+    .leaderboard-table th:hover {
+      background-color: var(--bg-tertiary);
+    }
+
+    .leaderboard-table th[data-sort] .sort-indicator {
+      margin-left: var(--space-1);
+      opacity: 0.5;
+    }
+
+    .leaderboard-table th[data-sort-active] .sort-indicator {
+      opacity: 1;
+    }
+
+    .leaderboard-table td {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .leaderboard-table tr {
+      transition: background-color var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .leaderboard-table tbody tr:hover {
+      background-color: var(--bg-secondary);
+    }
+
+    .leaderboard-table tbody tr--selected {
+      background-color: rgba(99, 102, 241, 0.1);
+    }
+
+    .leaderboard-table tbody tr--highlight-practical {
+      background-color: rgba(16, 185, 129, 0.1);
+    }
+
+    .leaderboard-table tbody tr--highlight-philosophical {
+      background-color: rgba(139, 92, 246, 0.1);
+    }
+
+    .leaderboard-table tbody tr--highlight-technical {
+      background-color: rgba(245, 158, 11, 0.1);
+    }
+
+    .leaderboard-table tbody tr--top-performer {
+      position: relative;
+    }
+
+    .leaderboard-table tbody tr--top-performer::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #fbbf24, #f59e0b);
+    }
+
+    .leaderboard-table__model-name {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .leaderboard-table__score {
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    .leaderboard-table__score--top {
+      color: var(--accent-warning);
+    }
+
+    .leaderboard-table__date {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .leaderboard-table__link {
+      color: var(--accent-primary);
+      text-decoration: none;
+      font-size: 0.75rem;
+    }
+
+    .leaderboard-table__link:hover {
+      text-decoration: underline;
+    }
+
+    /* Loading State */
+    .leaderboard-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8);
+      gap: var(--space-4);
+    }
+
+    .leaderboard-loading__spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--accent-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .leaderboard-loading__text {
+      color: var(--text-muted);
+    }
+
+    /* Error State */
+    .leaderboard-error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8);
+      gap: var(--space-4);
+      text-align: center;
+    }
+
+    .leaderboard-error__icon {
+      width: 48px;
+      height: 48px;
+      color: var(--accent-error);
+    }
+
+    .leaderboard-error__message {
+      color: var(--text-secondary);
+    }
+
+    /* Empty State */
+    .leaderboard-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8);
+      gap: var(--space-4);
+      text-align: center;
+    }
+
+    .leaderboard-empty__icon {
+      width: 48px;
+      height: 48px;
+      color: var(--text-muted);
+    }
+
+    /* Modal Component */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-5);
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-normal);
+    }
+
+    .modal-backdrop--open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background-color: var(--bg-primary);
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.95);
+      transition: transform var(--transition-normal);
+    }
+
+    .modal-backdrop--open .modal {
+      transform: scale(1);
+    }
+
+    .modal__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-5);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal__title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .modal__close {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 6px;
+      color: var(--text-muted);
+      transition: all var(--transition-fast);
+    }
+
+    .modal__close:hover {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .modal__body {
+      padding: var(--space-5);
+    }
+
+    .modal__model-info {
+      background-color: var(--bg-secondary);
+      border-radius: 8px;
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+
+    .modal__model-name {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+    }
+
+    .modal__model-score {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+
+    .modal__philosophy-context {
+      margin-top: var(--space-4);
+      padding: var(--space-4);
+      background-color: var(--bg-secondary);
+      border-radius: 8px;
+    }
+
+    .modal__philosophy-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: var(--space-2);
+    }
+
+    /* Tooltip Component */
+    .tooltip {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .tooltip__content {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--text-primary);
+      color: var(--bg-primary);
+      padding: var(--space-2) var(--space-3);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-fast);
+      z-index: 100;
+      margin-bottom: var(--space-2);
+    }
+
+    .tooltip__content::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--text-primary);
+    }
+
+    .tooltip:hover .tooltip__content {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Notification Component */
+    .notifications-container {
+      position: fixed;
+      top: 80px;
+      right: var(--space-5);
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      max-width: 360px;
+    }
+
+    .notification {
+      background-color: var(--bg-primary);
+      border-radius: 8px;
+      padding: var(--space-4);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      animation: slideIn 0.3s ease-out;
+      border-left: 4px solid;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .notification--info {
+      border-left-color: var(--accent-primary);
+    }
+
+    .notification--success {
+      border-left-color: var(--accent-success);
+    }
+
+    .notification--warning {
+      border-left-color: var(--accent-warning);
+    }
+
+    .notification--error {
+      border-left-color: var(--accent-error);
+    }
+
+    .notification__icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .notification--info .notification__icon {
+      color: var(--accent-primary);
+    }
+
+    .notification--success .notification__icon {
+      color: var(--accent-success);
+    }
+
+    .notification--warning .notification__icon {
+      color: var(--accent-warning);
+    }
+
+    .notification--error .notification__icon {
+      color: var(--accent-error);
+    }
+
+    .notification__content {
+      flex: 1;
+    }
+
+    .notification__title {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: var(--space-1);
+    }
+
+    .notification__message {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+
+    .notification__dismiss {
+      width: 20px;
+      height: 20px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all var(--transition-fast);
+    }
+
+    .notification__dismiss:hover {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    /* Mascot (Giraffe) */
+    .mascot {
+      position: fixed;
+      bottom: var(--space-5);
+      right: var(--space-5);
+      z-index: 50;
+      width: 120px;
+      height: 180px;
+      transition: transform var(--transition-slow);
+    }
+
+    .mascot--idle {
+      animation: mascotBreathing 3s ease-in-out infinite;
+    }
+
+    @keyframes mascotBreathing {
+      0%, 100% {
+        transform: translateY(0) scale(1);
+      }
+      50% {
+        transform: translateY(-5px) scale(1.02);
+      }
+    }
+
+    .mascot--philosopher-focused {
+      animation: mascotPhilosopherGaze 0.4s ease-out forwards;
+    }
+
+    @keyframes mascotPhilosopherGaze {
+      to {
+        transform: rotate(-15deg) translateX(-20px);
+      }
+    }
+
+    .mascot--model-focused {
+      animation: mascotModelGaze 0.4s ease-out forwards;
+    }
+
+    @keyframes mascotModelGaze {
+      to {
+        transform: rotate(10deg) translateX(20px);
+      }
+    }
+
+    .mascot--theme-transition {
+      animation: mascotThemePulse 0.5s ease-out;
+    }
+
+    @keyframes mascotThemePulse {
+      0%, 100% {
+        filter: brightness(1);
+      }
+      50% {
+        filter: brightness(1.5);
+      }
+    }
+
+    .mascot--workflow-hover {
+      animation: mascotWorkflowReact 0.4s ease-out;
+    }
+
+    .mascot__svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .mascot__body {
+      fill: var(--mascot-fill);
+      transition: fill var(--transition-normal);
+    }
+
+    .mascot__accent {
+      fill: var(--mascot-accent);
+      transition: fill var(--transition-normal);
+    }
+
+    .mascot__eye {
+      fill: var(--text-primary);
+    }
+
+    .mascot--idle .mascot__eye {
+      animation: mascotBlink 4s ease-in-out infinite;
+    }
+
+    @keyframes mascotBlink {
+      0%, 45%, 55%, 100% {
+        transform: scaleY(1);
+      }
+      50% {
+        transform: scaleY(0.1);
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .main {
+        padding: var(--space-4);
+      }
+
+      .workflow-timeline {
+        min-width: 600px;
+      }
+
+      .workflow-stage__icon {
+        width: 56px;
+        height: 56px;
+        font-size: 1.25rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: var(--space-3) var(--space-4);
+      }
+
+      .header__title {
+        font-size: 1.25rem;
+      }
+
+      .main {
+        padding: var(--space-3);
+      }
+
+      .section__title {
+        font-size: 1.125rem;
+      }
+
+      .philosophy-statement {
+        padding: var(--space-3);
+      }
+
+      .workflow-timeline {
+        min-width: 500px;
+        padding: var(--space-3) 0;
+      }
+
+      .workflow-stage__icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1rem;
+      }
+
+      .workflow-stage__label {
+        font-size: 0.75rem;
+      }
+
+      .leaderboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .mascot {
+        width: 80px;
+        height: 120px;
+        bottom: var(--space-3);
+        right: var(--space-3);
+      }
+
+      .notifications-container {
+        top: 70px;
+        right: var(--space-3);
+        left: var(--space-3);
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .workflow-container {
+        padding: var(--space-4);
+      }
+
+      .workflow-timeline {
+        flex-direction: column;
+        min-width: auto;
+        gap: var(--space-4);
+      }
+
+      .workflow-timeline::before {
+        display: none;
+      }
+
+      .workflow-stage {
+        flex-direction: row;
+        gap: var(--space-3);
+        width: 100%;
+      }
+
+      .workflow-stage__icon {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+      }
+
+      .workflow-stage__tooltip {
+        position: static;
+        transform: none;
+        margin-bottom: 0;
+        margin-left: var(--space-3);
+      }
+
+      .leaderboard-table {
+        font-size: 0.75rem;
+      }
+
+      .leaderboard-table th,
+      .leaderboard-table td {
+        padding: var(--space-2);
+      }
+
+      .modal {
+        margin: var(--space-3);
+        max-height: calc(100vh - var(--space-6));
+      }
+    }
+
+    /* Utility Classes */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header__logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="16" r="14" fill="var(--accent-primary)"/>
+          <path d="M16 8L16 24M12 12L16 8L20 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="16" cy="18" r="3" fill="white"/>
+        </svg>
+        <h1 class="header__title">Gironimo</h1>
+      </div>
+      <div class="header__actions">
+        <button class="btn btn--icon btn--ghost" id="themeToggle" aria-label="Toggle theme">
+          <svg class="theme-icon-light" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="theme-icon-dark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main" id="main">
+      <!-- Philosophy Explorer Section -->
+      <section class="section" aria-labelledby="philosophy-title">
+        <div class="section__header">
+          <h2 class="section__title" id="philosophy-title">Philosophy Explorer</h2>
+        </div>
+        <div class="philosophy-panel" id="philosophyPanel">
+          <!-- Philosophy filters and statements rendered here -->
+        </div>
+      </section>
+
+      <!-- Workflow System Section -->
+      <section class="section" aria-labelledby="workflow-title">
+        <div class="section__header">
+          <h2 class="section__title" id="workflow-title">Workflow System</h2>
+        </div>
+        <div class="workflow-container" id="workflowContainer">
+          <!-- Workflow stages rendered here -->
+        </div>
+      </section>
+
+      <!-- Leaderboard Section -->
+      <section class="section" aria-labelledby="leaderboard-title">
+        <div class="section__header">
+          <h2 class="section__title" id="leaderboard-title">Model Leaderboard</h2>
+        </div>
+        <div class="leaderboard-container" id="leaderboardContainer">
+          <!-- Leaderboard table rendered here -->
+        </div>
+      </section>
+    </main>
+
+    <!-- Mascot -->
+    <div class="mascot mascot--idle" id="mascot" aria-hidden="true">
+      <svg class="mascot__svg" viewBox="0 0 120 180" fill="none">
+        <!-- Body -->
+        <ellipse class="mascot__body" cx="60" cy="120" rx="35" ry="45"/>
+        <!-- Neck -->
+        <path class="mascot__body" d="M55 80 Q50 50 60 20 L70 20 Q80 50 75 80 Z"/>
+        <!-- Head -->
+        <ellipse class="mascot__body" cx="65" cy="25" rx="20" ry="15"/>
+        <!-- Ears -->
+        <ellipse class="mascot__accent" cx="50" cy="12" rx="6" ry="8"/>
+        <ellipse class="mascot__accent" cx="80" cy="12" rx="6" ry="8"/>
+        <!-- Horns -->
+        <rect class="mascot__accent" x="55" y="-5" width="4" height="12" rx="2"/>
+        <rect class="mascot__accent" x="71" y="-5" width="4" height="12" rx="2"/>
+        <!-- Eyes -->
+        <g class="mascot__eye-group">
+          <circle class="mascot__eye" cx="58" cy="22" r="3"/>
+          <circle class="mascot__eye" cx="72" cy="22" r="3"/>
+        </g>
+        <!-- Spots -->
+        <circle class="mascot__accent" cx="50" cy="110" r="8" opacity="0.6"/>
+        <circle class="mascot__accent" cx="75" cy="130" r="6" opacity="0.6"/>
+        <circle class="mascot__accent" cx="55" cy="145" r="5" opacity="0.6"/>
+        <!-- Legs -->
+        <rect class="mascot__body" x="40" y="155" width="12" height="25" rx="6"/>
+        <rect class="mascot__body" x="68" y="155" width="12" height="25" rx="6"/>
+        <!-- Hooves -->
+        <rect class="mascot__accent" x="40" y="175" width="12" height="5" rx="2"/>
+        <rect class="mascot__accent" x="68" y="175" width="12" height="5" rx="2"/>
+        <!-- Tail -->
+        <path class="mascot__body" d="M95 120 Q105 115 110 125 Q105 130 95 125" stroke-width="4" stroke="var(--mascot-fill)" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Notifications Container -->
+    <div class="notifications-container" id="notificationsContainer" aria-live="polite"></div>
+
+    <!-- Modal Backdrop -->
+    <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal" id="modal">
+        <div class="modal__header">
+          <h2 class="modal__title" id="modalTitle">Stage Details</h2>
+          <button class="modal__close" id="modalClose" aria-label="Close modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal__body" id="modalBody">
+          <!-- Modal content rendered here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // STORE MODULE - Centralized State Management
+    // ============================================================
+
+    const createStore = (reducer, initialState, persistenceKey = null) => {
+      let state = initialState;
+      const subscribers = new Set();
+      let pendingRender = false;
+
+      // Load persisted state
+      if (persistenceKey) {
+        try {
+          const stored = localStorage.getItem(persistenceKey);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            state = { ...initialState, ...parsed };
+          }
+        } catch (e) {
+          console.warn('Failed to load persisted state:', e);
+        }
+      }
+
+      const getState = () => state;
+
+      const dispatch = (action) => {
+        const prevState = state;
+        state = reducer(state, action);
+
+        // Persist to localStorage
+        if (persistenceKey) {
+          try {
+            localStorage.setItem(persistenceKey, JSON.stringify(state));
+          } catch (e) {
+            console.warn('Failed to persist state:', e);
+          }
+        }
+
+        // Notify subscribers
+        if (prevState !== state) {
+          subscribers.forEach(fn => fn(state, prevState));
+
+          // Schedule render
+          if (!pendingRender) {
+            pendingRender = true;
+            requestAnimationFrame(() => {
+              pendingRender = false;
+              renderApp(state);
+            });
+          }
+        }
+      };
+
+      const subscribe = (fn) => {
+        subscribers.add(fn);
+        return () => subscribers.delete(fn);
+      };
+
+      return { getState, dispatch, subscribe };
+    };
+
+    // ============================================================
+    // INITIAL STATE
+    // ============================================================
+
+    const initialState = {
+      theme: 'light',
+      selectedPhilosophyStatements: [],
+      selectedModel: null,
+      workflowState: {
+        currentStage: 0,
+        isModalOpen: false,
+        modalStageIndex: null
+      },
+      leaderboardData: {
+        models: [],
+        isLoading: true,
+        error: null,
+        sortBy: 'score',
+        sortDirection: 'desc'
+      },
+      notifications: [],
+      mascotState: 'idle'
+    };
+
+    // ============================================================
+    // ACTION TYPES
+    // ============================================================
+
+    const ActionTypes = {
+      SET_THEME: 'SET_THEME',
+      TOGGLE_PHILOSOPHY: 'TOGGLE_PHILOSOPHY',
+      SET_CATEGORY_FILTER: 'SET_CATEGORY_FILTER',
+      SELECT_MODEL: 'SELECT_MODEL',
+      SET_SORT: 'SET_SORT',
+      SET_LEADERBOARD_DATA: 'SET_LEADERBOARD_DATA',
+      SET_LOADING: 'SET_LOADING',
+      SET_ERROR: 'SET_ERROR',
+      OPEN_MODAL: 'OPEN_MODAL',
+      CLOSE_MODAL: 'CLOSE_MODAL',
+      ADD_NOTIFICATION: 'ADD_NOTIFICATION',
+      DISMISS_NOTIFICATION: 'DISMISS_NOTIFICATION',
+      SET_MASCOT_STATE: 'SET_MASCOT_STATE'
+    };
+
+    // ============================================================
+    // REDUCER
+    // ============================================================
+
+    const reducer = (state, action) => {
+      switch (action.type) {
+        case ActionTypes.SET_THEME:
+          return {
+            ...state,
+            theme: action.payload
+          };
+
+        case ActionTypes.TOGGLE_PHILOSOPHY: {
+          const id = action.payload;
+          const selected = state.selectedPhilosophyStatements;
+          const newSelected = selected.includes(id)
+            ? selected.filter(s => s !== id)
+            : [...selected, id];
+          return {
+            ...state,
+            selectedPhilosophyStatements: newSelected
+          };
+        }
+
+        case ActionTypes.SELECT_MODEL: {
+          const newModel = action.payload;
+          const prevModel = state.selectedModel;
+          return {
+            ...state,
+            selectedModel: newModel
+          };
+        }
+
+        case ActionTypes.SET_SORT:
+          return {
+            ...state,
+            leaderboardData: {
+              ...state.leaderboardData,
+              sortBy: action.payload.sortBy,
+              sortDirection: action.payload.sortDirection || state.leaderboardData.sortDirection
+            }
+          };
+
+        case ActionTypes.SET_LEADERBOARD_DATA:
+          return {
+            ...state,
+            leaderboardData: {
+              ...state.leaderboardData,
+              models: action.payload
+            }
+          };
+
+        case ActionTypes.SET_LOADING:
+          return {
+            ...state,
+            leaderboardData: {
+              ...state.leaderboardData,
+              isLoading: action.payload
+            }
+          };
+
+        case ActionTypes.SET_ERROR:
+          return {
+            ...state,
+            leaderboardData: {
+              ...state.leaderboardData,
+              error: action.payload,
+              isLoading: false
+            }
+          };
+
+        case ActionTypes.OPEN_MODAL:
+          return {
+            ...state,
+            workflowState: {
+              ...state.workflowState,
+              isModalOpen: true,
+              modalStageIndex: action.payload
+            }
+          };
+
+        case ActionTypes.CLOSE_MODAL:
+          return {
+            ...state,
+            workflowState: {
+              ...state.workflowState,
+              isModalOpen: false,
+              modalStageIndex: null
+            }
+          };
+
+        case ActionTypes.ADD_NOTIFICATION:
+          return {
+            ...state,
+            notifications: [
+              ...state.notifications,
+              { id: Date.now(), ...action.payload }
+            ]
+          };
+
+        case ActionTypes.DISMISS_NOTIFICATION:
+          return {
+            ...state,
+            notifications: state.notifications.filter(n => n.id !== action.payload)
+          };
+
+        case ActionTypes.SET_MASCOT_STATE:
+          return {
+            ...state,
+            mascotState: action.payload
+          };
+
+        default:
+          return state;
+      }
+    };
+
+    // ============================================================
+    // STORE INSTANCE
+    // ============================================================
+
+    const store = createStore(reducer, initialState, 'gironimo-state');
+
+    // ============================================================
+    // PHILOSOPHY DATA
+    // ============================================================
+
+    const philosophyStatements = [
+      { id: 'practical-1', category: 'Practical', text: 'Five minutes of correct work beats thirty seconds of plausible garbage' },
+      { id: 'practical-2', category: 'Practical', text: 'Human gates at specification and architecture catch expensive mistakes early' },
+      { id: 'philosophical-1', category: 'Philosophical', text: 'AI amplifies human judgment; it doesn\'t replace it' },
+      { id: 'philosophical-2', category: 'Philosophical', text: 'Stand tall. See far. Move deliberately' },
+      { id: 'technical-1', category: 'Technical', text: 'Two-model critique catches what single-model confidence misses' },
+      { id: 'technical-2', category: 'Technical', text: 'Documentation is auto-drafted because it fails when it\'s optional' },
+      { id: 'technical-3', category: 'Technical', text: 'Own your infrastructure. Own your data' }
+    ];
+
+    // ============================================================
+    // WORKFLOW STAGES DATA
+    // ============================================================
+
+    const workflowStages = [
+      { id: 0, name: 'Spec', description: 'Define requirements and specifications', icon: '📋' },
+      { id: 1, name: 'Gate 1', description: 'Requirements review checkpoint', icon: '🚪', isGate: true },
+      { id: 2, name: 'Architecture', description: 'Design system architecture', icon: '🏗️' },
+      { id: 3, name: 'Gate 2', description: 'Architecture review checkpoint', icon: '🚪', isGate: true },
+      { id: 4, name: 'Implementation', description: 'Build and implement features', icon: '⚙️' },
+      { id: 5, name: 'Review', description: 'Code review and testing', icon: '🔍' },
+      { id: 6, name: 'ADR', description: 'Architecture Decision Records', icon: '📝' }
+    ];
+
+    // ============================================================
+    // CSV PARSER
+    // ============================================================
+
+    const parseCSV = (text) => {
+      const lines = text.trim().split('\n');
+      if (lines.length < 2) return [];
+
+      const header = lines[0].split(',');
+      const models = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',');
+        if (values.length < header.length) continue;
+
+        const model = {
+          model: values[0]?.trim(),
+          date: values[1]?.trim(),
+          video_url: values[2]?.trim(),
+          result_url: values[3]?.trim(),
+          speed: parseFloat(values[4]) || 0,
+          one_shot_attempts: parseInt(values[5]) || 0,
+          design: parseFloat(values[6]) || 0,
+          architecture: parseFloat(values[7]) || 0,
+          code_quality: parseFloat(values[8]) || 0,
+          feature_complete: parseFloat(values[9]) || 0,
+          performance: parseFloat(values[10]) || 0,
+          accessibility: parseFloat(values[11]) || 0,
+          best_practices: parseFloat(values[12]) || 0,
+          value: parseFloat(values[13]) || 0,
+          overall_score: parseFloat(values[14]) || 0
+        };
+
+        if (!model.model) continue;
+
+        models.push(model);
+      }
+
+      return models;
+    };
+
+    const fetchLeaderboard = async () => {
+      store.dispatch({ type: ActionTypes.SET_LOADING, payload: true });
+
+      try {
+        const response = await fetch('/results/leaderboard.csv');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch CSV: ${response.status}`);
+        }
+        const text = await response.text();
+        const models = parseCSV(text);
+        store.dispatch({ type: ActionTypes.SET_LEADERBOARD_DATA, payload: models });
+      } catch (error) {
+        store.dispatch({ type: ActionTypes.SET_ERROR, payload: error.message });
+      }
+    };
+
+    // ============================================================
+    // HELPER FUNCTIONS - Derived State
+    // ============================================================
+
+    const getSortedModels = (models, sortBy, sortDirection) => {
+      const sorted = [...models].sort((a, b) => {
+        let aVal, bVal;
+
+        switch (sortBy) {
+          case 'score':
+            aVal = a.overall_score;
+            bVal = b.overall_score;
+            break;
+          case 'date':
+            aVal = new Date(a.date);
+            bVal = new Date(b.date);
+            break;
+          case 'alpha':
+            aVal = a.model.toLowerCase();
+            bVal = b.model.toLowerCase();
+            break;
+          default:
+            aVal = a.overall_score;
+            bVal = b.overall_score;
+        }
+
+        if (sortDirection === 'asc') {
+          return aVal > bVal ? 1 : -1;
+        } else {
+          return aVal < bVal ? 1 : -1;
+        }
+      });
+
+      return sorted;
+    };
+
+    const getPhilosophyHighlight = (model, selectedStatements) => {
+      if (selectedStatements.length === 0) return null;
+
+      const hasPractical = selectedStatements.some(id => id.startsWith('practical'));
+      const hasPhilosophical = selectedStatements.some(id => id.startsWith('philosophical'));
+      const hasTechnical = selectedStatements.some(id => id.startsWith('technical'));
+
+      if (hasPractical && model.code_quality >= 8 && model.feature_complete >= 8) {
+        return 'practical';
+      }
+      if (hasPhilosophical && model.architecture >= 8) {
+        return 'philosophical';
+      }
+      if (hasTechnical && model.best_practices >= 8) {
+        return 'technical';
+      }
+
+      return null;
+    };
+
+    const getWorkflowProgress = (model) => {
+      if (!model) return 0;
+      const score = model.overall_score;
+      if (score >= 90) return 6; // Full progression
+      if (score >= 70) return 4; // Stops at Implementation
+      return 2; // Stops at Architecture
+    };
+
+    const getMascotState = (state) => {
+      if (state.theme === 'transitioning') return 'theme-transition';
+      if (state.selectedPhilosophyStatements.length > 0) return 'philosopher-focused';
+      if (state.selectedModel) return 'model-focused';
+      return 'idle';
+    };
+
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
+
+    const renderPhilosophyExplorer = (state) => {
+      const container = document.getElementById('philosophyPanel');
+      const { selectedPhilosophyStatements, leaderboardData } = state;
+
+      const selectedCategories = new Set(
+        selectedPhilosophyStatements.map(id => {
+          const stmt = philosophyStatements.find(s => s.id === id);
+          return stmt?.category;
+        }).filter(Boolean)
+      );
+
+      const categories = ['All', 'Practical', 'Philosophical', 'Technical'];
+
+      container.innerHTML = `
+        <div class="philosophy-filters" role="group" aria-label="Filter by category">
+          ${categories.map(cat => `
+            <button
+              class="philosophy-filter-btn ${cat === 'All' && selectedCategories.size === 0 ? 'philosophy-filter-btn--active' : ''} ${cat !== 'All' && selectedCategories.has(cat) ? 'philosophy-filter-btn--active' : ''}"
+              data-category="${cat}"
+              aria-pressed="${cat === 'All' ? selectedCategories.size === 0 : selectedCategories.has(cat)}"
+            >
+              ${cat}
+            </button>
+          `).join('')}
+        </div>
+        <div class="philosophy-statements" role="listbox" aria-label="Philosophy statements">
+          ${philosophyStatements.map(stmt => {
+            const isSelected = selectedPhilosophyStatements.includes(stmt.id);
+            const matchesFilter = selectedCategories.size === 0 || selectedCategories.has(stmt.category);
+
+            return `
+              <div
+                class="philosophy-statement ${isSelected ? 'philosophy-statement--selected' : ''}"
+                data-id="${stmt.id}"
+                role="option"
+                aria-selected="${isSelected}"
+                tabindex="0"
+                ${!matchesFilter ? 'style="display: none;"' : ''}
+              >
+                <div class="philosophy-statement__checkbox" aria-hidden="true">
+                  <svg class="philosophy-statement__check-icon" viewBox="0 0 12 12">
+                    <path d="M2 6L5 9L10 3" stroke="currentColor" stroke-width="2" fill="none"/>
+                  </svg>
+                </div>
+                <div class="philosophy-statement__content">
+                  <div class="philosophy-statement__category">${stmt.category}</div>
+                  <div class="philosophy-statement__text">${stmt.text}</div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      // Add event listeners
+      container.querySelectorAll('.philosophy-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const category = btn.dataset.category;
+          if (category === 'All') {
+            // Clear all category filters
+            store.dispatch({ type: ActionTypes.TOGGLE_PHILOSOPHY, payload: '__clear__' });
+          } else {
+            // Toggle category filter
+            const newSelected = selectedCategories.has(category)
+              ? [...selectedCategories].filter(c => c !== category)
+              : [...selectedCategories, category];
+
+            // Update state to show/hide by category (derived)
+            store.dispatch({ type: ActionTypes.SET_MASCOT_STATE, payload: 'philosopher-focused' });
+          }
+          // Trigger re-render
+          renderApp(store.getState());
+        });
+      });
+
+      container.querySelectorAll('.philosophy-statement').forEach(stmt => {
+        stmt.addEventListener('click', () => {
+          store.dispatch({ type: ActionTypes.TOGGLE_PHILOSOPHY, payload: stmt.dataset.id });
+        });
+        stmt.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            store.dispatch({ type: ActionTypes.TOGGLE_PHILOSOPHY, payload: stmt.dataset.id });
+          }
+        });
+      });
+    };
+
+    const renderWorkflowSystem = (state) => {
+      const container = document.getElementById('workflowContainer');
+      const { selectedModel, leaderboardData } = state;
+
+      // Get the selected model object
+      const selectedModelObj = leaderboardData.models.find(m => m.model === selectedModel);
+      const progress = getWorkflowProgress(selectedModelObj);
+
+      container.innerHTML = `
+        <div class="workflow-timeline" role="list" aria-label="Workflow stages">
+          ${workflowStages.map((stage, index) => {
+            const isCompleted = index < progress;
+            const isActive = index === progress;
+            const isInactive = index > progress;
+
+            let stageClass = 'workflow-stage';
+            if (isCompleted) stageClass += ' workflow-stage--completed';
+            else if (isActive) stageClass += ' workflow-stage--active';
+            else stageClass += ' workflow-stage--inactive';
+            if (stage.isGate) stageClass += ' workflow-stage--gate';
+
+            return `
+              <div
+                class="${stageClass}"
+                data-stage="${index}"
+                role="listitem"
+                tabindex="0"
+                aria-label="${stage.name}: ${isCompleted ? 'Completed' : isActive ? 'In Progress' : 'Locked'}"
+              >
+                <div class="workflow-stage__tooltip">
+                  <strong>${stage.name}</strong>
+                  <p style="margin: 4px 0 0; font-size: 0.75rem; color: var(--text-secondary);">${stage.description}</p>
+                </div>
+                <div class="workflow-stage__icon" aria-hidden="true">${stage.icon}</div>
+                <div class="workflow-stage__label">${stage.name}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      // Add event listeners
+      container.querySelectorAll('.workflow-stage').forEach(stage => {
+        stage.addEventListener('click', () => {
+          const stageIndex = parseInt(stage.dataset.stage);
+          store.dispatch({ type: ActionTypes.OPEN_MODAL, payload: stageIndex });
+        });
+        stage.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const stageIndex = parseInt(stage.dataset.stage);
+            store.dispatch({ type: ActionTypes.OPEN_MODAL, payload: stageIndex });
+          }
+        });
+      });
+    };
+
+    const renderLeaderboard = (state) => {
+      const container = document.getElementById('leaderboardContainer');
+      const { leaderboardData, selectedPhilosophyStatements, selectedModel } = state;
+
+      if (leaderboardData.isLoading) {
+        container.innerHTML = `
+          <div class="leaderboard-loading">
+            <div class="leaderboard-loading__spinner" aria-hidden="true"></div>
+            <p class="leaderboard-loading__text">Loading leaderboard data...</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (leaderboardData.error) {
+        container.innerHTML = `
+          <div class="leaderboard-error">
+            <svg class="leaderboard-error__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p class="leaderboard-error__message">Failed to load leaderboard: ${leaderboardData.error}</p>
+            <button class="btn" onclick="fetchLeaderboard()">Retry</button>
+          </div>
+        `;
+        return;
+      }
+
+      if (leaderboardData.models.length === 0) {
+        container.innerHTML = `
+          <div class="leaderboard-empty">
+            <svg class="leaderboard-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <p style="color: var(--text-muted);">No models found in leaderboard</p>
+          </div>
+        `;
+        return;
+      }
+
+      const sortedModels = getSortedModels(
+        leaderboardData.models,
+        leaderboardData.sortBy,
+        leaderboardData.sortDirection
+      );
+
+      const maxScore = Math.max(...leaderboardData.models.map(m => m.overall_score));
+
+      container.innerHTML = `
+        <div class="leaderboard-header">
+          <span style="font-weight: 600;">${sortedModels.length} Models</span>
+          <div class="leaderboard-filters">
+            <button
+              class="leaderboard-sort-btn ${leaderboardData.sortBy === 'score' ? 'leaderboard-sort-btn--active' : ''}"
+              data-sort="score"
+              aria-pressed="${leaderboardData.sortBy === 'score'}"
+            >
+              Score
+              <svg class="leaderboard-sort-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12l7 7 7-7"/>
+              </svg>
+            </button>
+            <button
+              class="leaderboard-sort-btn ${leaderboardData.sortBy === 'date' ? 'leaderboard-sort-btn--active' : ''}"
+              data-sort="date"
+              aria-pressed="${leaderboardData.sortBy === 'date'}"
+            >
+              Date
+              <svg class="leaderboard-sort-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </button>
+            <button
+              class="leaderboard-sort-btn ${leaderboardData.sortBy === 'alpha' ? 'leaderboard-sort-btn--active' : ''}"
+              data-sort="alpha"
+              aria-pressed="${leaderboardData.sortBy === 'alpha'}"
+            >
+              A-Z
+              <svg class="leaderboard-sort-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="leaderboard-table-wrapper">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Score</th>
+                <th>Date</th>
+                <th>Design</th>
+                <th>Architecture</th>
+                <th>Code Quality</th>
+                <th>Features</th>
+                <th>Best Practices</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sortedModels.map((model, index) => {
+                const isSelected = model.model === selectedModel;
+                const isTopPerformer = model.overall_score === maxScore && maxScore > 0;
+                const highlight = getPhilosophyHighlight(model, selectedPhilosophyStatements);
+
+                let rowClass = 'leaderboard-table__tr';
+                if (isSelected) rowClass += ' leaderboard-table__tr--selected';
+                if (isTopPerformer) rowClass += ' leaderboard-table__tr--top-performer';
+                if (highlight) rowClass += ` leaderboard-table__tr--highlight-${highlight}`;
+
+                return `
+                  <tr
+                    class="${rowClass}"
+                    data-model="${model.model}"
+                    tabindex="0"
+                    role="row"
+                    aria-selected="${isSelected}"
+                  >
+                    <td>
+                      <div class="leaderboard-table__model-name">
+                        ${isTopPerformer ? '<span style="color: var(--accent-warning); margin-right: 4px;" title="Top Performer">★</span>' : ''}
+                        ${model.model}
+                      </div>
+                    </td>
+                    <td>
+                      <span class="leaderboard-table__score ${isTopPerformer ? 'leaderboard-table__score--top' : ''}">
+                        ${model.overall_score.toFixed(0)}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="leaderboard-table__date">${model.date}</span>
+                    </td>
+                    <td>${model.design.toFixed(0)}</td>
+                    <td>${model.architecture.toFixed(0)}</td>
+                    <td>${model.code_quality.toFixed(0)}</td>
+                    <td>${model.feature_complete.toFixed(0)}</td>
+                    <td>${model.best_practices.toFixed(0)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      // Add event listeners
+      container.querySelectorAll('.leaderboard-sort-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const sortBy = btn.dataset.sort;
+          const currentSort = leaderboardData.sortBy;
+          const newDirection = currentSort === sortBy && leaderboardData.sortDirection === 'desc' ? 'asc' : 'desc';
+          store.dispatch({ type: ActionTypes.SET_SORT, payload: { sortBy, sortDirection: newDirection } });
+        });
+      });
+
+      container.querySelectorAll('[data-model]').forEach(row => {
+        row.addEventListener('click', () => {
+          const modelName = row.dataset.model;
+          store.dispatch({ type: ActionTypes.SELECT_MODEL, payload: modelName });
+          store.dispatch({ type: ActionTypes.ADD_NOTIFICATION, payload: {
+            type: 'info',
+            title: 'Model Selected',
+            message: `${modelName} selected. Workflow progress updated.`
+          }});
+        });
+        row.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const modelName = row.dataset.model;
+            store.dispatch({ type: ActionTypes.SELECT_MODEL, payload: modelName });
+          }
+        });
+      });
+    };
+
+    const renderModal = (state) => {
+      const backdrop = document.getElementById('modalBackdrop');
+      const modal = document.getElementById('modal');
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+      const { workflowState, selectedModel, leaderboardData, selectedPhilosophyStatements } = state;
+
+      if (!workflowState.isModalOpen) {
+        backdrop.classList.remove('modal-backdrop--open');
+        return;
+      }
+
+      backdrop.classList.add('modal-backdrop--open');
+
+      const stage = workflowStages[workflowState.modalStageIndex];
+      const selectedModelObj = leaderboardData.models.find(m => m.model === selectedModel);
+      const selectedPhils = selectedPhilosophyStatements.map(id =>
+        philosophyStatements.find(s => s.id === id)
+      ).filter(Boolean);
+
+      title.textContent = stage.name;
+
+      body.innerHTML = `
+        <p style="margin-bottom: var(--space-4); color: var(--text-secondary);">${stage.description}</p>
+
+        ${selectedModelObj ? `
+          <div class="modal__model-info">
+            <div class="modal__model-name">${selectedModelObj.model}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-2);">
+              <span style="color: var(--text-muted);">Overall Score</span>
+              <span class="modal__model-score">${selectedModelObj.overall_score}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-2); margin-top: var(--space-3); font-size: 0.875rem;">
+              <div><span style="color: var(--text-muted);">Design:</span> ${selectedModelObj.design}</div>
+              <div><span style="color: var(--text-muted);">Architecture:</span> ${selectedModelObj.architecture}</div>
+              <div><span style="color: var(--text-muted);">Code Quality:</span> ${selectedModelObj.code_quality}</div>
+              <div><span style="color: var(--text-muted);">Features:</span> ${selectedModelObj.feature_complete}</div>
+            </div>
+          </div>
+        ` : `
+          <p style="color: var(--text-muted); font-style: italic;">No model selected. Select a model from the leaderboard to see its details.</p>
+        `}
+
+        ${selectedPhils.length > 0 ? `
+          <div class="modal__philosophy-context">
+            <div class="modal__philosophy-title">Selected Philosophy Statements</div>
+            ${selectedPhils.map(phil => `
+              <div style="margin-top: var(--space-2);">
+                <span style="font-size: 0.75rem; color: var(--accent-primary); font-weight: 600;">${phil.category}</span>
+                <p style="font-size: 0.875rem; margin-top: 2px;">${phil.text}</p>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      `;
+
+      // Focus trap
+      const closeBtn = document.getElementById('modalClose');
+      closeBtn.focus();
+
+      const handleKeydown = (e) => {
+        if (e.key === 'Escape') {
+          store.dispatch({ type: ActionTypes.CLOSE_MODAL });
+        }
+      };
+
+      document.addEventListener('keydown', handleKeydown);
+      backdrop._handleKeydown = handleKeydown;
+    };
+
+    const renderNotifications = (state) => {
+      const container = document.getElementById('notificationsContainer');
+
+      container.innerHTML = state.notifications.map(notif => `
+        <div class="notification notification--${notif.type}" role="alert">
+          <svg class="notification__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            ${notif.type === 'info' ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>' : ''}
+            ${notif.type === 'success' ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' : ''}
+            ${notif.type === 'warning' ? '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' : ''}
+            ${notif.type === 'error' ? '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>' : ''}
+          </svg>
+          <div class="notification__content">
+            <div class="notification__title">${notif.title}</div>
+            <div class="notification__message">${notif.message}</div>
+          </div>
+          <button class="notification__dismiss" aria-label="Dismiss notification" data-id="${notif.id}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      `).join('');
+
+      container.querySelectorAll('.notification__dismiss').forEach(btn => {
+        btn.addEventListener('click', () => {
+          store.dispatch({ type: ActionTypes.DISMISS_NOTIFICATION, payload: parseInt(btn.dataset.id) });
+        });
+      });
+
+      // Auto-dismiss after 5 seconds
+      state.notifications.forEach(notif => {
+        setTimeout(() => {
+          store.dispatch({ type: ActionTypes.DISMISS_NOTIFICATION, payload: notif.id });
+        }, 5000);
+      });
+    };
+
+    const renderMascot = (state) => {
+      const mascot = document.getElementById('mascot');
+      const mascotState = getMascotState(state);
+
+      // Remove all state classes
+      mascot.classList.remove('mascot--idle', 'mascot--philosopher-focused', 'mascot--model-focused', 'mascot--theme-transition', 'mascot--workflow-hover');
+
+      // Add current state class
+      mascot.classList.add(`mascot--${mascotState}`);
+
+      // Update aria-label
+      mascot.setAttribute('aria-label', `Gironimo mascot - ${mascotState.replace('-', ' ')}`);
+    };
+
+    const renderTheme = (state) => {
+      const html = document.documentElement;
+      const lightIcon = document.querySelector('.theme-icon-light');
+      const darkIcon = document.querySelector('.theme-icon-dark');
+
+      html.setAttribute('data-theme', state.theme);
+
+      if (state.theme === 'dark') {
+        lightIcon.style.display = 'none';
+        darkIcon.style.display = 'block';
+      } else {
+        lightIcon.style.display = 'block';
+        darkIcon.style.display = 'none';
+      }
+    };
+
+    // ============================================================
+    // MAIN RENDER FUNCTION
+    // ============================================================
+
+    const renderApp = (state) => {
+      renderTheme(state);
+      renderPhilosophyExplorer(state);
+      renderWorkflowSystem(state);
+      renderLeaderboard(state);
+      renderModal(state);
+      renderNotifications(state);
+      renderMascot(state);
+    };
+
+    // ============================================================
+    // EVENT LISTENERS
+    // ============================================================
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const currentTheme = store.getState().theme;
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      store.dispatch({ type: ActionTypes.SET_THEME, payload: newTheme });
+      store.dispatch({ type: ActionTypes.SET_MASCOT_STATE, payload: 'theme-transition' });
+    });
+
+    document.getElementById('modalClose').addEventListener('click', () => {
+      store.dispatch({ type: ActionTypes.CLOSE_MODAL });
+    });
+
+    document.getElementById('modalBackdrop').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modalBackdrop')) {
+        store.dispatch({ type: ActionTypes.CLOSE_MODAL });
+      }
+    });
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initial render
+      renderApp(store.getState());
+
+      // Fetch leaderboard data
+      fetchLeaderboard();
+    });
+
+    // Make fetchLeaderboard available globally for retry
+    window.fetchLeaderboard = fetchLeaderboard;
+  </script>
+
+<script>
+/**
+ * Iframe 元素高亮注入脚本
+ * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
+ *
+ * 使用方法：
+ * 1. 将此脚本添加到目标网站的 HTML 中
+ * 2. 或通过浏览器扩展、用户脚本等方式注入
+ */
+
+(function () {
+  "use strict";
+
+  // 检查是否在 iframe 中
+  if (window.self === window.top) {
+    return; // 不在 iframe 中，不执行
+  }
+
+  // 检查是否已经初始化过
+  if (window.__iframeHighlightInitialized) {
+    return;
+  }
+  window.__iframeHighlightInitialized = true;
+  console.log("Iframe 高亮脚本已加载");
+
+  // 创建高亮覆盖层
+  var overlay = document.createElement("div");
+  overlay.id = "iframe-highlight-overlay";
+  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
+
+  // 创建悬停高亮框（虚线边框）
+  var highlightBox = document.createElement("div");
+  highlightBox.id = "iframe-highlight-box";
+  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
+
+  // 创建选中节点的常驻高亮框（实线边框）
+  var selectedBox = document.createElement("div");
+  selectedBox.id = "iframe-selected-box";
+  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
+
+  // 创建悬停标签显示
+  var tagLabel = document.createElement("div");
+  tagLabel.id = "iframe-tag-label";
+  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
+
+  // 创建选中节点标签
+  var selectedLabel = document.createElement("div");
+  selectedLabel.id = "iframe-selected-label";
+  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
+  overlay.appendChild(highlightBox);
+  overlay.appendChild(selectedBox);
+  overlay.appendChild(tagLabel);
+  overlay.appendChild(selectedLabel);
+  document.body.appendChild(overlay);
+
+  // 存储当前选中的元素
+  var selectedElement = null;
+  var highlightEnabled = false;
+
+  // 更新选中元素的高亮显示
+  function updateSelectedHighlight(element) {
+    console.log("updateSelectedHighlight called with:", element);
+    if (!element) {
+      selectedBox.style.display = "none";
+      selectedLabel.style.display = "none";
+      selectedElement = null;
+      console.log("Cleared selected highlight");
+      return;
+    }
+    selectedElement = element;
+    var rect = element.getBoundingClientRect();
+    console.log("Selected element rect:", rect);
+
+    // 更新选中高亮框位置
+    selectedBox.style.display = "block";
+    selectedBox.style.left = "".concat(rect.left - 2, "px");
+    selectedBox.style.top = "".concat(rect.top - 2, "px");
+    selectedBox.style.width = "".concat(rect.width + 4, "px");
+    selectedBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新选中标签位置和内容
+    selectedLabel.style.display = "block";
+    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 28;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 5) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
+    if (labelLeft + labelWidth > window.innerWidth - 10) {
+      labelLeft = window.innerWidth - labelWidth - 10;
+    }
+    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
+    selectedLabel.style.top = "".concat(labelTop, "px");
+    console.log("Selected highlight positioned at:", {
+      left: selectedBox.style.left,
+      top: selectedBox.style.top,
+      width: selectedBox.style.width,
+      height: selectedBox.style.height
+    });
+  }
+  function getElementSelector(element) {
+    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
+    var segments = [];
+    var current = element;
+    while (current !== document.documentElement) {
+      var selector = '';
+      // 优先检查唯一ID
+      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
+        segments.unshift("#".concat(current.id));
+        break; // ID唯一，无需继续向上
+      }
+
+      // 生成类名选择器（取第一个有效类名）
+      var classes = Array.from(current.classList).filter(function (c) {
+        return !c.startsWith('js-');
+      });
+      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
+
+      // 生成位置索引（nth-child）
+      var tag = current.tagName.toLowerCase();
+      if (!className) {
+        var siblings = Array.from(current.parentNode.children);
+        var index = siblings.findIndex(function (el) {
+          return el === current;
+        }) + 1;
+        selector = "".concat(tag, ":nth-child(").concat(index, ")");
+      } else {
+        selector = className;
+      }
+      segments.unshift(selector);
+      current = current.parentElement;
+    }
+
+    // 处理根元素
+    if (current === document.documentElement) {
+      segments.unshift('html');
+    }
+    return segments.join(' > ');
+  }
+
+  // 获取元素文本内容
+  function getElementText(element) {
+    var _element$textContent;
+    if (element.tagName === "INPUT") {
+      return element.value || element.placeholder || "";
+    }
+    if (element.tagName === "TEXTAREA") {
+      return element.value || element.placeholder || "";
+    }
+    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
+    return text.length > 50 ? text.substring(0, 50) + "..." : text;
+  }
+
+  // 获取元素属性信息
+  function getElementAttributes(element) {
+    var attrs = {};
+    for (var i = 0; i < element.attributes.length; i++) {
+      var attr = element.attributes[i];
+      attrs[attr.name] = attr.value;
+    }
+    return attrs;
+  }
+
+  // 鼠标悬停事件处理
+  function handleMouseOver(e) {
+    if (!highlightEnabled) return;
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免高亮 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 如果是已选中的元素，不显示悬停高亮
+    if (target === selectedElement) {
+      highlightBox.style.display = "none";
+      tagLabel.style.display = "none";
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+
+    // 更新悬停高亮框位置
+    highlightBox.style.display = "block";
+    highlightBox.style.left = "".concat(rect.left - 2, "px");
+    highlightBox.style.top = "".concat(rect.top - 2, "px");
+    highlightBox.style.width = "".concat(rect.width + 4, "px");
+    highlightBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新标签位置和内容
+    tagLabel.style.display = "block";
+    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 22;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 0) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
+      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
+    }
+    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
+    tagLabel.style.top = "".concat(labelTop, "px");
+
+    // 发送消息到父窗口
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 鼠标离开事件处理
+  function handleMouseOut(e) {
+    if (!highlightEnabled) return;
+    var relatedTarget = e.relatedTarget;
+
+    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
+    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
+      return;
+    }
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: null,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 点击事件处理
+  function handleClick(e) {
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免处理 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 检查是否是交互元素，这些元素需要保留默认行为
+    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
+
+    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
+    if (highlightEnabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+    console.log("Element clicked:", {
+      tagName: target.tagName,
+      selector: selector,
+      rect: rect
+    });
+
+    // 立即更新选中高亮
+    updateSelectedHighlight(target);
+
+    // 隐藏悬停高亮，因为现在是选中状态
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-click",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 监听来自父窗口的消息
+  function handleParentMessage(event) {
+    console.log("Received message from parent:", event.data);
+    if (event.data.type === "iframe-highlight-toggle") {
+      var enabled = event.data.enabled;
+      console.log("Highlight toggle:", enabled);
+      if (enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "enable-iframe-highlight") {
+      console.log("Enable iframe highlight");
+      enableHighlight();
+    } else if (event.data.type === "disable-iframe-highlight") {
+      console.log("Disable iframe highlight");
+      disableHighlight();
+    } else if (event.data.type === "toggle-iframe-highlight") {
+      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
+      console.log("Toggle iframe highlight to:", _enabled);
+      if (_enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "update-selected-element") {
+      var selector = event.data.selector;
+      console.log("Update selected element with selector:", selector);
+      if (selector) {
+        try {
+          var element = document.querySelector(selector);
+          console.log("Found element by selector:", element);
+          updateSelectedHighlight(element);
+        } catch (error) {
+          console.warn("Failed to select element:", error);
+          updateSelectedHighlight(null);
+        }
+      } else {
+        updateSelectedHighlight(null);
+      }
+    } else if (event.data.type === "clear-selected-element") {
+      console.log("Clear selected element");
+      updateSelectedHighlight(null);
+    }
+  }
+
+  // 启用高亮功能
+  function enableHighlight() {
+    console.log("Enabling highlight");
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
+    document.addEventListener("click", handleClick, true);
+    highlightEnabled = true;
+    overlay.style.display = "block";
+  }
+
+  // 禁用高亮功能
+  function disableHighlight() {
+    console.log("Disabling highlight");
+    highlightEnabled = false;
+    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
+    // 这样可以保留选中状态的显示
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
+  }
+
+  // 完全禁用高亮功能（移除所有监听器）
+  function fullyDisableHighlight() {
+    console.log("Fully disabling highlight");
+    highlightEnabled = false;
+    document.removeEventListener("mouseover", handleMouseOver, true);
+    document.removeEventListener("mouseout", handleMouseOut, true);
+    document.removeEventListener("click", handleClick, true);
+    overlay.style.display = "none";
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    selectedBox.style.display = "none";
+    selectedLabel.style.display = "none";
+  }
+
+  // 添加事件监听
+  enableHighlight();
+  window.addEventListener("message", handleParentMessage);
+
+  // 暴露全局函数供外部调用
+  window.__iframeHighlightControl = {
+    enable: enableHighlight,
+    disable: disableHighlight,
+    fullyDisable: fullyDisableHighlight,
+    isEnabled: function isEnabled() {
+      return highlightEnabled;
+    },
+    getSelectedElement: function getSelectedElement() {
+      return selectedElement;
+    },
+    updateSelected: updateSelectedHighlight,
+    // 通过消息发送开关控制
+    sendToggleMessage: function sendToggleMessage(enabled) {
+      window.parent.postMessage({
+        type: 'iframe-highlight-status',
+        enabled: enabled || highlightEnabled,
+        source: 'iframe-highlight-injector'
+      }, '*');
+    }
+  };
+
+  // 通知父窗口脚本已加载
+  try {
+    window.parent.postMessage({
+      type: "iframe-highlight-ready",
+      data: {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      },
+      source: "iframe-highlight-injector"
+    }, "*");
+  } catch (error) {
+    console.warn("无法发送就绪消息到父窗口:", error);
+  }
+
+  // 清理函数
+  window.__iframeHighlightCleanup = function () {
+    fullyDisableHighlight();
+    window.removeEventListener("message", handleParentMessage);
+    if (overlay.parentElement) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    delete window.__iframeHighlightInitialized;
+    delete window.__iframeHighlightCleanup;
+  };
+})();
+
+</script>
+</body>
+</html>
