@@ -1,6 +1,6 @@
-import { createStore } from './store/store.js';
-import { renderApp } from './app.js';
-import { fetchLeaderboard } from './features/Leaderboard.js';
+import { createStore } from '../store/store.js';
+import { renderApp } from '../app.js';
+import { fetchLeaderboard } from '../features/Leaderboard.js';
 
 // Initialize store
 const store = createStore();
