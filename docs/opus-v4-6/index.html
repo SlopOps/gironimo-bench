@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦒 Gironimo — AI Model Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── CSS VARIABLES ── */
+:root {
+  --bg: #0d0f0e;
+  --surface: #141714;
+  --surface2: #1c201c;
+  --surface3: #242826;
+  --border: #2e342e;
+  --border2: #3a413a;
+  --text: #e8ede8;
+  --text2: #9aaa9a;
+  --text3: #6a7a6a;
+  --accent: #a8d060;
+  --accent2: #7ab030;
+  --accent3: #c8f070;
+  --gold: #e8c840;
+  --amber: #f0a020;
+  --red: #e05040;
+  --blue: #60a8d0;
+  --purple: #a870d8;
+  --radius: 6px;
+  --radius2: 12px;
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  --shadow2: 0 2px 8px rgba(0,0,0,0.4);
+  --giraffe-lean: 0deg;
+  --giraffe-eye-size: 1;
+}
+[data-theme="light"] {
+  --bg: #f5f7f0;
+  --surface: #ffffff;
+  --surface2: #eef2e8;
+  --surface3: #e4ead8;
+  --border: #d0d8c0;
+  --border2: #b8c4a8;
+  --text: #1a2010;
+  --text2: #4a5a3a;
+  --text3: #7a8a6a;
+  --accent: #4a8010;
+  --accent2: #3a6808;
+  --accent3: #5a9820;
+  --gold: #b87800;
+  --shadow: 0 4px 24px rgba(0,0,0,0.12);
+  --shadow2: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.4s, color 0.4s;
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, select { font-family: inherit; }
+
+/* ── LAYOUT ── */
+.app {
+  display: grid;
+  grid-template-columns: 260px 1fr 200px;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+  gap: 0;
+}
+.header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 60px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.sidebar-left {
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  padding: 20px 16px;
+  overflow-y: auto;
+  height: calc(100vh - 60px);
+  position: sticky;
+  top: 60px;
+}
+.main-content {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.sidebar-right {
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 12px;
+  gap: 16px;
+  height: calc(100vh - 60px);
+  position: sticky;
+  top: 60px;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--accent3);
+  flex-shrink: 0;
+}
+.logo-emoji { font-size: 1.4rem; }
+.header-tagline {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.header-spacer { flex: 1; }
+.theme-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.theme-btn:hover { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+.notification-area {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.notification {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  animation: slideIn 0.3s ease, fadeOut 0.4s ease 2.6s forwards;
+  pointer-events: all;
+  max-width: 280px;
+}
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { to { opacity: 0; transform: translateX(20px); } }
+
+/* ── SECTION HEADERS ── */
+.section-title {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── PHILOSOPHY EXPLORER ── */
+.philosophy-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.cat-filter {
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cat-filter:hover, .cat-filter.active {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--border2);
+}
+.cat-filter[data-cat="Practical"].active { border-color: var(--blue); color: var(--blue); }
+.cat-filter[data-cat="Philosophical"].active { border-color: var(--purple); color: var(--purple); }
+.cat-filter[data-cat="Technical"].active { border-color: var(--accent); color: var(--accent); }
+
+.philosophy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.phil-card {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface2);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.phil-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--border2);
+  transition: background 0.2s;
+}
+.phil-card[data-cat="Practical"]::before { background: var(--blue); opacity: 0.4; }
+.phil-card[data-cat="Philosophical"]::before { background: var(--purple); opacity: 0.4; }
+.phil-card[data-cat="Technical"]::before { background: var(--accent); opacity: 0.4; }
+.phil-card.selected { background: var(--surface3); border-color: var(--border2); }
+.phil-card.selected::before { opacity: 1; }
+.phil-card.highlighted { box-shadow: 0 0 0 1px var(--gold); border-color: var(--gold); }
+.phil-card:hover { background: var(--surface3); }
+.phil-card-cat {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+.phil-card[data-cat="Practical"] .phil-card-cat { color: var(--blue); }
+.phil-card[data-cat="Philosophical"] .phil-card-cat { color: var(--purple); }
+.phil-card[data-cat="Technical"] .phil-card-cat { color: var(--accent); }
+.phil-card-text {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text2);
+}
+.phil-card.selected .phil-card-text { color: var(--text); }
+.phil-card.hidden { display: none; }
+
+/* ── WORKFLOW ── */
+.workflow-section { }
+.workflow-stages {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  position: relative;
+}
+.workflow-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.stage-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  transition: all 0.2s;
+  min-width: 80px;
+}
+.stage-node:hover { background: var(--surface2); }
+.stage-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem;
+  transition: all 0.3s;
+}
+.stage-dot.active { border-color: var(--accent); background: var(--accent); color: #0d0f0e; font-weight: 700; }
+.stage-dot.gate { border-color: var(--gold); background: var(--surface); }
+.stage-dot.gate.active { background: var(--gold); color: #0d0f0e; }
+.stage-dot.blocked { border-color: var(--red); opacity: 0.5; }
+.stage-label {
+  font-size: 0.6rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text3);
+  white-space: nowrap;
+}
+.stage-connector {
+  width: 20px;
+  height: 2px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+.stage-connector.active { background: var(--accent2); }
+.workflow-info {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  color: var(--text2);
+  font-family: var(--font-mono);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+/* ── LEADERBOARD ── */
+.leaderboard-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lb-sort-btn {
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  background: transparent;
+  transition: all 0.15s;
+}
+.lb-sort-btn.active {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--border2);
+}
+.lb-sort-btn:hover { color: var(--text); border-color: var(--border2); }
+.lb-search {
+  flex: 1;
+  min-width: 140px;
+  padding: 5px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text);
+  font-size: 0.75rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.lb-search:focus { border-color: var(--accent); }
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+.leaderboard-table th {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+.leaderboard-table th:hover { color: var(--text); }
+.leaderboard-table th.sort-active { color: var(--accent); }
+.leaderboard-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  transition: background 0.15s;
+}
+.leaderboard-table tr { cursor: pointer; transition: background 0.15s; }
+.leaderboard-table tr:hover td { background: var(--surface2); }
+.leaderboard-table tr.selected td { background: var(--surface3); color: var(--text); }
+.leaderboard-table tr.top-performer td:first-child { border-left: 2px solid var(--gold); }
+.leaderboard-table tr.selected td:first-child { border-left: 2px solid var(--accent); }
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+.score-badge.high { background: rgba(168,208,96,0.15); color: var(--accent3); }
+.score-badge.mid { background: rgba(232,200,64,0.12); color: var(--gold); }
+.score-badge.low { background: rgba(224,80,64,0.12); color: var(--red); }
+.model-name-cell { font-weight: 500; color: var(--text); font-size: 0.8rem; }
+.rank-cell { font-family: var(--font-mono); color: var(--text3); font-size: 0.7rem; }
+.top-performer .rank-cell { color: var(--gold); font-weight: 700; }
+.date-cell { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text3); }
+.lb-link { color: var(--accent); font-size: 0.7rem; opacity: 0.7; transition: opacity 0.15s; }
+.lb-link:hover { opacity: 1; }
+.lb-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.lb-loading { display: flex; align-items: center; gap: 8px; justify-content: center; padding: 32px; color: var(--text3); font-family: var(--font-mono); font-size: 0.8rem; }
+.spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.mini-bars { display: flex; gap: 2px; align-items: flex-end; height: 20px; }
+.mini-bar { width: 4px; border-radius: 1px 1px 0 0; background: var(--border2); transition: background 0.3s; }
+.mini-bar.filled { background: var(--accent2); }
+.highlighted-row .mini-bar.filled { background: var(--gold); }
+
+/* ── GIRAFFE ── */
+.giraffe-container {
+  width: 160px;
+  height: 320px;
+  position: relative;
+  transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  flex-shrink: 0;
+}
+.giraffe-svg { width: 100%; height: 100%; overflow: visible; }
+.giraffe-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  text-align: center;
+  margin-top: 4px;
+}
+.giraffe-status {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  text-align: center;
+  min-height: 18px;
+  padding: 0 4px;
+  word-break: break-word;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 20px;
+  box-shadow: var(--shadow2);
+}
+.card-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.card-sub { font-size: 0.75rem; color: var(--text3); font-family: var(--font-mono); margin-bottom: 16px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+  animation: fadeInOverlay 0.2s ease;
+}
+@keyframes fadeInOverlay { from { opacity: 0; } }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius2);
+  padding: 28px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: var(--shadow);
+  animation: slideUpModal 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+@keyframes slideUpModal { from { transform: translateY(20px); opacity: 0; } }
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--text);
+}
+.modal-close {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  font-size: 0.9rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.modal-close:hover { background: var(--surface3); color: var(--text); }
+.modal-section { margin-bottom: 16px; }
+.modal-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.modal-stat {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+.modal-stat-label { font-size: 0.65rem; color: var(--text3); font-family: var(--font-mono); margin-bottom: 2px; }
+.modal-stat-value { font-size: 0.9rem; font-weight: 600; color: var(--text); font-family: var(--font-mono); }
+.phil-context-item {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  color: var(--text2);
+  margin-bottom: 6px;
+  background: var(--surface2);
+  font-style: italic;
+}
+.no-model-selected {
+  text-align: center;
+  padding: 20px;
+  color: var(--text3);
+  font-size: 0.8rem;
+}
+
+/* ── SCORE BARS ── */
+.score-bar-group { display: flex; flex-direction: column; gap: 6px; }
+.score-bar-row { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; }
+.score-bar-label { width: 100px; color: var(--text3); font-family: var(--font-mono); font-size: 0.65rem; flex-shrink: 0; }
+.score-bar-track { flex: 1; height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 3px; background: var(--accent2); transition: width 0.5s ease; }
+.score-bar-val { width: 28px; text-align: right; font-family: var(--font-mono); color: var(--text2); font-size: 0.68rem; flex-shrink: 0; }
+
+/* ── TOOLTIP ── */
+[data-tooltip] { position: relative; }
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 200;
+}
+[data-tooltip]:hover::after { opacity: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .sidebar-left, .sidebar-right {
+    border: none;
+    border-bottom: 1px solid var(--border);
+    position: static;
+    height: auto;
+  }
+  .sidebar-right { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  .giraffe-container { height: 200px; width: 100px; }
+  .workflow-stages { flex-wrap: wrap; }
+}
+
+/* ── FOCUS / A11Y ── */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── MISC ── */
+.fade-in { animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  background: var(--surface2);
+}
+</style>
+</head>
+<body>
+
+<div id="app" class="app" role="main">
+  <header class="header" role="banner">
+    <div class="logo">
+      <span class="logo-emoji">🦒</span>
+      <span>Gironimo</span>
+    </div>
+    <span class="header-tagline">AI Model Benchmark</span>
+    <div class="header-spacer"></div>
+    <button class="theme-btn" id="themeBtn" data-tooltip="Toggle theme" aria-label="Toggle theme">☀️</button>
+  </header>
+
+  <aside class="sidebar-left" role="complementary" aria-label="Philosophy Explorer">
+    <div class="section-title">Philosophy</div>
+    <div class="philosophy-categories" role="group" aria-label="Category filters">
+      <button class="cat-filter active" data-cat="all">All</button>
+      <button class="cat-filter" data-cat="Practical">Practical</button>
+      <button class="cat-filter" data-cat="Philosophical">Philosophical</button>
+      <button class="cat-filter" data-cat="Technical">Technical</button>
+    </div>
+    <div class="philosophy-list" id="philosophyList" role="list"></div>
+  </aside>
+
+  <main class="main-content" role="main">
+    <!-- Workflow -->
+    <div class="card workflow-section fade-in">
+      <div class="card-title">Development Workflow</div>
+      <div class="card-sub" id="workflowSub">Select a model to see workflow progression</div>
+      <div class="workflow-stages" id="workflowStages" role="list" aria-label="Workflow stages"></div>
+      <div class="workflow-info" id="workflowInfo">
+        <span style="color:var(--text3);font-family:var(--font-mono);font-size:0.75rem;">↑ Select a model from the leaderboard to see workflow stages</span>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="card fade-in">
+      <div class="card-title">Model Leaderboard</div>
+      <div class="card-sub">Evaluated on Gironimo Bench criteria</div>
+      <div class="leaderboard-controls" style="margin-bottom:14px;">
+        <button class="lb-sort-btn active" data-sort="score" aria-pressed="true">By Score</button>
+        <button class="lb-sort-btn" data-sort="date" aria-pressed="false">By Date</button>
+        <button class="lb-sort-btn" data-sort="alpha" aria-pressed="false">A–Z</button>
+        <input type="search" class="lb-search" id="lbSearch" placeholder="Filter models…" aria-label="Filter models">
+      </div>
+      <div id="leaderboardContainer">
+        <div class="lb-loading"><div class="spinner"></div>Loading leaderboard…</div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="sidebar-right" role="complementary" aria-label="Mascot">
+    <div class="section-title" style="width:100%">Gironimo</div>
+    <div class="giraffe-container" id="giraffeContainer" aria-label="Giraffe mascot" role="img">
+      <svg class="giraffe-svg" viewBox="0 0 160 320" id="giraffeSvg" aria-hidden="true"></svg>
+    </div>
+    <div class="giraffe-status" id="giraffeStatus">Idle</div>
+    <div class="giraffe-label">Standing tall</div>
+  </aside>
+</div>
+
+<!-- Notification area -->
+<div class="notification-area" id="notificationArea" role="log" aria-live="polite"></div>
+
+<!-- Modal container -->
+<div id="modalContainer"></div>
+
+<script>
+/* ════════════════════════════════════════════
+   STORE — Single centralized state management
+   ════════════════════════════════════════════ */
+const INITIAL_STATE = {
+  theme: 'dark',
+  selectedPhilosophyStatements: [],
+  selectedModel: null,
+  workflowState: { stage: 0, maxStage: 0 },
+  leaderboardData: [],
+  leaderboardSort: 'score',
+  leaderboardFilter: '',
+  modal: null,
+  notifications: [],
+};
+
+function loadPersistedState() {
+  try {
+    const raw = localStorage.getItem('gironimo_state');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    const safe = {};
+    if (['dark','light'].includes(parsed.theme)) safe.theme = parsed.theme;
+    if (Array.isArray(parsed.selectedPhilosophyStatements))
+      safe.selectedPhilosophyStatements = parsed.selectedPhilosophyStatements.filter(s => typeof s === 'string');
+    return safe;
+  } catch { return {}; }
+}
+
+function persistState(state) {
+  try {
+    localStorage.setItem('gironimo_state', JSON.stringify({
+      theme: state.theme,
+      selectedPhilosophyStatements: state.selectedPhilosophyStatements,
+    }));
+  } catch {}
+}
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'SET_THEME':
+      return { ...state, theme: action.payload };
+    case 'TOGGLE_PHILOSOPHY': {
+      const id = action.payload;
+      const sel = state.selectedPhilosophyStatements;
+      return {
+        ...state,
+        selectedPhilosophyStatements: sel.includes(id)
+          ? sel.filter(s => s !== id)
+          : [...sel, id],
+      };
+    }
+    case 'SELECT_MODEL': {
+      const model = action.payload;
+      let maxStage = 0;
+      if (model) {
+        const score = parseFloat(model.overall_score) || 0;
+        if (score >= 90) maxStage = 6;
+        else if (score >= 70) maxStage = 4;
+        else maxStage = 2;
+      }
+      return { ...state, selectedModel: model, workflowState: { stage: 0, maxStage } };
+    }
+    case 'SET_SORT':
+      return { ...state, leaderboardSort: action.payload };
+    case 'SET_FILTER':
+      return { ...state, leaderboardFilter: action.payload };
+    case 'SET_LEADERBOARD_DATA':
+      return { ...state, leaderboardData: action.payload };
+    case 'OPEN_MODAL':
+      return { ...state, modal: action.payload };
+    case 'CLOSE_MODAL':
+      return { ...state, modal: null };
+    case 'ADD_NOTIFICATION': {
+      const notif = { id: Date.now() + Math.random(), message: action.payload };
+      return { ...state, notifications: [...state.notifications, notif] };
+    }
+    case 'REMOVE_NOTIFICATION':
+      return { ...state, notifications: state.notifications.filter(n => n.id !== action.payload) };
+    default:
+      return state;
+  }
+}
+
+const Store = (() => {
+  let state = { ...INITIAL_STATE, ...loadPersistedState() };
+  let subscribers = [];
+  let pendingRender = false;
+
+  function notify() {
+    if (pendingRender) return;
+    pendingRender = true;
+    queueMicrotask(() => {
+      pendingRender = false;
+      subscribers.forEach(fn => fn(state));
+    });
+  }
+
+  return {
+    getState: () => state,
+    dispatch(action) {
+      state = reducer(state, action);
+      persistState(state);
+      notify();
+    },
+    subscribe(fn) { subscribers.push(fn); return () => { subscribers = subscribers.filter(s => s !== fn); }; },
+  };
+})();
+
+/* ════════════════════
+   PHILOSOPHY DATA
+   ════════════════════ */
+const PHILOSOPHY = [
+  { id: 'p1', category: 'Practical', text: 'Five minutes of correct work beats thirty seconds of plausible garbage' },
+  { id: 'p2', category: 'Practical', text: 'Human gates at specification and architecture catch expensive mistakes early' },
+  { id: 'p3', category: 'Philosophical', text: 'AI amplifies human judgment; it doesn\'t replace it' },
+  { id: 'p4', category: 'Philosophical', text: 'Stand tall. See far. Move deliberately' },
+  { id: 'p5', category: 'Technical', text: 'Two-model critique catches what single-model confidence misses' },
+  { id: 'p6', category: 'Technical', text: 'Documentation is auto-drafted because it fails when it\'s optional' },
+  { id: 'p7', category: 'Technical', text: 'Own your infrastructure. Own your data' },
+];
+
+const WORKFLOW_STAGES = [
+  { id: 'spec', label: 'Spec', icon: '📋', type: 'work' },
+  { id: 'gate1', label: 'Gate', icon: '🔒', type: 'gate' },
+  { id: 'arch', label: 'Arch', icon: '🏗', type: 'work' },
+  { id: 'gate2', label: 'Gate', icon: '🔒', type: 'gate' },
+  { id: 'impl', label: 'Impl', icon: '⚙', type: 'work' },
+  { id: 'review', label: 'Review', icon: '🔍', type: 'work' },
+  { id: 'adr', label: 'ADR', icon: '📝', type: 'work' },
+];
+
+/* ════════════════════
+   CSV LOADER
+   ════════════════════ */
+async function loadCSV() {
+  try {
+    const resp = await fetch('/results/leaderboard.csv');
+    if (!resp.ok) throw new Error('fetch failed');
+    const text = await resp.text();
+    const rows = parseCSV(text);
+    Store.dispatch({ type: 'SET_LEADERBOARD_DATA', payload: rows });
+  } catch {
+    // Try relative path as fallback
+    try {
+      const resp2 = await fetch('../results/leaderboard.csv');
+      if (!resp2.ok) throw new Error('fetch failed');
+      const text = await resp2.text();
+      Store.dispatch({ type: 'SET_LEADERBOARD_DATA', payload: parseCSV(text) });
+    } catch {
+      Store.dispatch({ type: 'SET_LEADERBOARD_DATA', payload: [] });
+    }
+  }
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(Boolean);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim());
+  const results = [];
+  for (let i = 1; i < lines.length; i++) {
+    try {
+      const vals = splitCSVLine(lines[i]);
+      if (vals.length < 2) continue;
+      const row = {};
+      headers.forEach((h, idx) => { row[h] = vals[idx]?.trim() ?? '0'; });
+      // Validate required field
+      if (!row.model) continue;
+      // Coerce numerics
+      ['speed','one_shot_attempts','design','architecture','code_quality','feature_complete',
+       'performance','accessibility','best_practices','value','overall_score'].forEach(k => {
+        row[k] = isNaN(parseFloat(row[k])) ? 0 : parseFloat(row[k]);
+      });
+      results.push(row);
+    } catch {}
+  }
+  return results;
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '"') { inQuotes = !inQuotes; }
+    else if (line[i] === ',' && !inQuotes) { result.push(current); current = ''; }
+    else { current += line[i]; }
+  }
+  result.push(current);
+  return result;
+}
+
+/* ════════════════════
+   DERIVED STATE
+   ════════════════════ */
+function getDerivedLeaderboard(state) {
+  let data = [...state.leaderboardData];
+  const filter = state.leaderboardFilter.toLowerCase();
+  if (filter) data = data.filter(m => m.model.toLowerCase().includes(filter));
+  switch (state.leaderboardSort) {
+    case 'score': data.sort((a, b) => b.overall_score - a.overall_score); break;
+    case 'date': data.sort((a, b) => new Date(b.date||0) - new Date(a.date||0)); break;
+    case 'alpha': data.sort((a, b) => a.model.localeCompare(b.model)); break;
+  }
+  // Rank (global, based on score)
+  const ranked = [...state.leaderboardData].sort((a,b) => b.overall_score - a.overall_score);
+  const topModel = ranked[0]?.model;
+  return { rows: data, topModel };
+}
+
+function getPhilosophyHighlights(state) {
+  if (!state.selectedPhilosophyStatements.length || !state.selectedModel) return new Set();
+  const m = state.selectedModel;
+  const ids = new Set();
+  state.selectedPhilosophyStatements.forEach(id => {
+    const p = PHILOSOPHY.find(x => x.id === id);
+    if (!p) return;
+    if (p.category === 'Practical' && (m.code_quality + m.feature_complete) >= 8) ids.add(id);
+    if (p.category === 'Philosophical' && m.architecture >= 8) ids.add(id);
+    if (p.category === 'Technical' && m.best_practices >= 8) ids.add(id);
+  });
+  return ids;
+}
+
+/* ════════════════════
+   GIRAFFE STATE MACHINE
+   ════════════════════ */
+const GiraffeStates = {
+  IDLE: 'idle',
+  PHILOSOPHY: 'philosophy',
+  THEME_CHANGE: 'theme_change',
+  MODEL_SELECTED: 'model_selected',
+  WORKFLOW_HOVER: 'workflow_hover',
+};
+
+const GiraffeStateMachine = (() => {
+  let current = GiraffeStates.IDLE;
+  let transitionTimer = null;
+  let label = 'Idle';
+
+  function transition(newState, statusText) {
+    current = newState;
+    label = statusText || newState;
+    clearTimeout(transitionTimer);
+    if (newState !== GiraffeStates.IDLE) {
+      transitionTimer = setTimeout(() => { current = GiraffeStates.IDLE; label = 'Idle'; renderGiraffe(); }, 3000);
+    }
+  }
+
+  return {
+    get state() { return current; },
+    get label() { return label; },
+    onPhilosophySelected(count) { transition(GiraffeStates.PHILOSOPHY, `${count} philosophy selected`); },
+    onThemeChange(t) { transition(GiraffeStates.THEME_CHANGE, `Theme: ${t}`); },
+    onModelSelected(name) { transition(GiraffeStates.MODEL_SELECTED, `Watching ${name}`); },
+    onWorkflowHover(stage) { transition(GiraffeStates.WORKFLOW_HOVER, `↗ ${stage}`); },
+  };
+})();
+
+/* ════════════════════
+   RENDER FUNCTIONS
+   ════════════════════ */
+let lastState = null;
+
+function renderAll(state) {
+  const s = state;
+  // Apply theme
+  document.documentElement.setAttribute('data-theme', s.theme);
+  document.getElementById('themeBtn').textContent = s.theme === 'dark' ? '☀️' : '🌙';
+
+  renderPhilosophy(s);
+  renderWorkflow(s);
+  renderLeaderboard(s);
+  renderGiraffe(s);
+  renderModal(s);
+  renderNotifications(s);
+
+  lastState = s;
+}
+
+/* PHILOSOPHY */
+function renderPhilosophy(state) {
+  const highlights = getPhilosophyHighlights(state);
+  const container = document.getElementById('philosophyList');
+  const catFilter = document.querySelector('.cat-filter.active')?.dataset.cat || 'all';
+  
+  // Build cards
+  container.innerHTML = '';
+  PHILOSOPHY.forEach(p => {
+    const selected = state.selectedPhilosophyStatements.includes(p.id);
+    const highlighted = highlights.has(p.id);
+    const hidden = catFilter !== 'all' && catFilter !== p.category;
+    
+    const card = document.createElement('div');
+    card.className = `phil-card${selected ? ' selected' : ''}${highlighted ? ' highlighted' : ''}${hidden ? ' hidden' : ''}`;
+    card.dataset.cat = p.category;
+    card.setAttribute('role', 'checkbox');
+    card.setAttribute('aria-checked', selected ? 'true' : 'false');
+    card.setAttribute('tabindex', '0');
+    card.innerHTML = `<div class="phil-card-cat">${p.category}</div><div class="phil-card-text">${p.text}</div>`;
+    card.addEventListener('click', () => Store.dispatch({ type: 'TOGGLE_PHILOSOPHY', payload: p.id }));
+    card.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); Store.dispatch({ type: 'TOGGLE_PHILOSOPHY', payload: p.id }); } });
+    container.appendChild(card);
+  });
+}
+
+/* WORKFLOW */
+function renderWorkflow(state) {
+  const wf = state.workflowState;
+  const container = document.getElementById('workflowStages');
+  const infoEl = document.getElementById('workflowInfo');
+  const subEl = document.getElementById('workflowSub');
+  
+  container.innerHTML = '';
+  WORKFLOW_STAGES.forEach((stage, idx) => {
+    const isActive = idx <= wf.maxStage;
+    const isBlocked = wf.maxStage > 0 && idx > wf.maxStage;
+    
+    const stageEl = document.createElement('div');
+    stageEl.className = 'workflow-stage';
+    stageEl.setAttribute('role', 'listitem');
+    
+    const dotClass = `stage-dot${stage.type === 'gate' ? ' gate' : ''}${isActive ? ' active' : ''}${isBlocked ? ' blocked' : ''}`;
+    stageEl.innerHTML = `
+      <div class="stage-node" tabindex="0" role="button" aria-label="Stage: ${stage.label}"
+           data-stage-idx="${idx}" data-stage-id="${stage.id}">
+        <div class="${dotClass}">${stage.icon}</div>
+        <div class="stage-label">${stage.label}</div>
+      </div>
+    `;
+    
+    stageEl.querySelector('.stage-node').addEventListener('click', () => openStageModal(state, stage, idx));
+    stageEl.querySelector('.stage-node').addEventListener('keydown', e => {
+      if (e.key === 'Enter') openStageModal(state, stage, idx);
+    });
+    stageEl.querySelector('.stage-node').addEventListener('mouseenter', () => {
+      GiraffeStateMachine.onWorkflowHover(stage.label);
+      renderGiraffe(Store.getState());
+    });
+    container.appendChild(stageEl);
+    
+    // Connector (not after last)
+    if (idx < WORKFLOW_STAGES.length - 1) {
+      const conn = document.createElement('div');
+      conn.className = `stage-connector${isActive && idx < wf.maxStage ? ' active' : ''}`;
+      container.appendChild(conn);
+    }
+  });
+  
+  if (state.selectedModel) {
+    const score = state.selectedModel.overall_score;
+    subEl.textContent = `${state.selectedModel.model} — Score: ${score}`;
+    infoEl.innerHTML = score >= 90
+      ? `<span style="color:var(--accent)">✓ Full progression unlocked</span>`
+      : score >= 70
+      ? `<span style="color:var(--gold)">⚠ Stops at Implementation (score &lt; 90)</span>`
+      : `<span style="color:var(--red)">✗ Stops at Architecture (score &lt; 70)</span>`;
+  } else {
+    subEl.textContent = 'Select a model to see workflow progression';
+    infoEl.innerHTML = `<span style="color:var(--text3);font-family:var(--font-mono);font-size:0.75rem;">↑ Select a model from the leaderboard to see workflow stages</span>`;
+  }
+}
+
+function openStageModal(state, stage, idx) {
+  Store.dispatch({ type: 'OPEN_MODAL', payload: { type: 'stage', stage, idx } });
+}
+
+/* LEADERBOARD */
+function renderLeaderboard(state) {
+  const container = document.getElementById('leaderboardContainer');
+  const { rows, topModel } = getDerivedLeaderboard(state);
+  
+  if (state.leaderboardData.length === 0 && rows.length === 0) {
+    // Check if still loading
+    if (document.querySelector('.lb-loading')) return; // still loading
+    container.innerHTML = `<div class="lb-empty">No leaderboard data found.<br><span style="color:var(--text3);font-size:0.7em">Place leaderboard.csv in /results/</span></div>`;
+    return;
+  }
+  
+  if (rows.length === 0 && state.leaderboardFilter) {
+    container.innerHTML = `<div class="lb-empty">No models match "${state.leaderboardFilter}"</div>`;
+    return;
+  }
+  
+  const scoreFields = ['design','architecture','code_quality','feature_complete','performance','accessibility','best_practices','value'];
+  
+  let html = `<div style="overflow-x:auto"><table class="leaderboard-table" role="grid" aria-label="Model leaderboard">
+  <thead>
+    <tr>
+      <th data-col="rank" aria-label="Rank">#</th>
+      <th data-col="model" class="sort-active" aria-label="Model name">Model</th>
+      <th data-col="score" aria-label="Overall score">Score</th>
+      <th data-col="date" aria-label="Date">Date</th>
+      <th aria-label="Score breakdown">Breakdown</th>
+      <th aria-label="Links">Links</th>
+    </tr>
+  </thead>
+  <tbody>`;
+  
+  const highlights = getPhilosophyHighlights(state);
+  const hasHighlights = highlights.size > 0;
+
+  rows.forEach((m, i) => {
+    const isTop = m.model === topModel;
+    const isSelected = state.selectedModel?.model === m.model;
+    const score = m.overall_score;
+    const scoreClass = score >= 80 ? 'high' : score >= 60 ? 'mid' : 'low';
+    
+    // Mini bar breakdown
+    const barCells = scoreFields.map(f => {
+      const v = m[f] || 0;
+      const filled = v >= 7 ? 'filled' : '';
+      return `<div class="mini-bar ${filled}" title="${f}: ${v}" style="height:${Math.max(4, (v/10)*18)}px"></div>`;
+    }).join('');
+    
+    const rowHighlight = isSelected && hasHighlights ? ' highlighted-row' : '';
+    const trClass = `${isTop ? 'top-performer' : ''} ${isSelected ? 'selected' : ''} ${rowHighlight}`.trim();
+    
+    const globalRank = state.leaderboardData
+      .sort((a,b)=>b.overall_score-a.overall_score)
+      .findIndex(x=>x.model===m.model) + 1;
+
+    html += `<tr class="${trClass}" data-model="${encodeURIComponent(JSON.stringify(m))}" role="row" tabindex="0" aria-selected="${isSelected}" aria-label="${m.model}">
+      <td class="rank-cell">${globalRank}${isTop ? ' 🏆' : ''}</td>
+      <td class="model-name-cell">${escHtml(m.model)}</td>
+      <td><span class="score-badge ${scoreClass}">${score}</span></td>
+      <td class="date-cell">${m.date || '—'}</td>
+      <td><div class="mini-bars">${barCells}</div></td>
+      <td>
+        ${m.video_url ? `<a href="${escAttr(m.video_url)}" target="_blank" class="lb-link" title="Video" aria-label="Video for ${m.model}">▶</a>` : ''}
+        ${m.result_url ? ` <a href="${escAttr(m.result_url)}" target="_blank" class="lb-link" title="Results" aria-label="Results for ${m.model}">📊</a>` : ''}
+      </td>
+    </tr>`;
+  });
+  
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+  
+  // Bind header sort clicks
+  container.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (col === 'model' || col === 'rank') Store.dispatch({ type: 'SET_SORT', payload: 'alpha' });
+      else if (col === 'score') Store.dispatch({ type: 'SET_SORT', payload: 'score' });
+      else if (col === 'date') Store.dispatch({ type: 'SET_SORT', payload: 'date' });
+    });
+  });
+  
+  // Bind row clicks
+  container.querySelectorAll('tr[data-model]').forEach(tr => {
+    tr.addEventListener('click', () => {
+      try {
+        const model = JSON.parse(decodeURIComponent(tr.dataset.model));
+        Store.dispatch({ type: 'SELECT_MODEL', payload: model });
+        Store.dispatch({ type: 'ADD_NOTIFICATION', payload: `Selected: ${model.model}` });
+        GiraffeStateMachine.onModelSelected(model.model);
+        setTimeout(() => renderGiraffe(Store.getState()), 50);
+      } catch {}
+    });
+    tr.addEventListener('keydown', e => { if (e.key === 'Enter') tr.click(); });
+  });
+}
+
+/* MODAL */
+function renderModal(state) {
+  const container = document.getElementById('modalContainer');
+  if (!state.modal) { container.innerHTML = ''; return; }
+  
+  const { type, stage, idx } = state.modal;
+  if (type !== 'stage') { container.innerHTML = ''; return; }
+  
+  const m = state.selectedModel;
+  const wf = state.workflowState;
+  const stageReachable = idx <= wf.maxStage;
+  const philSel = state.selectedPhilosophyStatements.map(id => PHILOSOPHY.find(p => p.id === id)).filter(Boolean);
+  
+  const scoreFields = ['design','architecture','code_quality','feature_complete','performance','accessibility','best_practices','value'];
+  
+  let content = '';
+  if (m) {
+    const bars = scoreFields.map(f => {
+      const v = m[f] || 0;
+      const pct = (v / 10) * 100;
+      return `<div class="score-bar-row">
+        <span class="score-bar-label">${f.replace(/_/g,' ')}</span>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%"></div></div>
+        <span class="score-bar-val">${v}</span>
+      </div>`;
+    }).join('');
+    
+    content = `
+      <div class="modal-section">
+        <div class="modal-section-title">Model</div>
+        <div class="modal-grid">
+          <div class="modal-stat"><div class="modal-stat-label">Name</div><div class="modal-stat-value" style="font-size:0.75rem">${escHtml(m.model)}</div></div>
+          <div class="modal-stat"><div class="modal-stat-label">Score</div><div class="modal-stat-value" style="color:var(--accent3)">${m.overall_score}</div></div>
+          <div class="modal-stat"><div class="modal-stat-label">Date</div><div class="modal-stat-value">${m.date || '—'}</div></div>
+          <div class="modal-stat"><div class="modal-stat-label">Speed</div><div class="modal-stat-value">${m.speed || '—'}</div></div>
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Score Breakdown</div>
+        <div class="score-bar-group">${bars}</div>
+      </div>
+    `;
+    
+    if (philSel.length) {
+      const philHtml = philSel.map(p => `<div class="phil-context-item">"${p.text}"</div>`).join('');
+      content += `<div class="modal-section"><div class="modal-section-title">Philosophy Context</div>${philHtml}</div>`;
+    }
+    
+    if (!stageReachable) {
+      content += `<div style="padding:10px;background:rgba(224,80,64,0.1);border:1px solid var(--red);border-radius:var(--radius);font-size:0.75rem;color:var(--red);font-family:var(--font-mono);">
+        ⚠ Model score (${m.overall_score}) insufficient to reach this stage</div>`;
+    }
+  } else {
+    content = `<div class="no-model-selected">No model selected.<br>Select a model from the leaderboard to see details here.</div>`;
+  }
+  
+  container.innerHTML = `
+    <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title" id="modalTitle">${stage.icon} ${stage.label}</div>
+            <div style="font-size:0.7rem;color:var(--text3);font-family:var(--font-mono);margin-top:2px;">
+              Stage ${idx + 1} of ${WORKFLOW_STAGES.length}
+              ${stageReachable && m ? ' · <span style="color:var(--accent)">Reachable</span>' : ''}
+            </div>
+          </div>
+          <button class="modal-close" id="modalClose" aria-label="Close modal">✕</button>
+        </div>
+        ${content}
+      </div>
+    </div>
+  `;
+  
+  container.querySelector('#modalClose').addEventListener('click', () => Store.dispatch({ type: 'CLOSE_MODAL' }));
+  container.querySelector('#modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) Store.dispatch({ type: 'CLOSE_MODAL' }); });
+  document.addEventListener('keydown', escHandler);
+}
+
+function escHandler(e) {
+  if (e.key === 'Escape') {
+    Store.dispatch({ type: 'CLOSE_MODAL' });
+    document.removeEventListener('keydown', escHandler);
+  }
+}
+
+/* NOTIFICATIONS */
+function renderNotifications(state) {
+  const area = document.getElementById('notificationArea');
+  // Only add new ones
+  const existing = new Set(Array.from(area.children).map(el => el.dataset.id));
+  state.notifications.forEach(n => {
+    if (existing.has(String(n.id))) return;
+    const el = document.createElement('div');
+    el.className = 'notification';
+    el.dataset.id = n.id;
+    el.textContent = n.message;
+    area.appendChild(el);
+    setTimeout(() => {
+      Store.dispatch({ type: 'REMOVE_NOTIFICATION', payload: n.id });
+      el.remove();
+    }, 3000);
+  });
+}
+
+/* GIRAFFE SVG */
+function renderGiraffe(state) {
+  state = state || Store.getState();
+  const svg = document.getElementById('giraffeSvg');
+  const statusEl = document.getElementById('giraffeStatus');
+  const gmState = GiraffeStateMachine.state;
+  
+  statusEl.textContent = GiraffeStateMachine.label;
+  
+  // Compute lean based on state
+  let lean = 0; // degrees
+  let eyeSize = 1;
+  let neckAngle = 0;
+  let tailWag = 0;
+  let spotColor = '#c8a050';
+  
+  switch (gmState) {
+    case GiraffeStates.PHILOSOPHY:
+      lean = -8;
+      neckAngle = -12;
+      eyeSize = 1.2;
+      break;
+    case GiraffeStates.THEME_CHANGE:
+      spotColor = state?.theme === 'dark' ? '#c8a050' : '#a87030';
+      eyeSize = 0.8;
+      break;
+    case GiraffeStates.MODEL_SELECTED:
+      lean = 5;
+      neckAngle = 15;
+      eyeSize = 1.3;
+      tailWag = 1;
+      break;
+    case GiraffeStates.WORKFLOW_HOVER:
+      lean = -5;
+      neckAngle = 10;
+      break;
+    case GiraffeStates.IDLE:
+    default:
+      break;
+  }
+  
+  // Idle animation offset (sinusoidal)
+  const t = Date.now() / 2000;
+  const idleRock = gmState === GiraffeStates.IDLE ? Math.sin(t) * 1.5 : 0;
+  
+  const totalLean = lean + idleRock;
+  
+  svg.innerHTML = buildGiraffeSVG({ lean: totalLean, neckAngle, eyeSize, tailWag, spotColor, state });
+  
+  if (gmState === GiraffeStates.IDLE) {
+    requestAnimationFrame(() => renderGiraffe(Store.getState()));
+  }
+}
+
+function buildGiraffeSVG({ lean, neckAngle, eyeSize, tailWag, spotColor, state }) {
+  const theme = state?.theme || 'dark';
+  const bodyColor = theme === 'dark' ? '#d4a040' : '#c89030';
+  const lightColor = theme === 'dark' ? '#f0d080' : '#e8c060';
+  const darkColor = spotColor;
+  const eyeColor = theme === 'dark' ? '#1a1a1a' : '#1a1a1a';
+  const hoofColor = theme === 'dark' ? '#3a2a10' : '#4a3010';
+  
+  const cx = 80; // center x
+  const leanRad = (lean * Math.PI) / 180;
+  const neckRad = (neckAngle * Math.PI) / 180;
+  
+  // Computed positions
+  const bodyY = 200;
+  const bodyW = 60;
+  const bodyH = 50;
+  
+  const legLen = 65;
+  const legW = 9;
+  
+  const neckLen = 80;
+  const neckBaseX = cx - 10 + Math.sin(leanRad) * 10;
+  const neckBaseY = bodyY - 20;
+  const neckTipX = neckBaseX + Math.sin(neckRad + leanRad) * neckLen;
+  const neckTipY = neckBaseY - Math.cos(neckRad) * neckLen;
+  
+  const headX = neckTipX;
+  const headY = neckTipY - 10;
+  
+  const tailWagAngle = tailWag ? Math.sin(Date.now()/300) * 20 : 5;
+  const tailX = cx + bodyW / 2 - 5;
+  const tailY = bodyY - 5;
+  const tailEndX = tailX + Math.cos((tailWagAngle * Math.PI) / 180) * 25;
+  const tailEndY = tailY + Math.sin((tailWagAngle * Math.PI) / 180) * 20;
+
+  // Spots (static pattern)
+  const spots = [
+    { x: cx - 18, y: bodyY - 10, r: 9 },
+    { x: cx + 5, y: bodyY - 18, r: 7 },
+    { x: cx + 18, y: bodyY + 5, r: 6 },
+    { x: cx - 5, y: bodyY + 8, r: 8 },
+    { x: cx - 25, y: bodyY + 5, r: 5 },
+  ];
+  
+  const ossicones = [
+    { x: headX - 6, y: headY - 16 },
+    { x: headX + 4, y: headY - 18 },
+  ];
+  
+  return `
+    <!-- Shadow -->
+    <ellipse cx="${cx}" cy="295" rx="35" ry="6" fill="rgba(0,0,0,0.25)"/>
+    
+    <!-- Tail -->
+    <path d="M${tailX},${tailY} Q${(tailX+tailEndX)/2+5},${(tailY+tailEndY)/2} ${tailEndX},${tailEndY}" 
+          stroke="${bodyColor}" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="${tailEndX}" cy="${tailEndY}" r="4" fill="${darkColor}"/>
+    
+    <!-- Legs (back) -->
+    <rect x="${cx+12}" y="${bodyY+bodyH/2-4}" width="${legW}" height="${legLen}" 
+          rx="4" fill="${bodyColor}" transform="rotate(${lean*0.3},${cx+12+legW/2},${bodyY+bodyH/2})"/>
+    <rect x="${cx-5}" y="${bodyY+bodyH/2-4}" width="${legW}" height="${legLen}" 
+          rx="4" fill="${lightColor}" transform="rotate(${lean*0.3},${cx-5+legW/2},${bodyY+bodyH/2})"/>
+    <!-- Hooves (back) -->
+    <rect x="${cx+11}" y="${bodyY+bodyH/2+legLen-6}" width="${legW+2}" height="8" rx="3" fill="${hoofColor}"/>
+    <rect x="${cx-6}" y="${bodyY+bodyH/2+legLen-6}" width="${legW+2}" height="8" rx="3" fill="${hoofColor}"/>
+    
+    <!-- Body -->
+    <ellipse cx="${cx}" cy="${bodyY}" rx="${bodyW/2}" ry="${bodyH/2}" fill="${bodyColor}"
+             transform="rotate(${lean},${cx},${bodyY})"/>
+    <!-- Spots on body -->
+    ${spots.map(s => `<ellipse cx="${s.x}" cy="${s.y}" rx="${s.r}" ry="${s.r*0.75}" fill="${darkColor}" opacity="0.6"
+      transform="rotate(${lean},${cx},${bodyY})"/>`).join('')}
+    
+    <!-- Legs (front) -->
+    <rect x="${cx-24}" y="${bodyY+bodyH/2-4}" width="${legW}" height="${legLen}" 
+          rx="4" fill="${lightColor}" transform="rotate(${-lean*0.2},${cx-24+legW/2},${bodyY+bodyH/2})"/>
+    <rect x="${cx-8}" y="${bodyY+bodyH/2-2}" width="${legW}" height="${legLen}" 
+          rx="4" fill="${bodyColor}" transform="rotate(${-lean*0.2},${cx-8+legW/2},${bodyY+bodyH/2})"/>
+    <!-- Hooves (front) -->
+    <rect x="${cx-25}" y="${bodyY+bodyH/2+legLen-6}" width="${legW+2}" height="8" rx="3" fill="${hoofColor}"/>
+    <rect x="${cx-9}" y="${bodyY+bodyH/2+legLen-6}" width="${legW+2}" height="8" rx="3" fill="${hoofColor}"/>
+    
+    <!-- Neck -->
+    <polygon points="
+      ${neckBaseX-9},${neckBaseY}
+      ${neckBaseX+9},${neckBaseY}
+      ${neckTipX+6},${neckTipY}
+      ${neckTipX-6},${neckTipY}
+    " fill="${bodyColor}"/>
+    <!-- Neck spots -->
+    <ellipse cx="${(neckBaseX+neckTipX)/2}" cy="${(neckBaseY+neckTipY)/2-5}" 
+             rx="6" ry="5" fill="${darkColor}" opacity="0.5"/>
+    <ellipse cx="${(neckBaseX+neckTipX)/2-4}" cy="${(neckBaseY+neckTipY)/2+15}" 
+             rx="5" ry="4" fill="${darkColor}" opacity="0.5"/>
+    
+    <!-- Head -->
+    <ellipse cx="${headX}" cy="${headY}" rx="16" ry="12" fill="${bodyColor}"/>
+    <!-- Snout -->
+    <ellipse cx="${headX+14}" cy="${headY+3}" rx="8" ry="6" fill="${lightColor}"/>
+    <!-- Nostril -->
+    <circle cx="${headX+19}" cy="${headY+4}" r="2" fill="${darkColor}" opacity="0.5"/>
+    <!-- Eye -->
+    <circle cx="${headX-2}" cy="${headY-2}" r="${5*eyeSize}" fill="${lightColor}"/>
+    <circle cx="${headX-1}" cy="${headY-2}" r="${3*eyeSize}" fill="${eyeColor}"/>
+    <circle cx="${headX}" cy="${headY-3}" r="${1.2*eyeSize}" fill="white" opacity="0.7"/>
+    <!-- Eyelash -->
+    <line x1="${headX-6}" y1="${headY-6}" x2="${headX-8}" y2="${headY-9}" stroke="${eyeColor}" stroke-width="1.5"/>
+    <line x1="${headX-4}" y1="${headY-7}" x2="${headX-5}" y2="${headY-10}" stroke="${eyeColor}" stroke-width="1.5"/>
+    <line x1="${headX-2}" y1="${headY-7}" x2="${headX-2}" y2="${headY-10}" stroke="${eyeColor}" stroke-width="1.5"/>
+    
+    <!-- Ossicones -->
+    ${ossicones.map(o => `
+      <rect x="${o.x}" y="${o.y}" width="4" height="12" rx="2" fill="${darkColor}"/>
+      <circle cx="${o.x+2}" cy="${o.y}" r="3" fill="${bodyColor}" stroke="${darkColor}" stroke-width="1"/>
+    `).join('')}
+    
+    <!-- Mane -->
+    ${[0,1,2,3,4].map(i => {
+      const mx = neckBaseX + (neckTipX-neckBaseX)*i/5;
+      const my = neckBaseY + (neckTipY-neckBaseY)*i/5;
+      const offset = 7;
+      return `<ellipse cx="${mx-offset}" cy="${my}" rx="4" ry="3" fill="${darkColor}" opacity="0.7"/>`;
+    }).join('')}
+  `;
+}
+
+/* ════════════════════
+   UI EVENT BINDINGS
+   ════════════════════ */
+function bindEvents() {
+  // Theme toggle
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    const newTheme = Store.getState().theme === 'dark' ? 'light' : 'dark';
+    Store.dispatch({ type: 'SET_THEME', payload: newTheme });
+    GiraffeStateMachine.onThemeChange(newTheme);
+    setTimeout(() => renderGiraffe(Store.getState()), 50);
+  });
+  
+  // Philosophy category filters
+  document.querySelectorAll('.cat-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPhilosophy(Store.getState());
+    });
+    btn.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
+  });
+  
+  // Sort buttons
+  document.querySelectorAll('.lb-sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.lb-sort-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed','true');
+      Store.dispatch({ type: 'SET_SORT', payload: btn.dataset.sort });
+    });
+  });
+  
+  // Search
+  const searchEl = document.getElementById('lbSearch');
+  if (searchEl) {
+    let searchTimer;
+    searchEl.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => Store.dispatch({ type: 'SET_FILTER', payload: searchEl.value }), 120);
+    });
+  }
+}
+
+/* ════════════════════
+   INIT
+   ════════════════════ */
+async function init() {
+  // Subscribe to store
+  Store.subscribe(state => renderAll(state));
+  
+  // Bind UI events
+  bindEvents();
+  
+  // Initial render
+  renderAll(Store.getState());
+  
+  // Load CSV
+  await loadCSV();
+  
+  // Start giraffe idle animation
+  renderGiraffe(Store.getState());
+  
+  // Apply initial theme
+  document.documentElement.setAttribute('data-theme', Store.getState().theme);
+  
+  // Restore sort button state
+  const sortState = Store.getState().leaderboardSort;
+  document.querySelectorAll('.lb-sort-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.sort === sortState);
+  });
+  
+  // Philosophy: trigger mascot if already selected
+  const philCount = Store.getState().selectedPhilosophyStatements.length;
+  if (philCount > 0) GiraffeStateMachine.onPhilosophySelected(philCount);
+  
+  // After CSV loaded, if model was persisted (we don't persist model, but just in case)
+  // Handle philosophy updates from store changes
+  Store.subscribe(state => {
+    const prev = lastState;
+    if (!prev) return;
+    if (state.selectedPhilosophyStatements !== prev.selectedPhilosophyStatements) {
+      const count = state.selectedPhilosophyStatements.length;
+      if (count > 0) {
+        GiraffeStateMachine.onPhilosophySelected(count);
+        renderGiraffe(state);
+      }
+    }
+  });
+}
+
+// ── Helpers ──
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(str) {
+  return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+init();
+</script>
+</body>
+</html>
