@@ -1,1 +1,703 @@
-#deepseek
+/* DeepSeek 3.2 */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>90's Basketball: Hoops & Hype</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: radial-gradient(circle at 20% 30%, #0a1f0e, #030603);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Impact', 'Bebas Neue', 'Arial Black', 'Poppins', sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    /* 9:16 portrait container */
+    .game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      max-width: 450px;
+      max-height: 800px;
+      background: #00000022;
+      overflow: hidden;
+      box-shadow: 0 0 0 4px #f4a261, 0 0 0 8px #e76f51, 0 0 0 12px #264653;
+      border-radius: 0;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #ui-layer {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 16px 20px;
+      pointer-events: none;
+      z-index: 20;
+      text-shadow: 3px 3px 0 #e76f51, 5px 5px 0 #000;
+    }
+
+    .score-panel {
+      background: #f4a261dd;
+      backdrop-filter: blur(4px);
+      padding: 8px 20px;
+      border-radius: 60px;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #ffe8d6;
+      letter-spacing: 2px;
+      border: 2px solid #ffb703;
+      box-shadow: 0 0 0 3px #2a9d8f;
+      font-family: monospace;
+    }
+
+    .combo-panel {
+      background: #2a9d8fdd;
+      backdrop-filter: blur(4px);
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #ffdd99;
+      border: 1px solid #f4a261;
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .combo-number {
+      font-size: 1.8rem;
+      color: #ffb703;
+      font-weight: 900;
+    }
+
+    .instruction {
+      position: absolute;
+      top: 18px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      pointer-events: none;
+      font-size: 1rem;
+      background: #00000099;
+      padding: 6px 12px;
+      width: fit-content;
+      margin: 0 auto;
+      border-radius: 40px;
+      backdrop-filter: blur(4px);
+      color: #f4e285;
+      font-weight: bold;
+      letter-spacing: 2px;
+      z-index: 20;
+      border: 1px solid #ffb703;
+      font-family: monospace;
+    }
+
+    .hoop-tap {
+      position: absolute;
+      bottom: 35%;
+      right: 12%;
+      background: #e76f51;
+      color: #1e2f1e;
+      padding: 8px 14px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      pointer-events: none;
+      animation: bounce 0.8s infinite;
+      z-index: 20;
+      font-family: monospace;
+      box-shadow: 0 0 0 2px #ffb703;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .reset-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: #2a9d8f;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 60px;
+      font-weight: bold;
+      color: #fff;
+      font-family: monospace;
+      font-size: 1rem;
+      pointer-events: auto;
+      cursor: pointer;
+      z-index: 30;
+      box-shadow: 0 4px 0 #1e5a55;
+      transition: 0.05s linear;
+    }
+    .reset-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #1e5a55;
+    }
+
+    @media (max-width: 500px) {
+      .score-panel { font-size: 1.8rem; padding: 4px 16px; }
+      .combo-panel { font-size: 0.9rem; }
+      .combo-number { font-size: 1.4rem; }
+      .hoop-tap { font-size: 0.7rem; bottom: 32%;}
+    }
+  </style>
+</head>
+<body>
+<div class="game-container">
+  <canvas id="bgCanvas"></canvas>
+  <canvas id="gameCanvas"></canvas>
+  <div id="ui-layer">
+    <div class="score-panel">🏀 <span id="scoreValue">0</span></div>
+    <div class="combo-panel">🔥 COMBO <span class="combo-number" id="comboValue">0</span></div>
+  </div>
+  <div class="instruction">🔥 TAP RIGHT SIDE → SHOOT!  |  SWIPE LEFT →  CROSSOVER DUNK 🔥</div>
+  <div class="hoop-tap">🏀⬅️ SWISH ZONE ➡️🏀</div>
+  <button class="reset-btn" id="resetGame">🔄 AIRBALL RESET</button>
+</div>
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+    }
+  }
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+
+  // ------------------- 90's BASKETBALL THEME: VIBRANT, GRAFFITI ENERGY, NEON ORANGE + SPLASHES
+  // REQUIREMENTS: 3D scene + interactive mini-game (shooting hoops with tap/swipe + physics)
+  // Includes particle bursts on score, drag/tap interaction, combo system, distortion effect on score.
+  
+  // ---- DOM elements ----
+  const scoreSpan = document.getElementById('scoreValue');
+  const comboSpan = document.getElementById('comboValue');
+  const resetBtn = document.getElementById('resetGame');
+  
+  // ---- Game state ----
+  let score = 0;
+  let combo = 0;
+  let gameActive = true;
+  
+  // ---- canvas references ----
+  const bgCanvas = document.getElementById('bgCanvas');
+  const gameCanvas = document.getElementById('gameCanvas');
+  let ctx2d = gameCanvas.getContext('2d');
+  
+  // size adaptation
+  let width, height;
+  
+  // ---- 3D scene (Three.js) ----
+  let scene, camera, renderer, courtFloor, backboardGroup, hoopMesh, netParticles = [];
+  let threeInitialized = false;
+  
+  // ---- Game objects: basketball physics ----
+  let ball = { x: 0, y: 0, vx: 0, vy: 0, radius: 18, active: false, onFire: false };
+  let hoop = { x: 0, y: 0, radius: 22, rimX: 0, rimY: 0 };
+  let lastShotTime = 0;
+  let particles = []; // 2D particle bursts
+  let swishEffect = false;
+  let distortionAmount = 0;
+  let lastTapX = 0, lastTapY = 0;
+  
+  // ---- input handling for shooting & swipe dunk ----
+  let touchStartX = 0, touchStartY = 0;
+  let isSwiping = false;
+  let swipeThreshold = 35;
+  
+  // ---- particle system config ----
+  class Particle2D {
+    constructor(x, y, vx, vy, color, size, life) {
+      this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+      this.color = color; this.size = size; this.life = life; this.maxLife = life;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.vy += 0.2;
+      this.life -= 2;
+      return this.life > 0;
+    }
+    draw(ctx) {
+      ctx.globalAlpha = Math.min(1, this.life / this.maxLife);
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size * (this.life/this.maxLife), 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  
+  function addScoreExplosion(px, py, isCombo = false) {
+    const colors = ['#ffb703', '#f4a261', '#e76f51', '#ffdd77', '#ff4d6d'];
+    for (let i = 0; i < 18 + (combo * 2); i++) {
+      let angle = Math.random() * Math.PI * 2;
+      let speed = 2 + Math.random() * 5;
+      let vx = Math.cos(angle) * speed;
+      let vy = Math.sin(angle) * speed - 2;
+      let col = colors[Math.floor(Math.random() * colors.length)];
+      particles.push(new Particle2D(px, py, vx, vy, col, 4 + Math.random() * 6, 40 + Math.random() * 20));
+    }
+    // extra burst for combo
+    if (combo >= 3) {
+      for (let i=0;i<12;i++) {
+        let angle = Math.random() * Math.PI*2;
+        let vx = Math.cos(angle)*3;
+        let vy = Math.sin(angle)*3;
+        particles.push(new Particle2D(px, py, vx, vy, '#ffea00', 5, 30));
+      }
+    }
+  }
+  
+  function addSwishTrail(x, y) {
+    for (let i=0;i<12;i++) {
+      let vx = (Math.random() - 0.5)*3;
+      let vy = (Math.random() - 1)*2 - 2;
+      particles.push(new Particle2D(x, y, vx, vy, '#caffbf', 3, 25));
+    }
+  }
+  
+  // ---- score & combo logic ----
+  function addScore(points, shotX, shotY) {
+    if (!gameActive) return;
+    let oldCombo = combo;
+    score += points;
+    combo++;
+    if (combo > 99) combo = 99;
+    updateUI();
+    addScoreExplosion(shotX, shotY, true);
+    // distortion flash effect
+    distortionAmount = 0.45;
+    // bonus for combo
+    if (combo % 5 === 0 && combo > 0) {
+      addScoreExplosion(width/2, height/3, true);
+    }
+    // play with rim shake in 3d scene (rotate hoop slightly)
+    if (threeInitialized && hoopMesh) {
+      hoopMesh.rotation.z = 0.15;
+      setTimeout(() => { if(hoopMesh) hoopMesh.rotation.z = 0; }, 100);
+    }
+  }
+  
+  function resetCombo() {
+    combo = 0;
+    updateUI();
+  }
+  
+  function updateUI() {
+    scoreSpan.innerText = score;
+    comboSpan.innerText = combo;
+  }
+  
+  function resetGame() {
+    score = 0;
+    combo = 0;
+    gameActive = true;
+    ball.active = false;
+    particles = [];
+    updateUI();
+    distortionAmount = 0;
+    // also reset net particles in three
+    if(threeInitialized){
+      netParticles.forEach(p => scene.remove(p));
+      netParticles = [];
+    }
+  }
+  
+  // ---- Basketball shooting physics (arcade style) ----
+  function shootBall(tapX, tapY, isSwipe = false) {
+    if (!gameActive) return false;
+    if (ball.active) return false; // ball already flying
+    
+    const now = Date.now();
+    if (now - lastShotTime < 220) return false; // shot cooldown
+    lastShotTime = now;
+    
+    // Determine aim: tapX relative to hoop position (right side typical)
+    let targetX = hoop.rimX;
+    let targetY = hoop.rimY;
+    let power = 9.5;
+    let angleVariation = 0;
+    
+    if (isSwipe) {
+      // SWIPE DUNK / crossover effect: more accurate, higher arc, + style points
+      power = 11.2;
+      angleVariation = (Math.random() - 0.5) * 0.12;
+      addScoreExplosion(tapX, tapY, false);
+    } else {
+      power = 9.8 + (Math.random() * 1.5);
+      angleVariation = (Math.random() - 0.5) * 0.25;
+    }
+    
+    let dx = targetX - tapX;
+    let dy = targetY - tapY;
+    let distance = Math.hypot(dx, dy);
+    let angle = Math.atan2(dy, dx);
+    angle += angleVariation;
+    let speed = Math.min(power, distance * 0.38 + 4.5);
+    let vx = Math.cos(angle) * speed;
+    let vy = Math.sin(angle) * speed - 1.2;
+    
+    ball.x = tapX;
+    ball.y = tapY;
+    ball.vx = vx;
+    ball.vy = vy;
+    ball.active = true;
+    ball.onFire = true;
+    
+    // add trail particles on launch
+    for(let i=0;i<8;i++) {
+      particles.push(new Particle2D(ball.x, ball.y, (Math.random()-0.5)*2, (Math.random()-0.5)*2, '#ffaa44', 3, 20));
+    }
+    return true;
+  }
+  
+  function updatePhysics() {
+    if (!ball.active) return;
+    // gravity + drag
+    ball.vy += 0.42;
+    ball.vx *= 0.992;
+    ball.vy *= 0.992;
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+    
+    // rim collision detection (circle-rect approx but circle hoop)
+    const rimCenterX = hoop.rimX;
+    const rimCenterY = hoop.rimY;
+    const rimR = hoop.radius;
+    const distToRim = Math.hypot(ball.x - rimCenterX, ball.y - rimCenterY);
+    
+    // SCORE condition: ball goes through hoop with correct arc
+    if (!ball.scoredFlag && ball.vy > -0.5 && ball.vy < 3.8 && distToRim < rimR + ball.radius - 2) {
+      // swish!
+      ball.scoredFlag = true;
+      let points = 2;
+      if (combo >= 3) points = 3;
+      if (combo >= 7) points = 4;
+      addScore(points, ball.x, ball.y);
+      addSwishTrail(rimCenterX, rimCenterY);
+      ball.active = false;
+      // combo stays positive
+      return;
+    }
+    
+    // out of bounds / miss
+    if (ball.y > height + 100 || ball.x < -100 || ball.x > width + 100 || ball.y < -100) {
+      ball.active = false;
+      if (combo > 0) resetCombo();
+      // "clank" effect via 3d court flash
+      if(threeInitialized) {
+        courtFloor.material.emissiveIntensity = 0.4;
+        setTimeout(() => { if(courtFloor) courtFloor.material.emissiveIntensity = 0.05; }, 120);
+      }
+      // add miss particles
+      for(let i=0;i<12;i++) {
+        particles.push(new Particle2D(ball.x, ball.y, (Math.random()-0.5)*4, (Math.random()-2)*3, '#b5835a', 4, 25));
+      }
+    }
+    
+    // wall bounce sides (optional)
+    if(ball.x - ball.radius < 0) { ball.x = ball.radius; ball.vx *= -0.5; }
+    if(ball.x + ball.radius > width) { ball.x = width - ball.radius; ball.vx *= -0.5; }
+  }
+  
+  // ---- 2D drawing: retro hoop, ball, neon court lines ----
+  function draw2D(ctx, w, h) {
+    ctx.clearRect(0, 0, w, h);
+    
+    // court texture: wood grain + 90s geometric zigzag
+    ctx.fillStyle = '#c47e3a';
+    ctx.fillRect(0, 0, w, h);
+    for(let i=0;i<100;i++) {
+      ctx.beginPath();
+      ctx.moveTo(i*30, 0);
+      ctx.lineTo(i*30+15, h);
+      ctx.lineTo(i*30-15, h);
+      ctx.fillStyle = '#b56a2c30';
+      ctx.fill();
+    }
+    ctx.fillStyle = '#e09d5e';
+    for(let i=0;i<w+40;i+=40){
+      ctx.fillRect(i, h-80, 20, 8);
+    }
+    // free throw line
+    ctx.beginPath();
+    ctx.arc(w-70, h-110, 48, 0, Math.PI*2);
+    ctx.strokeStyle = '#ffb703';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+    
+    // HOOP: backboard neon orange
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#f4a261';
+    ctx.fillRect(hoop.rimX - 30, hoop.rimY - 45, 50, 70);
+    ctx.fillStyle = '#e76f51';
+    ctx.fillRect(hoop.rimX - 28, hoop.rimY - 42, 46, 64);
+    // rim
+    ctx.beginPath();
+    ctx.arc(hoop.rimX, hoop.rimY, hoop.radius, 0, Math.PI*2);
+    ctx.strokeStyle = '#ffb703';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+    ctx.fillStyle = '#ffaa33cc';
+    ctx.beginPath();
+    ctx.arc(hoop.rimX, hoop.rimY, hoop.radius-3, 0, Math.PI*2);
+    ctx.fill();
+    // net lines
+    for(let i=0;i<12;i++) {
+      let ang = -Math.PI/2 + (i/12)*Math.PI*0.8;
+      let xOff = Math.cos(ang)*hoop.radius;
+      let yOff = Math.sin(ang)*hoop.radius;
+      ctx.beginPath();
+      ctx.moveTo(hoop.rimX + xOff, hoop.rimY + yOff);
+      ctx.lineTo(hoop.rimX + xOff*0.9, hoop.rimY + yOff + 28);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#f4e285';
+      ctx.stroke();
+    }
+    
+    // draw ball (with 90's star pattern)
+    if (ball.active) {
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = '#ffb703';
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
+      ctx.fillStyle = '#e27c2c';
+      ctx.fill();
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath();
+      ctx.moveTo(ball.x-8, ball.y-5);
+      ctx.lineTo(ball.x, ball.y-12);
+      ctx.lineTo(ball.x+8, ball.y-5);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.rect(ball.x-3, ball.y-3, 6, 6);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+    
+    // draw particles
+    for(let i=particles.length-1; i>=0; i--) {
+      let p = particles[i];
+      let alive = p.update(ctx);
+      p.draw(ctx);
+      if(!alive) particles.splice(i,1);
+    }
+    
+    // distortion effect (retro wave)
+    if(distortionAmount > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#ff5722';
+      for(let i=0;i<12;i++) {
+        ctx.fillRect(Math.sin(Date.now()*0.02+i)*10 + w/2, i*35, 80, 12);
+      }
+      distortionAmount -= 0.02;
+      ctx.restore();
+    }
+  }
+  
+  // ---- THREE.JS 90's BASKETBALL ARENA ----
+  function initThree() {
+    const canvas = document.getElementById('bgCanvas');
+    width = window.innerWidth > 450 ? 450 : window.innerWidth;
+    height = window.innerHeight > 800 ? 800 : window.innerHeight;
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x071a07);
+    scene.fog = new THREE.FogExp2(0x071a07, 0.008);
+    camera = new THREE.PerspectiveCamera(45, width/height, 0.1, 1000);
+    camera.position.set(0, 2, 9);
+    camera.lookAt(0, 2, 0);
+    renderer = new THREE.WebGLRenderer({ canvas, alpha: false });
+    renderer.setSize(width, height);
+    
+    // Court floor with neon grid
+    const geometry = new THREE.PlaneGeometry(8, 12);
+    const material = new THREE.MeshStandardMaterial({ color: 0xc97133, roughness: 0.6, metalness: 0.2, emissive: 0x331a00 });
+    courtFloor = new THREE.Mesh(geometry, material);
+    courtFloor.rotation.x = -Math.PI/2;
+    courtFloor.position.y = -1.2;
+    scene.add(courtFloor);
+    
+    // neon 3-point line
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffaa44 });
+    const points = [];
+    for(let i=-2.5;i<=2.5;i+=0.2) points.push(new THREE.Vector3(i, -0.9, 3.2));
+    const arcLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), lineMat);
+    scene.add(arcLine);
+    
+    // Backboard 3D
+    const boardGeo = new THREE.BoxGeometry(1.2, 0.9, 0.1);
+    const boardMat = new THREE.MeshStandardMaterial({ color: 0xe76f51, emissive: 0x441100 });
+    const backboard = new THREE.Mesh(boardGeo, boardMat);
+    backboard.position.set(2.6, 1.8, -1.2);
+    scene.add(backboard);
+    // Hoop ring
+    const ringGeo = new THREE.TorusGeometry(0.35, 0.07, 32, 64);
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0xffaa33, metalness: 0.9 });
+    hoopMesh = new THREE.Mesh(ringGeo, ringMat);
+    hoopMesh.position.set(2.9, 1.55, -0.8);
+    hoopMesh.rotation.x = Math.PI/2;
+    scene.add(hoopMesh);
+    
+    // add glowing sphere for rim effect
+    const glowMat = new THREE.MeshStandardMaterial({ color: 0xff8800, emissive: 0xff2200 });
+    const rimLight = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8,8), glowMat);
+    rimLight.position.set(2.9, 1.55, -0.6);
+    scene.add(rimLight);
+    
+    // lights
+    const ambient = new THREE.AmbientLight(0x553322);
+    scene.add(ambient);
+    const dirLight = new THREE.DirectionalLight(0xffcc88, 1);
+    dirLight.position.set(2, 5, 3);
+    scene.add(dirLight);
+    const backLight = new THREE.PointLight(0xff6600, 0.5);
+    backLight.position.set(-1, 2, -2);
+    scene.add(backLight);
+    
+    // floating particles around court (3d dust)
+    const particleCount = 300;
+    const particleGeo = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    for(let i=0;i<particleCount;i++) {
+      particlePositions[i*3] = (Math.random() - 0.5)*12;
+      particlePositions[i*3+1] = Math.random()*4;
+      particlePositions[i*3+2] = (Math.random() - 0.5)*8 - 2;
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    const particleMat3d = new THREE.PointsMaterial({ color: 0xffaa66, size: 0.05 });
+    const stars3d = new THREE.Points(particleGeo, particleMat3d);
+    scene.add(stars3d);
+    
+    threeInitialized = true;
+    animate3D();
+  }
+  
+  function animate3D() {
+    if(!threeInitialized) return;
+    requestAnimationFrame(animate3D);
+    if(hoopMesh) hoopMesh.rotation.z *= 0.92;
+    camera.position.x += (0 - camera.position.x)*0.05;
+    camera.lookAt(1.5, 1.2, 0);
+    renderer.render(scene, camera);
+  }
+  
+  // ---- resize & set hoop position based on canvas ----
+  function resizeAndPlace() {
+    const container = document.querySelector('.game-container');
+    const rect = container.getBoundingClientRect();
+    width = rect.width;
+    height = rect.height;
+    bgCanvas.width = width;
+    bgCanvas.height = height;
+    gameCanvas.width = width;
+    gameCanvas.height = height;
+    
+    hoop.rimX = width - 75;
+    hoop.rimY = height * 0.58;
+    hoop.radius = 26;
+    if (width < 400) hoop.radius = 22;
+    if(threeInitialized){
+      camera.aspect = width/height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+  }
+  
+  // ---- Touch & Mouse events for shooting + swipe dunk ----
+  function handleStart(e) {
+    e.preventDefault();
+    const rect = gameCanvas.getBoundingClientRect();
+    let clientX, clientY;
+    if(e.touches) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+    else { clientX = e.clientX; clientY = e.clientY; }
+    touchStartX = clientX - rect.left;
+    touchStartY = clientY - rect.top;
+    isSwiping = false;
+  }
+  
+  function handleMove(e) {
+    if(!touchStartX) return;
+    const rect = gameCanvas.getBoundingClientRect();
+    let clientX, clientY;
+    if(e.touches) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+    else { clientX = e.clientX; clientY = e.clientY; }
+    let deltaX = (clientX - rect.left) - touchStartX;
+    let deltaY = (clientY - rect.top) - touchStartY;
+    if(Math.abs(deltaX) > swipeThreshold && !isSwiping && !ball.active) {
+      isSwiping = true;
+    }
+  }
+  
+  function handleEnd(e) {
+    if(!gameActive) return;
+    const rect = gameCanvas.getBoundingClientRect();
+    let endX, endY;
+    if(e.changedTouches) { endX = e.changedTouches[0].clientX - rect.left; endY = e.changedTouches[0].clientY - rect.top; }
+    else if(e.clientX) { endX = e.clientX - rect.left; endY = e.clientY - rect.top; }
+    else { endX = touchStartX; endY = touchStartY; }
+    
+    if(isSwiping && !ball.active) {
+      shootBall(endX, endY, true);
+    } else if(!ball.active && !isSwiping && touchStartX) {
+      shootBall(endX, endY, false);
+    }
+    touchStartX = 0; isSwiping = false;
+  }
+  
+  // ---- main loop ----
+  function gameLoop() {
+    if(!width || !height) return;
+    updatePhysics();
+    ctx2d = gameCanvas.getContext('2d');
+    draw2D(ctx2d, width, height);
+    requestAnimationFrame(gameLoop);
+  }
+  
+  function initGame() {
+    resizeAndPlace();
+    initThree();
+    window.addEventListener('resize', () => { resizeAndPlace(); });
+    gameCanvas.addEventListener('touchstart', handleStart, {passive:false});
+    gameCanvas.addEventListener('touchmove', handleMove, {passive:false});
+    gameCanvas.addEventListener('touchend', handleEnd);
+    gameCanvas.addEventListener('mousedown', handleStart);
+    window.addEventListener('mousemove', (e) => { if(touchStartX) handleMove(e); });
+    window.addEventListener('mouseup', handleEnd);
+    resetBtn.addEventListener('click', () => resetGame());
+    gameLoop();
+  }
+  
+  initGame();
+</script>
+</body>
+</html>
