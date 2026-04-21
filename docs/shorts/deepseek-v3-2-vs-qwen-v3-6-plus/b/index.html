@@ -1,1 +1,887 @@
-# Qwen
+/* Qwen 3.6 Plus */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>STREET COURT '97</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  overflow: hidden;
+  background: #0a0a1a;
+  font-family: 'Courier New', monospace;
+  touch-action: none;
+  user-select: none;
+}
+canvas { display: block; }
+#ui-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+.scoreboard {
+  position: fixed;
+  top: 20px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 20;
+  pointer-events: none;
+}
+.score-box {
+  background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
+  border: 2px solid #ff3366;
+  padding: 8px 16px;
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(255,51,102,0.5), inset 0 0 10px rgba(255,51,102,0.1);
+}
+.score-label {
+  font-size: 10px;
+  color: #666;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.score-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #ff3366;
+  text-shadow: 0 0 10px rgba(255,51,102,0.8);
+  letter-spacing: 4px;
+}
+.timer-box {
+  background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
+  border: 2px solid #00ff88;
+  padding: 8px 12px;
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(0,255,136,0.5);
+}
+.timer-value {
+  font-size: 22px;
+  font-weight: bold;
+  color: #00ff88;
+  text-shadow: 0 0 10px rgba(0,255,136,0.8);
+  letter-spacing: 2px;
+}
+#instruction {
+  position: fixed;
+  bottom: 40px;
+  left: 10px;
+  right: 10px;
+  text-align: center;
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  letter-spacing: 1px;
+  z-index: 20;
+  pointer-events: none;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+#streak {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffcc00;
+  font-size: 16px;
+  font-weight: bold;
+  text-shadow: 0 0 15px rgba(255,204,0,0.8);
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+#message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-size: 48px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 30px rgba(255,51,102,0.8), 3px 3px 0 #ff3366;
+  z-index: 30;
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  letter-spacing: 6px;
+}
+#message.show {
+  transform: translate(-50%, -50%) scale(1);
+}
+.aim-line {
+  position: fixed;
+  pointer-events: none;
+  z-index: 5;
+}
+#start-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0a0a2e 0%, #1a0a1e 100%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.5s, transform 0.5s;
+}
+#start-screen.hidden {
+  opacity: 0;
+  transform: scale(1.1);
+  pointer-events: none;
+}
+.title {
+  font-size: 42px;
+  font-weight: 900;
+  background: linear-gradient(180deg, #fff 0%, #ff3366 50%, #00ff88 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 0 20px rgba(255,51,102,0.5));
+}
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  letter-spacing: 8px;
+  margin-bottom: 40px;
+}
+.tap-start {
+  background: linear-gradient(135deg, #ff3366 0%, #ff6600 100%);
+  padding: 15px 50px;
+  border-radius: 30px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 0 30px rgba(255,51,102,0.5);
+  animation: pulse 2s ease-in-out infinite;
+}
+.decorative-lines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+.line {
+  position: absolute;
+  background: rgba(255,51,102,0.1);
+  transform-origin: left center;
+}
+</style>
+</head>
+<body>
+
+<div id="start-screen">
+  <div class="title">STREET COURT '97</div>
+  <div class="subtitle">SHOOTER</div>
+  <div class="tap-start" id="tap-start">TAP TO PLAY</div>
+</div>
+
+<div class="scoreboard">
+  <div class="score-box">
+    <div class="score-label">SCORE</div>
+    <div class="score-value" id="score">000</div>
+  </div>
+  <div class="score-box">
+    <div class="score-label">STREAK</div>
+    <div class="score-value" id="streak-count" style="color: #ffcc00;">0</div>
+  </div>
+  <div class="timer-box">
+    <div class="score-label" style="color: #00ff88;">TIME</div>
+    <div class="timer-value" id="timer">30</div>
+  </div>
+</div>
+
+<div id="streak"></div>
+<div id="message"></div>
+<div id="instruction">DRAG BALL & RELEASE TO SHOOT</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// 90s Basketball Shooter - Street Court '97
+const config = {
+  gravity: -15,
+  ballRadius: 0.6,
+  hoopY: 10,
+  hoopZ: -18,
+  hoopRadius: 1.2,
+  rimRadius: 0.15,
+  timeLimit: 30,
+  dragPower: 1.2
+};
+
+let score = 0, streak = 0, bestStreak = 0, timeLeft = config.timeLimit;
+let gameStarted = false, gameEnded = false;
+let ballLaunched = false, dragging = false;
+let dragStart = { x: 0, y: 0 }, dragCurrent = { x: 0, y: 0 };
+
+// Three.js setup
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0a1a, 0.02);
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 3, 8);
+camera.lookAt(0, config.hoopY - 1, config.hoopZ);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0x444466, 0.5);
+scene.add(ambientLight);
+const mainLight = new THREE.DirectionalLight(0xff6600, 1.5);
+mainLight.position.set(5, 15, 10);
+mainLight.castShadow = true;
+mainLight.shadow.mapSize.width = 2048;
+mainLight.shadow.mapSize.height = 2048;
+mainLight.shadow.camera.near = 0.5;
+mainLight.shadow.camera.far = 50;
+mainLight.shadow.camera.left = -15;
+mainLight.shadow.camera.right = 15;
+mainLight.shadow.camera.top = 15;
+mainLight.shadow.camera.bottom = -5;
+scene.add(mainLight);
+
+const pinkLight = new THREE.PointLight(0xff3366, 2, 20);
+pinkLight.position.set(-8, 8, -5);
+scene.add(pinkLight);
+
+const greenLight = new THREE.PointLight(0x00ff88, 2, 20);
+greenLight.position.set(8, 8, -5);
+scene.add(greenLight);
+
+// Court floor
+const courtGeo = new THREE.PlaneGeometry(30, 40);
+const courtMat = new THREE.MeshStandardMaterial({
+  color: 0x2a1a0a,
+  roughness: 0.8,
+  metalness: 0.2,
+});
+const court = new THREE.Mesh(courtGeo, courtMat);
+court.rotation.x = -Math.PI / 2;
+court.position.set(0, 0, -10);
+court.receiveShadow = true;
+scene.add(court);
+
+// Court lines
+function createCourtLine(start, end, color) {
+  const points = [new THREE.Vector3(...start), new THREE.Vector3(...end)];
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+  const lineMat = new THREE.LineBasicMaterial({ color, linewidth: 2 });
+  return new THREE.Line(lineGeo, lineMat);
+}
+
+const lineColor = 0xffffff;
+scene.add(createCourtLine([-12, 0.01, -28], [12, 0.01, -28], lineColor));
+scene.add(createCourtLine([-12, 0.01, -28], [-12, 0.01, 8], lineColor));
+scene.add(createCourtLine([12, 0.01, -28], [12, 0.01, 8], lineColor));
+
+// Three point arc
+const arcGeo = new THREE.BufferGeometry();
+const arcPoints = [];
+for (let i = 0; i <= 20; i++) {
+  const angle = Math.PI * 0.5 + (i / 20) * Math.PI;
+  arcPoints.push(new THREE.Vector3(Math.cos(angle) * 6, 0.01, config.hoopZ + Math.sin(angle) * 6));
+}
+arcGeo.setFromPoints(arcPoints);
+scene.add(new THREE.Line(arcGeo, new THREE.LineBasicMaterial({ color: lineColor })));
+
+// Backboard
+const backboardGeo = new THREE.BoxGeometry(4, 3, 0.1);
+const backboardMat = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  transparent: true,
+  opacity: 0.7,
+  roughness: 0.3,
+});
+const backboard = new THREE.Mesh(backboardGeo, backboardMat);
+backboard.position.set(0, config.hoopY + 1, config.hoopZ - 0.5);
+backboard.castShadow = true;
+scene.add(backboard);
+
+// Square on backboard
+const squareGeo = new THREE.PlaneGeometry(1.5, 1);
+const squareMat = new THREE.MeshBasicMaterial({ color: 0xff3366, side: THREE.DoubleSide });
+const square = new THREE.Mesh(squareGeo, squareMat);
+square.position.set(0, config.hoopY, config.hoopZ - 0.4);
+scene.add(square);
+
+// Pole
+const poleGeo = new THREE.CylinderGeometry(0.2, 0.2, config.hoopY + 3);
+const poleMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.2 });
+const pole = new THREE.Mesh(poleGeo, poleMat);
+pole.position.set(0, (config.hoopY + 3) / 2, config.hoopZ - 0.6);
+pole.castShadow = true;
+scene.add(pole);
+
+// Rim
+const rimGeo = new THREE.TorusGeometry(config.hoopRadius, config.rimRadius, 8, 24);
+const rimMat = new THREE.MeshStandardMaterial({ color: 0xff3300, metalness: 0.9, roughness: 0.1 });
+const rim = new THREE.Mesh(rimGeo, rimMat);
+rim.position.set(0, config.hoopY, config.hoopZ);
+rim.rotation.x = Math.PI / 2;
+rim.castShadow = true;
+scene.add(rim);
+
+// Net (cloth simulation with springs)
+const netSegments = 12;
+const netRows = 6;
+const netParticles = [];
+const netSprings = [];
+
+for (let row = 0; row <= netRows; row++) {
+  const y = config.hoopY - (row / netRows) * 2.5;
+  const radius = config.hoopRadius * (1 - row * 0.3);
+  for (let seg = 0; seg < netSegments; seg++) {
+    const angle = (seg / netSegments) * Math.PI * 2;
+    const x = Math.cos(angle) * radius;
+    const z = config.hoopZ + Math.sin(angle) * radius;
+    const particle = {
+      pos: new THREE.Vector3(x, y, z),
+      originalPos: new THREE.Vector3(x, y, z),
+      vel: new THREE.Vector3(0, 0, 0),
+      pinned: row === 0,
+    };
+    netParticles.push(particle);
+  }
+}
+
+// Springs connecting net particles
+for (let row = 0; row <= netRows; row++) {
+  for (let seg = 0; seg < netSegments; seg++) {
+    const idx = row * netSegments + seg;
+    if (seg < netSegments - 1) {
+      netSprings.push([idx, idx + 1, 0.8]);
+    }
+    if (row < netRows) {
+      netSprings.push([idx, idx + netSegments, 1.0]);
+    }
+  }
+}
+
+const netLineGeo = new THREE.BufferGeometry();
+const netPositions = new Float32Array(netSprings.length * 2 * 3);
+netLineGeo.setAttribute('position', new THREE.BufferAttribute(netPositions, 3));
+const netLineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+const netLines = new THREE.LineSegments(netLineGeo, netLineMat);
+scene.add(netLines);
+
+// Basketball
+const ballGeo = new THREE.SphereGeometry(config.ballRadius, 16, 16);
+const ballMat = new THREE.MeshStandardMaterial({
+  color: 0xff6600,
+  roughness: 0.6,
+  metalness: 0.1,
+});
+const ball = new THREE.Mesh(ballGeo, ballMat);
+ball.castShadow = true;
+ball.position.set(0, 2, 4);
+scene.add(ball);
+
+// Ball lines
+const ballLineMat = new THREE.LineBasicMaterial({ color: 0x332211 });
+for (let i = 0; i < 3; i++) {
+  const curve = new THREE.EllipseCurve(0, 0, config.ballRadius * 0.95, config.ballRadius * 0.95, 0, Math.PI * 2, false, 0);
+  const points = curve.getPoints(20).map(p => new THREE.Vector3(p.x, p.y, 0));
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const line = new THREE.Line(geo, ballLineMat);
+  line.rotation.y = (i / 3) * Math.PI;
+  ball.add(line);
+}
+
+// Trail particles
+const trailParticles = [];
+const trailGeo = new THREE.BufferGeometry();
+const trailMax = 100;
+const trailPos = new Float32Array(trailMax * 3);
+const trailSizes = new Float32Array(trailMax);
+trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+trailGeo.setAttribute('size', new THREE.BufferAttribute(trailSizes, 1));
+const trailMat = new THREE.PointsMaterial({
+  color: 0xff6600,
+  size: 0.3,
+  transparent: true,
+  opacity: 0.6,
+  blending: THREE.AdditiveBlending,
+});
+const trailPoints = new THREE.Points(trailGeo, trailMat);
+scene.add(trailPoints);
+
+function addTrail(x, y, z) {
+  trailParticles.push({ x, y, z, life: 1 });
+  if (trailParticles.length > trailMax) trailParticles.shift();
+}
+
+function updateTrail() {
+  for (let i = 0; i < trailMax; i++) {
+    if (i < trailParticles.length) {
+      const p = trailParticles[i];
+      trailPos[i * 3] = p.x;
+      trailPos[i * 3 + 1] = p.y;
+      trailPos[i * 3 + 2] = p.z;
+      trailSizes[i] = p.life * 0.3;
+      p.life -= 0.02;
+    } else {
+      trailPos[i * 3] = 0;
+      trailPos[i * 3 + 1] = -100;
+      trailPos[i * 3 + 2] = 0;
+      trailSizes[i] = 0;
+    }
+  }
+  trailGeo.attributes.position.needsUpdate = true;
+  trailGeo.attributes.size.needsUpdate = true;
+  for (let i = trailParticles.length - 1; i >= 0; i--) {
+    if (trailParticles[i].life <= 0) trailParticles.splice(i, 1);
+  }
+}
+
+// Score explosion particles
+const explosionParticles = [];
+const explosionGeo = new THREE.BufferGeometry();
+const explosionMax = 200;
+const explosionPos = new Float32Array(explosionMax * 3);
+const explosionVel = new Float32Array(explosionMax * 3);
+const explosionLife = new Float32Array(explosionMax);
+const explosionSizes = new Float32Array(explosionMax);
+const explosionColors = new Float32Array(explosionMax * 3);
+explosionGeo.setAttribute('position', new THREE.BufferAttribute(explosionPos, 3));
+explosionGeo.setAttribute('size', new THREE.BufferAttribute(explosionSizes, 1));
+const explosionMat = new THREE.PointsMaterial({
+  size: 0.4,
+  transparent: true,
+  opacity: 0.8,
+  blending: THREE.AdditiveBlending,
+  vertexColors: true,
+});
+const explosionPoints = new THREE.Points(explosionGeo, explosionMat);
+scene.add(explosionPoints);
+
+function createExplosion(x, y, z) {
+  const colors = [
+    [1, 0.2, 0.4], // pink
+    [0, 1, 0.53], // green
+    [1, 0.8, 0], // gold
+    [1, 0.4, 0], // orange
+  ];
+  for (let i = 0; i < 50; i++) {
+    const idx = explosionParticles.length;
+    if (idx >= explosionMax) break;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    explosionPos[idx * 3] = x;
+    explosionPos[idx * 3 + 1] = y;
+    explosionPos[idx * 3 + 2] = z;
+    explosionVel[idx * 3] = (Math.random() - 0.5) * 15;
+    explosionVel[idx * 3 + 1] = Math.random() * 10 + 5;
+    explosionVel[idx * 3 + 2] = (Math.random() - 0.5) * 15;
+    explosionLife[idx] = 1;
+    explosionSizes[idx] = Math.random() * 0.6 + 0.2;
+    explosionColors[idx * 3] = color[0];
+    explosionColors[idx * 3 + 1] = color[1];
+    explosionColors[idx * 3 + 2] = color[2];
+    explosionParticles.push({ alive: true });
+  }
+}
+
+function updateExplosions() {
+  for (let i = 0; i < explosionMax; i++) {
+    if (explosionParticles[i]?.alive) {
+      explosionPos[i * 3] += explosionVel[i * 3] * 0.016;
+      explosionPos[i * 3 + 1] += explosionVel[i * 3 + 1] * 0.016;
+      explosionPos[i * 3 + 2] += explosionVel[i * 3 + 2] * 0.016;
+      explosionVel[i * 3 + 1] -= 9.8 * 0.016;
+      explosionLife[i] -= 0.015;
+      explosionSizes[i] = explosionLife[i] * 0.5;
+      if (explosionLife[i] <= 0) explosionParticles[i] = { alive: false };
+    } else {
+      explosionPos[i * 3 + 1] = -100;
+      explosionSizes[i] = 0;
+    }
+  }
+  explosionGeo.attributes.position.needsUpdate = true;
+  explosionGeo.attributes.size.needsUpdate = true;
+  explosionGeo.setAttribute('color', new THREE.BufferAttribute(explosionColors, 3));
+}
+
+// Aim line
+const aimLineGeo = new THREE.BufferGeometry();
+const aimPositions = new Float32Array(100 * 3);
+aimLineGeo.setAttribute('position', new THREE.BufferAttribute(aimPositions, 3));
+const aimLineMat = new THREE.LineBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.8 });
+const aimLine = new THREE.Line(aimLineGeo, aimLineMat);
+aimLine.visible = false;
+scene.add(aimLine);
+
+function updateAimLine() {
+  if (!dragging) {
+    aimLine.visible = false;
+    return;
+  }
+  aimLine.visible = true;
+  const dx = dragCurrent.x - dragStart.x;
+  const dy = dragCurrent.y - dragStart.y;
+  const power = Math.min(Math.sqrt(dx * dx + dy * dy) * config.dragPower, 20);
+  const angle = Math.atan2(dy, dx);
+  const vx = Math.cos(angle) * power;
+  const vy = Math.sin(angle) * power * 0.8 + 10;
+  const vz = -Math.abs(power) * 0.6 - 5;
+  const sx = ball.position.x, sy = ball.position.y, sz = ball.position.z;
+  let px = sx, py = sy, pz = sz, pvx = vx, pvy = vy, pvz = vz;
+  for (let i = 0; i < 100; i++) {
+    px += pvx * 0.016;
+    py += pvy * 0.016;
+    pz += pvz * 0.016;
+    pvy += config.gravity * 0.016;
+    aimPositions[i * 3] = px;
+    aimPositions[i * 3 + 1] = py;
+    aimPositions[i * 3 + 2] = pz;
+    if (py < 0 || pz < config.hoopZ - 2) {
+      for (let j = i + 1; j < 100; j++) {
+        aimPositions[j * 3] = px;
+        aimPositions[j * 3 + 1] = 0;
+        aimPositions[j * 3 + 2] = pz;
+      }
+      break;
+    }
+  }
+  aimLineGeo.attributes.position.needsUpdate = true;
+}
+
+// Ball physics
+let ballVel = new THREE.Vector3(0, 0, 0);
+let ballResetting = false;
+
+function launchBall(vx, vy, vz) {
+  ballVel.set(vx, vy, vz);
+  ballLaunched = true;
+  ballResetting = false;
+}
+
+function resetBall() {
+  ball.position.set((Math.random() - 0.5) * 2, 2, 4 + Math.random() * 2);
+  ballVel.set(0, 0, 0);
+  ballLaunched = false;
+  ballResetting = true;
+  setTimeout(() => ballResetting = false, 200);
+}
+
+// Collision detection
+function checkScore() {
+  const dx = ball.position.x;
+  const dy = ball.position.y - config.hoopY;
+  const dz = ball.position.z - config.hoopZ;
+  const dist = Math.sqrt(dx * dx + dz * dz);
+  if (dist < config.hoopRadius - 0.2 && dy < 0.2 && dy > -0.5 && ballVel.y < 0) {
+    return true;
+  }
+  return false;
+}
+
+function checkRimHit() {
+  const dx = ball.position.x;
+  const dz = ball.position.z - config.hoopZ;
+  const dy = ball.position.y - config.hoopY;
+  const dist = Math.sqrt(dx * dx + dz * dz);
+  if (Math.abs(dist - config.hoopRadius) < config.ballRadius + config.rimRadius && Math.abs(dy) < 0.5) {
+    return true;
+  }
+  return false;
+}
+
+// Net physics update
+function updateNet() {
+  const gravity = -9.8;
+  for (let i = 0; i < netParticles.length; i++) {
+    const p = netParticles[i];
+    if (p.pinned) continue;
+    p.vel.y += gravity * 0.016;
+    // Ball collision with net
+    const dx = p.pos.x - ball.position.x;
+    const dy = p.pos.y - ball.position.y;
+    const dz = p.pos.z - ball.position.z;
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (dist < config.ballRadius + 0.1 && ballLaunched) {
+      p.vel.add(new THREE.Vector3(dx, dy, dz).normalize().multiplyScalar(2));
+    }
+    p.vel.multiplyScalar(0.98);
+    p.pos.add(p.vel.clone().multiplyScalar(0.016));
+    // Return to original
+    const restore = p.originalPos.clone().sub(p.pos).multiplyScalar(0.05);
+    p.pos.add(restore);
+  }
+  // Spring constraints
+  for (const [a, b, strength] of netSprings) {
+    const pa = netParticles[a], pb = netParticles[b];
+    const diff = pa.pos.clone().sub(pb.pos);
+    const dist = diff.length();
+    const targetDist = pa.originalPos.distanceTo(pb.originalPos);
+    const force = (dist - targetDist) * strength * 0.1;
+    const correction = diff.normalize().multiplyScalar(force);
+    if (!pa.pinned) pa.vel.sub(correction);
+    if (!pb.pinned) pb.vel.add(correction);
+  }
+}
+
+function updateNetGeometry() {
+  let idx = 0;
+  for (const [a, b] of netSprings) {
+    const pa = netParticles[a], pb = netParticles[b];
+    netPositions[idx * 3] = pa.pos.x;
+    netPositions[idx * 3 + 1] = pa.pos.y;
+    netPositions[idx * 3 + 2] = pa.pos.z;
+    idx++;
+    netPositions[idx * 3] = pb.pos.x;
+    netPositions[idx * 3 + 1] = pb.pos.y;
+    netPositions[idx * 3 + 2] = pb.pos.z;
+    idx++;
+  }
+  netLineGeo.attributes.position.needsUpdate = true;
+}
+
+// UI Updates
+function updateUI() {
+  document.getElementById('score').textContent = String(score).padStart(3, '0');
+  document.getElementById('streak-count').textContent = streak;
+  document.getElementById('timer').textContent = timeLeft;
+  const streakEl = document.getElementById('streak');
+  if (streak >= 3) {
+    streakEl.textContent = `🔥 ${streak} STREAK!`;
+    streakEl.style.opacity = 1;
+    if (streak % 5 === 0) {
+      showMessage(streak === 5 ? "ON FIRE!" : "UNSTOPPABLE!");
+    }
+  } else {
+    streakEl.style.opacity = 0;
+  }
+}
+
+function showMessage(text) {
+  const msg = document.getElementById('message');
+  msg.textContent = text;
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 800);
+}
+
+// Input handling
+function getTouchPos(e) {
+  const touch = e.touches ? e.touches[0] : e;
+  return { x: touch.clientX, y: touch.clientY };
+}
+
+function handleStart(e) {
+  e.preventDefault();
+  if (!gameStarted || gameEnded || ballLaunched) return;
+  dragging = true;
+  const pos = getTouchPos(e);
+  dragStart.x = pos.x;
+  dragStart.y = pos.y;
+  dragCurrent.x = pos.x;
+  dragCurrent.y = pos.y;
+}
+
+function handleMove(e) {
+  e.preventDefault();
+  if (!dragging) return;
+  const pos = getTouchPos(e);
+  dragCurrent.x = pos.x;
+  dragCurrent.y = pos.y;
+}
+
+function handleEnd(e) {
+  e.preventDefault();
+  if (!dragging) return;
+  dragging = false;
+  const dx = dragCurrent.x - dragStart.x;
+  const dy = dragCurrent.y - dragStart.y;
+  const power = Math.min(Math.sqrt(dx * dx + dy * dy) * config.dragPower, 25);
+  if (power < 2) return;
+  const angle = Math.atan2(dy, dx);
+  const vx = Math.cos(angle) * power;
+  const vy = Math.sin(angle) * power * 0.8 + 8;
+  const vz = -Math.abs(power) * 0.5 - 8;
+  launchBall(vx, vy, vz);
+}
+
+renderer.domElement.addEventListener('touchstart', handleStart, { passive: false });
+renderer.domElement.addEventListener('touchmove', handleMove, { passive: false });
+renderer.domElement.addEventListener('touchend', handleEnd, { passive: false });
+renderer.domElement.addEventListener('mousedown', handleStart);
+renderer.domElement.addEventListener('mousemove', handleMove);
+renderer.domElement.addEventListener('mouseup', handleEnd);
+
+// Game timer
+let timerInterval;
+function startGame() {
+  gameStarted = true;
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateUI();
+    if (timeLeft <= 0) {
+      endGame();
+    }
+  }, 1000);
+}
+
+function endGame() {
+  gameEnded = true;
+  clearInterval(timerInterval);
+  showMessage(`GAME OVER!\nSCORE: ${score}`);
+  setTimeout(() => {
+    document.getElementById('start-screen').classList.remove('hidden');
+    document.querySelector('.title').textContent = 'STREET COURT \'97';
+    document.querySelector('.subtitle').textContent = `FINAL SCORE: ${score}`;
+    document.getElementById('tap-start').textContent = 'PLAY AGAIN';
+  }, 2000);
+  score = 0;
+  streak = 0;
+  timeLeft = config.timeLimit;
+  resetBall();
+  updateUI();
+}
+
+document.getElementById('tap-start').addEventListener('click', () => {
+  document.getElementById('start-screen').classList.add('hidden');
+  gameStarted = false;
+  gameEnded = false;
+  score = 0;
+  streak = 0;
+  timeLeft = config.timeLimit;
+  updateUI();
+  resetBall();
+  setTimeout(startGame, 500);
+});
+
+// Decorative floating geometry
+const decoGroup = new THREE.Group();
+for (let i = 0; i < 15; i++) {
+  const size = Math.random() * 0.3 + 0.1;
+  const geo = Math.random() > 0.5 ?
+    new THREE.BoxGeometry(size, size, size) :
+    new THREE.OctahedronGeometry(size);
+  const mat = new THREE.MeshBasicMaterial({
+    color: [0xff3366, 0x00ff88, 0xffcc00][Math.floor(Math.random() * 3)],
+    transparent: true,
+    opacity: 0.3,
+    wireframe: true,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(
+    (Math.random() - 0.5) * 20,
+    Math.random() * 15 + 5,
+    (Math.random() - 0.5) * 20 - 10
+  );
+  mesh.userData.rotSpeed = (Math.random() - 0.5) * 2;
+  mesh.userData.floatSpeed = Math.random() * 0.5 + 0.5;
+  mesh.userData.floatOffset = Math.random() * Math.PI * 2;
+  decoGroup.add(mesh);
+}
+scene.add(decoGroup);
+
+// Background grid
+const gridGeo = new THREE.BufferGeometry();
+const gridVerts = [];
+for (let i = -20; i <= 20; i++) {
+  gridVerts.push(i, 0, -28, i, 0, 8);
+  gridVerts.push(-12, 0, i, 12, 0, i);
+}
+const gridPositions = new Float32Array(gridVerts);
+gridGeo.setAttribute('position', new THREE.BufferAttribute(gridPositions, 3));
+const gridMat = new THREE.LineBasicMaterial({ color: 0xff3366, transparent: true, opacity: 0.1 });
+scene.add(new THREE.LineSegments(gridGeo, gridMat));
+
+// Main game loop
+let scored = false;
+let lastTime = performance.now();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+
+  // Ball physics
+  if (ballLaunched && !ballResetting) {
+    ballVel.y += config.gravity * dt;
+    ball.position.add(ballVel.clone().multiplyScalar(dt));
+    ball.rotation.x += ballVel.z * dt * 0.5;
+    ball.rotation.z -= ballVel.x * dt * 0.5;
+
+    if (ballLaunched) addTrail(ball.position.x, ball.position.y, ball.position.z);
+
+    // Score detection
+    if (!scored && checkScore()) {
+      scored = true;
+      const points = streak >= 5 ? 3 : streak >= 3 ? 2 : 1;
+      score += points;
+      streak++;
+      if (streak > bestStreak) bestStreak = streak;
+      createExplosion(ball.position.x, ball.position.y, ball.position.z);
+      showMessage(streak >= 5 ? "THREE!" : streak >= 3 ? "BUCKET!" : "SWISH!");
+      updateUI();
+    }
+
+    // Rim collision
+    if (checkRimHit()) {
+      ballVel.x *= -0.6;
+      ballVel.z *= -0.6;
+      streak = 0;
+      updateUI();
+    }
+
+    // Reset if out of bounds
+    if (ball.position.y < -2 || ball.position.z < -30 || ball.position.x > 15 || ball.position.x < -15) {
+      if (!scored) streak = 0;
+      scored = false;
+      updateUI();
+      setTimeout(resetBall, 500);
+    }
+  }
+
+  // Update systems
+  updateTrail();
+  updateExplosions();
+  updateNet();
+  updateNetGeometry();
+  updateAimLine();
+
+  // Animate deco objects
+  decoGroup.children.forEach(obj => {
+    obj.rotation.x += obj.userData.rotSpeed * dt;
+    obj.rotation.y += obj.userData.rotSpeed * 0.7 * dt;
+    obj.position.y += Math.sin(now * 0.001 * obj.userData.floatSpeed + obj.userData.floatOffset) * 0.01;
+  });
+
+  // Animate lights
+  pinkLight.position.x = Math.sin(now * 0.001) * 8;
+  greenLight.position.x = Math.cos(now * 0.001) * 8;
+
+  // Camera subtle movement
+  camera.position.x = Math.sin(now * 0.0003) * 0.5;
+  camera.lookAt(0, config.hoopY - 1, config.hoopZ);
+
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+updateUI();
+animate();
+</script>
+</body>
+</html>
