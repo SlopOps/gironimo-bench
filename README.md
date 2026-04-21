@@ -531,7 +531,7 @@ Episodes include:
 
 Benchmark results and leaderboard:
 
-👉 [https://gironimo.ai/bench](https://gironimo.ai)
+👉 [https://gironimo.ai](https://gironimo.ai)
 
 Website is generated from this repository via GitHub Pages and updated after each video.
 
