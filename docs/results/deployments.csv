@@ -4,3 +4,7 @@ Gemma-4,Local,Chat,off,https://huggingface.co/cyankiwi/gemma-4-26B-A4B-it-AWQ-4b
 Qwen-3.6-Plus,Cloud,Chat,on,https://chat.qwen.ai,??,China,Alibaba
 ChatGPT-5.3,Cloud,Chat,off,https://chatgpt.com,??,USA,OpenAI
 Kimi-2.5,Cloud,Chat,off,https://kimi.com,1T,China,Moonshot
+Opus-4.6,Cloud,Chat,on,https://chatgpt.com,??,USA,Anthropic
+MiMo-V2-Pro,Cloud,Chat,on,https://aistudio.xiaomimimo.com/,1T,China,Xiaomi
+MiniMax-M2.7,Cloud,Chat,on,https://agent.minimax.io/,??,China,MiniMax
+Mistral-Large-3,Cloud,Chat,off,https://chat.mistral.ai/chat,675B,France,Mistral
