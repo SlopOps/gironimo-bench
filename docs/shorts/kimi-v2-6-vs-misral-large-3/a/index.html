@@ -20,6 +20,7 @@
             width: 100vw;
             touch-action: none;
             position: relative;
+            color: #8B4513;
         }
         #app {
             position: relative;
@@ -45,15 +46,16 @@
             border: 3px solid #D2B48C;
             top: 0;
             border-radius: 5px;
-            transition: transform 0.3s ease;
+            transition: transform 0.1s ease;
+            transform-origin: center bottom;
         }
         #door-left {
             left: 0;
-            transform-origin: right center;
+            transform: rotateY(0deg);
         }
         #door-right {
             right: 0;
-            transform-origin: left center;
+            transform: rotateY(0deg);
         }
         #cactus-container {
             position: absolute;
@@ -70,6 +72,7 @@
             border-radius: 3px;
             bottom: 0;
             cursor: pointer;
+            transition: transform 0.05s;
         }
         .cactus::before {
             content: '';
@@ -121,6 +124,20 @@
             z-index: 0;
             box-shadow: 0 0 30px #FF8C00;
         }
+        #saloon-sign {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8vw;
+            font-weight: bold;
+            text-shadow: 3px 3px 5px rgba(0,0,0,0.5);
+            color: #FFD700;
+            z-index: 15;
+            pointer-events: none;
+            text-align: center;
+            white-space: nowrap;
+        }
         #instructions {
             position: absolute;
             top: 5vh;
@@ -131,6 +148,17 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
             z-index: 20;
             pointer-events: none;
+            font-size: 4vw;
+        }
+        .tumbleweed {
+            position: absolute;
+            width: 10vw;
+            height: 10vw;
+            background: radial-gradient(circle, #D2B48C 0%, #8B4513 100%);
+            border-radius: 50%;
+            bottom: 15vh;
+            z-index: 3;
+            opacity: 0.8;
         }
         @media (min-aspect-ratio: 1/1) {
             #saloon-doors {
@@ -145,6 +173,9 @@
                 width: 4vw;
                 height: 30vh;
             }
+            #saloon-sign {
+                font-size: 3vw;
+            }
         }
     </style>
 </head>
@@ -157,9 +188,10 @@
             <div id="door-left"></div>
             <div id="door-right"></div>
         </div>
+        <div id="saloon-sign">SALOON<br><span style="font-size: 0.6em;">TAP CACTI • DRAG DOORS</span></div>
         <div id="cactus-container"></div>
         <div id="particle-container"></div>
-        <div id="instructions">TAP CACTI • DRAG DOORS</div>
+        <div id="instructions"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
@@ -173,59 +205,76 @@
             const doorRight = document.getElementById('door-right');
             const cactusContainer = document.getElementById('cactus-container');
             const particleContainer = document.getElementById('particle-container');
+            const saloonSign = document.getElementById('saloon-sign');
             const instructions = document.getElementById('instructions');
 
             // --- Particle System ---
             class ParticleSystem {
                 constructor() {
                     this.particles = [];
-                    this.maxParticles = 100;
+                    this.maxParticles = 300;
                 }
 
-                create(x, y, color) {
-                    for (let i = 0; i < 20; i++) {
+                create(x, y) {
+                    for (let i = 0; i < 50; i++) {
                         if (this.particles.length >= this.maxParticles) {
-                            this.particles.shift();
+                            const oldParticle = this.particles.shift();
+                            if (oldParticle.element.parentNode) {
+                                oldParticle.element.remove();
+                            }
                         }
 
                         const particle = document.createElement('div');
                         particle.classList.add('particle');
                         particle.style.left = `${x}px`;
                         particle.style.top = `${y}px`;
+                        // Random color: green or brown
+                        const color = Math.random() > 0.7 ? '#8B4513' : '#228B22';
                         particle.style.backgroundColor = color;
-                        particle.style.width = `${Math.random() * 10 + 5}px`;
+                        particle.style.width = `${Math.random() * 12 + 3}px`;
                         particle.style.height = particle.style.width;
+                        particle.style.opacity = '1';
 
+                        // Random angle and velocity
                         const angle = Math.random() * Math.PI * 2;
-                        const velocity = Math.random() * 5 + 2;
+                        const velocity = Math.random() * 10 + 5;
                         const vx = Math.cos(angle) * velocity;
                         const vy = Math.sin(angle) * velocity;
                         const life = Math.random() * 1000 + 500;
 
-                        particle.dataset = { vx, vy, life, start: Date.now() };
+                        particle.dataset = {
+                            vx,
+                            vy,
+                            life,
+                            start: Date.now(),
+                            element: particle
+                        };
+
                         particleContainer.appendChild(particle);
-                        this.particles.push(particle);
+                        this.particles.push(particle.dataset);
                     }
                 }
 
                 update() {
                     const now = Date.now();
-                    this.particles.forEach((p, i) => {
-                        const elapsed = now - parseFloat(p.dataset.start);
-                        const progress = elapsed / parseFloat(p.dataset.life);
+                    for (let i = this.particles.length - 1; i >= 0; i--) {
+                        const p = this.particles[i];
+                        const elapsed = now - parseFloat(p.start);
+                        const progress = elapsed / parseFloat(p.life);
 
                         if (progress >= 1) {
-                            p.remove();
+                            p.element.remove();
                             this.particles.splice(i, 1);
-                            return;
+                            continue;
                         }
 
-                        const x = parseFloat(p.style.left) + parseFloat(p.dataset.vx);
-                        const y = parseFloat(p.style.top) + parseFloat(p.dataset.vy) + (0.1 * elapsed);
-                        p.style.left = `${x}px`;
-                        p.style.top = `${y}px`;
-                        p.style.opacity = 1 - progress;
-                    });
+                        // Apply gravity
+                        const y = parseFloat(p.element.style.top) + p.vy + (0.3 * elapsed * 0.01);
+                        const x = parseFloat(p.element.style.left) + p.vx;
+                        p.element.style.left = `${x}px`;
+                        p.element.style.top = `${y}px`;
+                        p.element.style.opacity = 1 - progress;
+                    }
                 }
             }
 
@@ -233,18 +282,21 @@
 
             // --- Cactus Interaction ---
             function createCacti() {
-                const count = window.innerWidth > 600 ? 8 : 4;
+                const count = window.innerWidth > 600 ? 10 : 6;
                 for (let i = 0; i < count; i++) {
                     const cactus = document.createElement('div');
                     cactus.classList.add('cactus');
                     cactus.style.left = `${Math.random() * 90 + 5}vw`;
-                    cactus.addEventListener('click', () => {
+                    cactus.addEventListener('click', (e) => {
                         const rect = cactus.getBoundingClientRect();
                         const x = rect.left + rect.width / 2;
                         const y = rect.top + rect.height / 2;
-                        particleSystem.create(x, y, '#228B22');
-                        cactus.style.transform = 'scale(0.8)';
-                        setTimeout(() => cactus.style.transform = 'scale(1)', 200);
+                        particleSystem.create(x, y);
+
+                        // Visual feedback: shake the cactus
+                        cactus.style.transform = 'scale(0.9) rotate(5deg)';
+                        setTimeout(() => cactus.style.transform = 'scale(1.1) rotate(-5deg)', 50);
+                        setTimeout(() => cactus.style.transform = 'scale(1) rotate(0deg)', 100);
                     });
                     cactusContainer.appendChild(cactus);
                 }
@@ -252,15 +304,17 @@
 
             // --- Saloon Doors Physics ---
             let isDragging = false;
-            let startX, startLeft, startRight;
+            let startX, startY;
+            let doorLeftAngle = 0;
+            let doorRightAngle = 0;
+            let velocity = 0;
+            let animationId;
 
             function initDrag(e) {
                 isDragging = true;
                 startX = e.clientX || e.touches[0].clientX;
-                const leftRect = doorLeft.getBoundingClientRect();
-                const rightRect = doorRight.getBoundingClientRect();
-                startLeft = leftRect.left;
-                startRight = rightRect.right;
+                startY = e.clientY || e.touches[0].clientY;
+                cancelAnimationFrame(animationId);
                 document.body.style.cursor = 'grabbing';
                 e.preventDefault();
             }
@@ -268,26 +322,51 @@
             function drag(e) {
                 if (!isDragging) return;
                 const x = e.clientX || e.touches[0].clientX;
-                const delta = x - startX;
+                const deltaX = x - startX;
 
-                const maxOpen = window.innerWidth * 0.3;
-                const openAmount = Math.min(Math.max(delta, -maxOpen), maxOpen);
+                doorLeftAngle = Math.min(Math.max(deltaX * 0.01, -Math.PI / 3), Math.PI / 3);
+                doorRightAngle = -doorLeftAngle;
 
-                doorLeft.style.transform = `rotateY(${openAmount * 0.05}deg)`;
-                doorRight.style.transform = `rotateY(${-openAmount * 0.05}deg)`;
+                doorLeft.style.transform = `rotateY(${doorLeftAngle}rad)`;
+                doorRight.style.transform = `rotateY(${doorRightAngle}rad)`;
+
+                velocity = deltaX - (x - (e.clientX || e.touches[0].clientX));
             }
 
             function endDrag() {
+                if (!isDragging) return;
                 isDragging = false;
                 document.body.style.cursor = '';
-                doorLeft.style.transition = 'transform 0.5s ease';
-                doorRight.style.transition = 'transform 0.5s ease';
-                doorLeft.style.transform = '';
-                doorRight.style.transform = '';
-                setTimeout(() => {
-                    doorLeft.style.transition = '';
-                    doorRight.style.transition = '';
-                }, 500);
+
+                let momentum = velocity * 0.02;
+
+                function animateMomentum() {
+                    doorLeftAngle += momentum;
+                    doorRightAngle -= momentum;
+
+                    momentum *= 0.95;
+
+                    if (Math.abs(momentum) < 0.001) {
+                        doorLeftAngle *= 0.9;
+                        doorRightAngle *= 0.9;
+                        if (Math.abs(doorLeftAngle) < 0.01) {
+                            doorLeftAngle = 0;
+                            doorRightAngle = 0;
+                        }
+                    }
+
+                    doorLeftAngle = Math.min(Math.max(doorLeftAngle, -Math.PI / 3), Math.PI / 3);
+                    doorRightAngle = -doorLeftAngle;
+
+                    doorLeft.style.transform = `rotateY(${doorLeftAngle}rad)`;
+                    doorRight.style.transform = `rotateY(${doorRightAngle}rad)`;
+
+                    if (Math.abs(momentum) > 0.001 || Math.abs(doorLeftAngle) > 0.01) {
+                        animationId = requestAnimationFrame(animateMomentum);
+                    }
+                }
+
+                animateMomentum();
             }
 
             saloonDoors.addEventListener('mousedown', initDrag);
@@ -297,11 +376,29 @@
             document.addEventListener('mouseup', endDrag);
             document.addEventListener('touchend', endDrag);
 
+            // --- Tumbleweeds ---
+            function createTumbleweeds() {
+                for (let i = 0; i < 3; i++) {
+                    const tumbleweed = document.createElement('div');
+                    tumbleweed.classList.add('tumbleweed');
+                    tumbleweed.style.left = `${Math.random() * 90 + 5}vw`;
+                    app.appendChild(tumbleweed);
+
+                    let pos = 0;
+                    function animateTumbleweed() {
+                        pos += 0.5;
+                        tumbleweed.style.left = `${(pos + Math.random() * 2) % 100}vw`;
+                        requestAnimationFrame(animateTumbleweed);
+                    }
+                    animateTumbleweed();
+                }
+            }
+
             // --- 3D Saloon Scene (Three.js) ---
-            let scene, camera, renderer, saloon;
+            let scene, camera, renderer;
             function initThreeJS() {
                 scene = new THREE.Scene();
-                scene.background = new THREE.Color(0xF5DEB3);
+                scene.background = null;
 
                 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 camera.position.set(0, 2, 5);
@@ -312,6 +409,7 @@
                 renderer.domElement.style.top = '0';
                 renderer.domElement.style.left = '0';
                 renderer.domElement.style.zIndex = '3';
+                renderer.domElement.style.pointerEvents = 'none';
                 app.prepend(renderer.domElement);
 
                 // Lighting
@@ -329,7 +427,7 @@
                     roughness: 0.7,
                     metalness: 0.1
                 });
-                saloon = new THREE.Mesh(saloonGeometry, saloonMaterial);
+                const saloon = new THREE.Mesh(saloonGeometry, saloonMaterial);
                 saloon.position.y = 1;
                 scene.add(saloon);
 
@@ -381,6 +479,7 @@
 
             // --- Initialize ---
             createCacti();
+            createTumbleweeds();
             initThreeJS();
             setupParallax();
 
@@ -390,6 +489,31 @@
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
             });
+
+            // --- Dust Clouds ---
+            const dustClouds = [];
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('div');
+                cloud.style.position = 'absolute';
+                cloud.style.width = `${Math.random() * 20 + 10}vw`;
+                cloud.style.height = '5vh';
+                cloud.style.background = 'rgba(255, 255, 255, 0.3)';
+                cloud.style.borderRadius = '50%';
+                cloud.style.bottom = `${Math.random() * 30 + 20}vh`;
+                cloud.style.left = `${Math.random() * 90 + 5}vw`;
+                cloud.style.zIndex = '4';
+                cloud.style.opacity = '0.5';
+                app.appendChild(cloud);
+                dustClouds.push(cloud);
+
+                let pos = 0;
+                function animateDust() {
+                    pos += 0.2;
+                    cloud.style.left = `${(pos + Math.random() * 2) % 100}vw`;
+                    requestAnimationFrame(animateDust);
+                }
+                animateDust();
+            }
         });
     </script>
 </body>
