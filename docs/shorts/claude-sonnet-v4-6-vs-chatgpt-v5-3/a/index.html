@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html model=sonnet lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VOID PILOT — Navigate the Dark</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --void: #00000f;
+    --deep: #010118;
+    --nebula-blue: #0a0a3a;
+    --star-white: #e8f4ff;
+    --plasma: #00d4ff;
+    --plasma-dim: rgba(0,212,255,0.15);
+    --warn: #ff4444;
+    --heat: #ff8800;
+    --shield: #00ff9d;
+    --ui-glow: 0 0 10px rgba(0,212,255,0.8), 0 0 30px rgba(0,212,255,0.3);
+    --font-hud: 'Share Tech Mono', monospace;
+    --font-title: 'Orbitron', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--void);
+    overflow: hidden;
+    font-family: var(--font-hud);
+    color: var(--star-white);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #bg-canvas {
+    position: fixed; inset: 0;
+    z-index: 0;
+  }
+
+  #game-canvas {
+    position: fixed; inset: 0;
+    z-index: 1;
+  }
+
+  /* HUD OVERLAY */
+  #hud {
+    position: fixed; inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px;
+  }
+
+  #hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  #hud-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hud-panel {
+    background: rgba(0,10,30,0.75);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 4px;
+    padding: 8px 12px;
+    backdrop-filter: blur(4px);
+  }
+
+  .hud-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(0,212,255,0.6);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .hud-value {
+    font-size: 20px;
+    font-family: var(--font-title);
+    font-weight: 700;
+    color: var(--plasma);
+    text-shadow: var(--ui-glow);
+    line-height: 1;
+  }
+
+  .hud-value.warn { color: var(--warn); text-shadow: 0 0 10px rgba(255,68,68,0.8); }
+  .hud-value.heat { color: var(--heat); text-shadow: 0 0 10px rgba(255,136,0,0.8); }
+  .hud-value.shield-val { color: var(--shield); text-shadow: 0 0 10px rgba(0,255,157,0.8); }
+
+  /* SHIELD BAR */
+  #shield-bar-wrap {
+    width: 100%;
+  }
+  #shield-bar-track {
+    height: 6px;
+    background: rgba(0,255,157,0.1);
+    border: 1px solid rgba(0,255,157,0.3);
+    border-radius: 3px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  #shield-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff9d, #00e5ff);
+    border-radius: 3px;
+    transition: width 0.2s ease;
+    box-shadow: 0 0 8px rgba(0,255,157,0.6);
+  }
+
+  /* THRUST CONTROL */
+  #thrust-ring {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    pointer-events: all;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #thrust-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: rgba(0,212,255,0.5);
+    text-transform: uppercase;
+  }
+
+  #thrust-btn {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,212,255,0.5);
+    background: radial-gradient(circle at center, rgba(0,60,120,0.8), rgba(0,0,30,0.9));
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.1s;
+    box-shadow: 0 0 20px rgba(0,212,255,0.2), inset 0 0 20px rgba(0,212,255,0.05);
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: all;
+  }
+
+  #thrust-btn:active, #thrust-btn.firing {
+    border-color: var(--plasma);
+    box-shadow: 0 0 30px rgba(0,212,255,0.6), inset 0 0 20px rgba(0,212,255,0.2);
+    background: radial-gradient(circle at center, rgba(0,100,200,0.8), rgba(0,20,60,0.9));
+  }
+
+  .thrust-arrow {
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 14px solid rgba(0,212,255,0.8);
+  }
+
+  .thrust-text {
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: rgba(0,212,255,0.7);
+  }
+
+  /* GYRO INDICATOR (tilt to steer) */
+  #gyro-hint {
+    position: fixed;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  #tilt-indicator {
+    width: 8px;
+    height: 60px;
+    border: 1px solid rgba(0,212,255,0.4);
+    border-radius: 4px;
+    background: rgba(0,10,30,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #tilt-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--plasma);
+    position: absolute;
+    left: 1px;
+    top: 27px;
+    transition: top 0.1s;
+    box-shadow: 0 0 6px var(--plasma);
+  }
+
+  /* SCREENS */
+  #splash-screen, #gameover-screen {
+    position: fixed; inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 50% 30%, rgba(10,10,60,0.95), rgba(0,0,15,0.98));
+    padding: 24px;
+  }
+
+  #gameover-screen { display: none; }
+
+  .screen-title {
+    font-family: var(--font-title);
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    text-align: center;
+    color: var(--plasma);
+    text-shadow: var(--ui-glow);
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+
+  .screen-sub {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: rgba(0,212,255,0.5);
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .mission-block {
+    background: rgba(0,20,50,0.6);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 40px;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .mission-block h3 {
+    font-family: var(--font-title);
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: rgba(0,212,255,0.6);
+    margin-bottom: 14px;
+  }
+
+  .mission-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: rgba(232,244,255,0.8);
+    letter-spacing: 1px;
+  }
+
+  .mission-icon {
+    font-size: 18px;
+    min-width: 24px;
+    text-align: center;
+  }
+
+  .start-btn {
+    font-family: var(--font-title);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--void);
+    background: linear-gradient(135deg, var(--plasma), #0066ff);
+    border: none;
+    border-radius: 4px;
+    padding: 16px 40px;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 0 30px rgba(0,212,255,0.5), 0 0 60px rgba(0,212,255,0.2);
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .start-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 0 15px rgba(0,212,255,0.4);
+  }
+
+  #score-final {
+    font-family: var(--font-title);
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--plasma);
+    text-shadow: var(--ui-glow);
+    margin-bottom: 4px;
+  }
+
+  #score-label-final {
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: rgba(0,212,255,0.5);
+    margin-bottom: 8px;
+  }
+
+  #death-reason {
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--warn);
+    margin-bottom: 32px;
+    text-shadow: 0 0 10px rgba(255,68,68,0.6);
+  }
+
+  /* COMBO POPUP */
+  #combo-popup {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    font-family: var(--font-title);
+    font-size: 28px;
+    font-weight: 900;
+    color: #ffdd00;
+    text-shadow: 0 0 20px rgba(255,221,0,0.8);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    letter-spacing: 3px;
+    white-space: nowrap;
+  }
+
+  /* NEBULA LAYERS */
+  .nebula {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    animation: nebula-drift 20s ease-in-out infinite alternate;
+  }
+
+  @keyframes nebula-drift {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(20px, -15px) scale(1.05); }
+  }
+
+  .n1 { width: 300px; height: 200px; background: rgba(30,0,80,0.4); top: -50px; left: -80px; animation-duration: 25s; }
+  .n2 { width: 250px; height: 300px; background: rgba(0,20,80,0.35); top: 40%; right: -60px; animation-duration: 30s; animation-delay: -10s; }
+  .n3 { width: 200px; height: 200px; background: rgba(0,60,40,0.2); bottom: 10%; left: 20%; animation-duration: 22s; animation-delay: -5s; }
+
+  /* WARP FLASH */
+  #warp-flash {
+    position: fixed; inset: 0;
+    z-index: 200;
+    background: radial-gradient(ellipse, white, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.05s;
+  }
+
+  #scanline {
+    position: fixed; inset: 0;
+    z-index: 5;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.04) 3px,
+      rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* DRAG HINT */
+  #drag-hint {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 15;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+
+  #drag-hint .hint-text {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: rgba(0,212,255,0.5);
+    animation: pulse-hint 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-hint {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nebula atmosphere -->
+<div class="nebula n1"></div>
+<div class="nebula n2"></div>
+<div class="nebula n3"></div>
+<div id="scanline"></div>
+<div id="warp-flash"></div>
+
+<!-- Star background -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- Game canvas -->
+<canvas id="game-canvas"></canvas>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="hud-top">
+    <div class="hud-panel">
+      <div class="hud-label">Score</div>
+      <div class="hud-value" id="hud-score">0</div>
+    </div>
+    <div class="hud-panel">
+      <div class="hud-label">Wave</div>
+      <div class="hud-value" id="hud-wave">01</div>
+    </div>
+    <div class="hud-panel">
+      <div class="hud-label">Speed</div>
+      <div class="hud-value heat" id="hud-speed">1.0</div>
+    </div>
+  </div>
+
+  <div id="hud-bottom">
+    <div class="hud-panel" id="shield-bar-wrap">
+      <div class="hud-label">Shield Integrity</div>
+      <div id="shield-bar-track">
+        <div id="shield-bar-fill" style="width:100%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Thrust control -->
+<div id="thrust-ring">
+  <div id="thrust-label">HOLD TO BOOST</div>
+  <div id="thrust-btn">
+    <div class="thrust-arrow"></div>
+    <div class="thrust-text">THRUST</div>
+  </div>
+</div>
+
+<!-- Combo popup -->
+<div id="combo-popup"></div>
+
+<!-- SPLASH SCREEN -->
+<div id="splash-screen">
+  <div class="screen-title">VOID<br>PILOT</div>
+  <div class="screen-sub">DEEP SPACE SURVIVAL</div>
+
+  <div class="mission-block">
+    <h3>// MISSION BRIEFING</h3>
+    <div class="mission-item">
+      <span class="mission-icon">✦</span>
+      <span>Dodge asteroids hurtling through the void</span>
+    </div>
+    <div class="mission-item">
+      <span class="mission-icon">☄</span>
+      <span>Collect glowing plasma cores for points</span>
+    </div>
+    <div class="mission-item">
+      <span class="mission-icon">⟁</span>
+      <span>Drag or tilt phone to steer your craft</span>
+    </div>
+    <div class="mission-item">
+      <span class="mission-icon">🚀</span>
+      <span>Hold THRUST to boost through gaps</span>
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn">LAUNCH →</button>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div id="gameover-screen">
+  <div class="screen-title">SIGNAL<br>LOST</div>
+  <div id="death-reason">HULL BREACH</div>
+  <div id="score-label-final">DISTANCE LOGGED</div>
+  <div id="score-final">0</div>
+  <br>
+  <button class="start-btn" id="restart-btn">FLY AGAIN</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  VOID PILOT — Outer Space Survival Game
+//  Features: Particle system, physics, explosions,
+//            scroll/interaction animations, 3D parallax
+// ═══════════════════════════════════════════════
+
+const bgCanvas = document.getElementById('bg-canvas');
+const bgCtx = bgCanvas.getContext('2d');
+const gc = document.getElementById('game-canvas');
+const ctx = gc.getContext('2d');
+
+let W, H;
+function resize() {
+  W = bgCanvas.width = gc.width = window.innerWidth;
+  H = bgCanvas.height = gc.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ─── GAME STATE ─────────────────────────────────
+let gameRunning = false;
+let score = 0;
+let wave = 1;
+let shield = 100;
+let frameCount = 0;
+let speed = 1.0;
+let combo = 1;
+let comboTimer = 0;
+let lastCollect = 0;
+let invincible = 0;
+
+// ─── STAR FIELD (background layer) ──────────────
+const STAR_LAYERS = 3;
+const starLayers = [];
+
+function initStars() {
+  starLayers.length = 0;
+  for (let layer = 0; layer < STAR_LAYERS; layer++) {
+    const count = [120, 60, 30][layer];
+    const stars = [];
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: [0.5, 1, 1.8][layer] + Math.random() * [0.5, 0.8, 1.2][layer],
+        speed: [0.3, 0.8, 1.8][layer],
+        alpha: 0.3 + Math.random() * 0.7,
+        twinkle: Math.random() * Math.PI * 2,
+        twinkleSpeed: 0.02 + Math.random() * 0.04,
+        hue: Math.random() < 0.1 ? (Math.random() < 0.5 ? '#b0c4ff' : '#ffd0b0') : 'white'
+      });
+    }
+    starLayers.push(stars);
+  }
+}
+initStars();
+
+function drawStars(speedMult) {
+  bgCtx.clearRect(0, 0, W, H);
+  // Deep space gradient
+  const grad = bgCtx.createRadialGradient(W/2, H*0.3, 0, W/2, H*0.5, H*0.8);
+  grad.addColorStop(0, '#050524');
+  grad.addColorStop(0.5, '#020215');
+  grad.addColorStop(1, '#000008');
+  bgCtx.fillStyle = grad;
+  bgCtx.fillRect(0, 0, W, H);
+
+  for (let layer = 0; layer < STAR_LAYERS; layer++) {
+    const stars = starLayers[layer];
+    for (const s of stars) {
+      s.twinkle += s.twinkleSpeed;
+      const twinkleFactor = 0.6 + 0.4 * Math.sin(s.twinkle);
+      bgCtx.globalAlpha = s.alpha * twinkleFactor;
+
+      if (gameRunning) {
+        s.y += s.speed * speedMult;
+        if (s.y > H + 2) {
+          s.y = -2;
+          s.x = Math.random() * W;
+        }
+      }
+
+      bgCtx.beginPath();
+      bgCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      bgCtx.fillStyle = s.hue;
+      bgCtx.fill();
+
+      // Glow for bigger stars
+      if (layer === 2 && s.r > 2) {
+        bgCtx.globalAlpha = s.alpha * twinkleFactor * 0.3;
+        bgCtx.beginPath();
+        bgCtx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
+        const gGrad = bgCtx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 3);
+        gGrad.addColorStop(0, 'rgba(180,210,255,0.8)');
+        gGrad.addColorStop(1, 'transparent');
+        bgCtx.fillStyle = gGrad;
+        bgCtx.fill();
+      }
+    }
+  }
+  bgCtx.globalAlpha = 1;
+}
+
+// ─── SHIP ────────────────────────────────────────
+const ship = {
+  x: 0, y: 0,
+  vx: 0, vy: 0,
+  w: 22, h: 36,
+  targetX: 0,
+  thrusting: false,
+  thrustParticles: [],
+  trail: [],
+  engineGlow: 0,
+  shake: 0
+};
+
+function initShip() {
+  ship.x = W / 2;
+  ship.y = H * 0.65;
+  ship.targetX = W / 2;
+  ship.vx = ship.vy = 0;
+  ship.trail = [];
+  ship.thrustParticles = [];
+  ship.engineGlow = 0;
+  ship.shake = 0;
+}
+
+function drawShip() {
+  const { x, y, thrusting, engineGlow, shake } = ship;
+  const sx = x + (shake ? (Math.random()-0.5)*shake : 0);
+  const sy = y + (shake ? (Math.random()-0.5)*shake*0.5 : 0);
+
+  // Ship trail
+  ship.trail.push({ x: sx, y: sy + ship.h/2, alpha: 0.7 });
+  if (ship.trail.length > 20) ship.trail.shift();
+
+  for (let i = 0; i < ship.trail.length; i++) {
+    const t = ship.trail[i];
+    const prog = i / ship.trail.length;
+    t.alpha *= 0.85;
+    ctx.globalAlpha = t.alpha * prog;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, 2 * prog, 0, Math.PI * 2);
+    ctx.fillStyle = '#00d4ff';
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Engine glow
+  if (thrusting || engineGlow > 0) {
+    const glowIntensity = thrusting ? 1 : engineGlow;
+    const g = ctx.createRadialGradient(sx, sy + ship.h/2 + 8, 0, sx, sy + ship.h/2 + 8, 30 * glowIntensity);
+    g.addColorStop(0, `rgba(0,200,255,${0.6 * glowIntensity})`);
+    g.addColorStop(0.4, `rgba(0,100,255,${0.3 * glowIntensity})`);
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(sx, sy + ship.h/2 + 8, 30 * glowIntensity, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ship.engineGlow = Math.max(0, ship.engineGlow - 0.04);
+
+  ctx.save();
+  ctx.translate(sx, sy);
+
+  // Invincibility flash
+  if (invincible > 0 && frameCount % 6 < 3) {
+    ctx.globalAlpha = 0.3;
+  }
+
+  // Main body
+  ctx.shadowColor = '#00d4ff';
+  ctx.shadowBlur = 15;
+
+  // Hull
+  ctx.beginPath();
+  ctx.moveTo(0, -ship.h/2);
+  ctx.lineTo(ship.w/2, ship.h/4);
+  ctx.lineTo(ship.w * 0.3, ship.h/2);
+  ctx.lineTo(-ship.w * 0.3, ship.h/2);
+  ctx.lineTo(-ship.w/2, ship.h/4);
+  ctx.closePath();
+  const hullGrad = ctx.createLinearGradient(0, -ship.h/2, 0, ship.h/2);
+  hullGrad.addColorStop(0, '#aad4ff');
+  hullGrad.addColorStop(0.4, '#4488cc');
+  hullGrad.addColorStop(1, '#1a3366');
+  ctx.fillStyle = hullGrad;
+  ctx.fill();
+
+  // Cockpit
+  ctx.beginPath();
+  ctx.ellipse(0, -ship.h/2 + 14, 7, 10, 0, 0, Math.PI * 2);
+  const cockpitGrad = ctx.createRadialGradient(-2, -ship.h/2 + 10, 1, 0, -ship.h/2 + 14, 9);
+  cockpitGrad.addColorStop(0, 'rgba(200,240,255,0.9)');
+  cockpitGrad.addColorStop(1, 'rgba(0,100,200,0.5)');
+  ctx.fillStyle = cockpitGrad;
+  ctx.fill();
+
+  // Wing accents
+  ctx.strokeStyle = '#00d4ff';
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = (invincible > 0 && frameCount % 6 < 3) ? 0.1 : 0.6;
+  ctx.beginPath();
+  ctx.moveTo(-ship.w*0.15, 0);
+  ctx.lineTo(-ship.w/2, ship.h/4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(ship.w*0.15, 0);
+  ctx.lineTo(ship.w/2, ship.h/4);
+  ctx.stroke();
+
+  ctx.restore();
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+
+  // Engine exhaust
+  if (thrusting) {
+    spawnThrustParticles(sx, sy);
+  }
+}
+
+// ─── PARTICLES ──────────────────────────────────
+const particles = [];
+
+function spawnThrustParticles(x, y) {
+  for (let i = 0; i < 4; i++) {
+    particles.push({
+      x: x + (Math.random()-0.5) * 10,
+      y: y + ship.h/2 + 4,
+      vx: (Math.random()-0.5) * 2,
+      vy: 1 + Math.random() * 4,
+      life: 1,
+      decay: 0.06 + Math.random() * 0.04,
+      size: 2 + Math.random() * 3,
+      type: 'thrust',
+      color: Math.random() < 0.5 ? '#00d4ff' : '#ffffff'
+    });
+  }
+}
+
+function spawnExplosion(x, y, color = '#ff6600', count = 30) {
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 / count) * i + Math.random() * 0.5;
+    const speed = 1.5 + Math.random() * 6;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 1,
+      life: 1,
+      decay: 0.025 + Math.random() * 0.03,
+      size: 1.5 + Math.random() * 4,
+      type: 'explosion',
+      color
+    });
+  }
+  // Shockwave ring
+  particles.push({ x, y, life: 1, decay: 0.04, size: 5, type: 'ring', vx: 0, vy: 0, color });
+}
+
+function spawnCollectBurst(x, y) {
+  for (let i = 0; i < 16; i++) {
+    const angle = (Math.PI * 2 / 16) * i;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * (2 + Math.random() * 3),
+      vy: Math.sin(angle) * (2 + Math.random() * 3),
+      life: 1,
+      decay: 0.04,
+      size: 1.5 + Math.random() * 2.5,
+      type: 'collect',
+      color: '#ffdd00'
+    });
+  }
+}
+
+function updateParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.life -= p.decay;
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
+
+    if (p.type !== 'ring') {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.type === 'thrust') { p.vy -= 0.1; }
+      if (p.type === 'explosion') { p.vx *= 0.95; p.vy *= 0.95; }
+    }
+
+    ctx.globalAlpha = p.life;
+
+    if (p.type === 'ring') {
+      const ringSize = (1 - p.life) * 60 + p.size;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, ringSize, 0, Math.PI * 2);
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 2 * p.life;
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      if (p.type === 'thrust') {
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 6;
+      }
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ─── ASTEROIDS ───────────────────────────────────
+const asteroids = [];
+
+function spawnAsteroid() {
+  const size = 15 + Math.random() * 35;
+  const x = size + Math.random() * (W - size * 2);
+  const vx = (Math.random() - 0.5) * 1.5;
+  const vy = speed * (0.8 + Math.random() * 1.4);
+  const points = [];
+  const numPoints = 7 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (Math.PI * 2 / numPoints) * i;
+    const r = size * (0.7 + Math.random() * 0.4);
+    points.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r });
+  }
+  const hue = Math.random() < 0.2 ? '#5a4a7a' : (Math.random() < 0.5 ? '#4a3a3a' : '#6a5a5a');
+  asteroids.push({ x, y: -size, vx, vy, size, points, rot: 0, rotSpeed: (Math.random()-0.5)*0.03, color: hue });
+}
+
+function updateAsteroids() {
+  for (let i = asteroids.length - 1; i >= 0; i--) {
+    const a = asteroids[i];
+    a.x += a.vx;
+    a.y += a.vy * speed;
+    a.rot += a.rotSpeed;
+
+    if (a.y > H + a.size * 2) {
+      asteroids.splice(i, 1);
+      continue;
+    }
+
+    // Draw asteroid
+    ctx.save();
+    ctx.translate(a.x, a.y);
+    ctx.rotate(a.rot);
+    ctx.beginPath();
+    ctx.moveTo(a.points[0].x, a.points[0].y);
+    for (const p of a.points) ctx.lineTo(p.x, p.y);
+    ctx.closePath();
+
+    const aGrad = ctx.createRadialGradient(-a.size*0.3, -a.size*0.3, 0, 0, 0, a.size);
+    aGrad.addColorStop(0, '#888880');
+    aGrad.addColorStop(0.5, a.color);
+    aGrad.addColorStop(1, '#1a1a1a');
+    ctx.fillStyle = aGrad;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// ─── PLASMA CORES (collectibles) ─────────────────
+const cores = [];
+
+function spawnCore() {
+  const x = 30 + Math.random() * (W - 60);
+  const hue = Math.random() < 0.6 ? '#00ffaa' : (Math.random() < 0.5 ? '#ffdd00' : '#ff44ff');
+  cores.push({ x, y: -20, vy: speed * 0.7, life: 1, pulse: Math.random()*Math.PI*2, color: hue, value: hue === '#ffdd00' ? 5 : (hue === '#ff44ff' ? 3 : 1) });
+}
+
+function updateCores() {
+  for (let i = cores.length - 1; i >= 0; i--) {
+    const c = cores[i];
+    c.y += c.vy * speed;
+    c.pulse += 0.08;
+    const ps = 0.85 + 0.15 * Math.sin(c.pulse);
+
+    if (c.y > H + 30) { cores.splice(i, 1); continue; }
+
+    const r = 9 * ps;
+    ctx.shadowColor = c.color;
+    ctx.shadowBlur = 15;
+    const cg = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, r * 2);
+    cg.addColorStop(0, 'white');
+    cg.addColorStop(0.3, c.color);
+    cg.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r * 2, 0, Math.PI * 2);
+    ctx.fillStyle = cg;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = c.color;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ─── WARP LINES ──────────────────────────────────
+const warpLines = [];
+let warpActive = false;
+
+function spawnWarpLines() {
+  for (let i = 0; i < 20; i++) {
+    warpLines.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      len: 20 + Math.random() * 80,
+      speed: 8 + Math.random() * 12,
+      alpha: 0.3 + Math.random() * 0.5,
+      life: 1
+    });
+  }
+}
+
+function updateWarpLines() {
+  for (let i = warpLines.length - 1; i >= 0; i--) {
+    const w = warpLines[i];
+    w.y += w.speed;
+    w.life -= 0.015;
+    if (w.y > H + w.len || w.life <= 0) { warpLines.splice(i, 1); continue; }
+    ctx.globalAlpha = w.alpha * w.life;
+    ctx.strokeStyle = '#a0d0ff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(w.x, w.y - w.len);
+    ctx.lineTo(w.x, w.y);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ─── NEBULA CLOUD (foreground atmospheric) ───────
+const nebulaClouds = [];
+
+function spawnNebulaCloud() {
+  const x = Math.random() * W;
+  const colors = ['rgba(30,0,80,0.06)', 'rgba(0,20,80,0.05)', 'rgba(80,0,40,0.04)'];
+  nebulaClouds.push({
+    x, y: -100,
+    r: 80 + Math.random() * 150,
+    vy: 0.3 + Math.random() * 0.4,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    life: 1
+  });
+}
+
+function updateNebulaClouds() {
+  for (let i = nebulaClouds.length - 1; i >= 0; i--) {
+    const n = nebulaClouds[i];
+    n.y += n.vy;
+    if (n.y > H + n.r) { nebulaClouds.splice(i, 1); continue; }
+    const ng = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
+    ng.addColorStop(0, n.color);
+    ng.addColorStop(1, 'transparent');
+    ctx.fillStyle = ng;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ─── COLLISION ───────────────────────────────────
+function checkCollisions() {
+  // Asteroids
+  if (invincible <= 0) {
+    for (let i = asteroids.length - 1; i >= 0; i--) {
+      const a = asteroids[i];
+      const dx = ship.x - a.x, dy = ship.y - a.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < a.size * 0.7 + ship.w * 0.5) {
+        asteroids.splice(i, 1);
+        spawnExplosion(a.x, a.y, '#ff6600', 25);
+        shield -= 25;
+        invincible = 90;
+        ship.shake = 8;
+        combo = 1;
+        updateHUD();
+        screenShake();
+        if (shield <= 0) { shield = 0; endGame('HULL BREACH'); }
+      }
+    }
+  }
+  invincible = Math.max(0, invincible - 1);
+  ship.shake = Math.max(0, ship.shake - 0.5);
+
+  // Cores
+  for (let i = cores.length - 1; i >= 0; i--) {
+    const c = cores[i];
+    const dx = ship.x - c.x, dy = ship.y - c.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 22) {
+      const now = Date.now();
+      if (now - lastCollect < 1000) { combo = Math.min(combo + 1, 8); }
+      else { combo = 1; }
+      lastCollect = now;
+      comboTimer = 90;
+
+      const pts = c.value * combo;
+      score += pts;
+      spawnCollectBurst(c.x, c.y);
+      cores.splice(i, 1);
+
+      if (combo >= 3) showCombo(combo);
+      // Shield repair on gold core
+      if (c.value === 5) { shield = Math.min(100, shield + 10); }
+      updateHUD();
+    }
+  }
+}
+
+function showCombo(n) {
+  const popup = document.getElementById('combo-popup');
+  popup.textContent = `×${n} COMBO!`;
+  popup.style.opacity = '1';
+  clearTimeout(popup._timer);
+  popup._timer = setTimeout(() => { popup.style.opacity = '0'; }, 900);
+}
+
+// ─── SCREEN SHAKE ────────────────────────────────
+function screenShake() {
+  const flash = document.getElementById('warp-flash');
+  flash.style.opacity = '0.4';
+  setTimeout(() => { flash.style.opacity = '0'; }, 80);
+}
+
+// ─── HUD UPDATE ──────────────────────────────────
+function updateHUD() {
+  document.getElementById('hud-score').textContent = score;
+  document.getElementById('hud-wave').textContent = String(wave).padStart(2, '0');
+  document.getElementById('hud-speed').textContent = speed.toFixed(1);
+  const pct = Math.max(0, shield);
+  document.getElementById('shield-bar-fill').style.width = pct + '%';
+  const sv = document.getElementById('hud-score');
+  sv.className = 'hud-value' + (shield < 30 ? ' warn' : '');
+}
+
+// ─── INPUT ───────────────────────────────────────
+let pointerDown = false;
+let dragX = null;
+let thrustBtn = document.getElementById('thrust-btn');
+
+function handlePointerMove(e) {
+  if (!gameRunning) return;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  // Check if not interacting with thrust button area
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  if (clientY > H * 0.75) return; // don't steer when near thrust
+  ship.targetX = clientX;
+}
+
+function handlePointerStart(e) {
+  if (!gameRunning) return;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  if (clientY < H * 0.75) {
+    ship.targetX = clientX;
+    pointerDown = true;
+  }
+}
+
+gc.addEventListener('pointermove', handlePointerMove);
+gc.addEventListener('pointerdown', handlePointerStart);
+gc.addEventListener('touchmove', handlePointerMove, { passive: true });
+gc.addEventListener('touchstart', handlePointerStart, { passive: true });
+document.addEventListener('pointermove', handlePointerMove);
+document.addEventListener('touchmove', handlePointerMove, { passive: true });
+
+thrustBtn.addEventListener('pointerdown', (e) => {
+  e.stopPropagation();
+  ship.thrusting = true;
+  thrustBtn.classList.add('firing');
+});
+thrustBtn.addEventListener('pointerup', () => {
+  ship.thrusting = false;
+  thrustBtn.classList.remove('firing');
+  ship.engineGlow = 1;
+});
+thrustBtn.addEventListener('touchstart', (e) => {
+  e.stopPropagation();
+  ship.thrusting = true;
+  thrustBtn.classList.add('firing');
+}, { passive: true });
+thrustBtn.addEventListener('touchend', () => {
+  ship.thrusting = false;
+  thrustBtn.classList.remove('firing');
+  ship.engineGlow = 1;
+});
+
+// Gyroscope / device tilt
+if (window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientation', (e) => {
+    if (!gameRunning) return;
+    const tilt = e.gamma; // -90 to 90
+    if (tilt !== null) {
+      ship.targetX = W/2 + (tilt / 45) * (W * 0.45);
+      ship.targetX = Math.max(20, Math.min(W - 20, ship.targetX));
+      // Update tilt indicator
+      const dot = document.getElementById('tilt-dot');
+      const normalized = Math.max(-1, Math.min(1, tilt / 45));
+      dot.style.top = (27 + normalized * 22) + 'px';
+    }
+  });
+}
+
+// ─── SHIP UPDATE ─────────────────────────────────
+function updateShip() {
+  const dx = ship.targetX - ship.x;
+  ship.vx += dx * 0.08;
+  ship.vx *= 0.75;
+  ship.x += ship.vx;
+  ship.x = Math.max(ship.w, Math.min(W - ship.w, ship.x));
+
+  if (ship.thrusting) {
+    ship.vy = Math.max(ship.vy - 0.5, -8);
+    ship.engineGlow = 1;
+  } else {
+    ship.vy *= 0.9;
+  }
+  ship.y += ship.vy;
+  ship.y = Math.max(H * 0.15, Math.min(H * 0.85, ship.y));
+}
+
+// ─── WAVE / DIFFICULTY ───────────────────────────
+function updateDifficulty() {
+  wave = Math.floor(frameCount / 600) + 1;
+  speed = 1.0 + (wave - 1) * 0.25 + (frameCount / 3000) * 0.5;
+  speed = Math.min(speed, 4.5);
+
+  // Spawn asteroids
+  const spawnRate = Math.max(20, 60 - wave * 4);
+  if (frameCount % spawnRate === 0) spawnAsteroid();
+  if (frameCount % 8 === 0 && wave >= 3) spawnAsteroid(); // extra asteroids in later waves
+
+  // Spawn cores
+  if (frameCount % 90 === 0) spawnCore();
+
+  // Nebula ambience
+  if (frameCount % 120 === 0) spawnNebulaCloud();
+
+  // Warp lines on speed surge
+  if (Math.floor(speed) > Math.floor(speed - 0.01) || (frameCount % 180 === 0 && speed > 2)) {
+    spawnWarpLines();
+  }
+
+  if (comboTimer > 0) comboTimer--;
+  else if (comboTimer === 0) { combo = 1; comboTimer = -1; }
+}
+
+// ─── GAME LOOP ───────────────────────────────────
+let animId = null;
+
+function gameLoop() {
+  if (!gameRunning) return;
+  frameCount++;
+  ctx.clearRect(0, 0, W, H);
+
+  drawStars(speed * 0.3);
+  updateNebulaClouds();
+  updateWarpLines();
+  updateAsteroids();
+  updateCores();
+  updateShip();
+  drawShip();
+  updateParticles();
+  checkCollisions();
+  updateDifficulty();
+  updateHUD();
+
+  animId = requestAnimationFrame(gameLoop);
+}
+
+// ─── AMBIENT STAR LOOP (title / gameover) ────────
+function ambientLoop() {
+  if (gameRunning) return;
+  drawStars(0.2);
+  requestAnimationFrame(ambientLoop);
+}
+ambientLoop();
+
+// ─── START / END ─────────────────────────────────
+function startGame() {
+  document.getElementById('splash-screen').style.display = 'none';
+  document.getElementById('gameover-screen').style.display = 'none';
+
+  // Reset state
+  score = 0; wave = 1; shield = 100; frameCount = 0;
+  speed = 1.0; combo = 1; comboTimer = -1; invincible = 0;
+  asteroids.length = 0; cores.length = 0; particles.length = 0;
+  warpLines.length = 0; nebulaClouds.length = 0;
+
+  initShip();
+  initStars();
+  updateHUD();
+
+  gameRunning = true;
+  gameLoop();
+}
+
+function endGame(reason) {
+  gameRunning = false;
+  cancelAnimationFrame(animId);
+  spawnExplosion(ship.x, ship.y, '#00d4ff', 50);
+  spawnExplosion(ship.x, ship.y, '#ff6600', 30);
+
+  setTimeout(() => {
+    document.getElementById('score-final').textContent = score;
+    document.getElementById('death-reason').textContent = reason;
+    document.getElementById('gameover-screen').style.display = 'flex';
+    ambientLoop();
+  }, 1200);
+}
+
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('restart-btn').addEventListener('click', startGame);
+document.getElementById('start-btn').addEventListener('touchend', (e) => { e.preventDefault(); startGame(); });
+document.getElementById('restart-btn').addEventListener('touchend', (e) => { e.preventDefault(); startGame(); });
+
+// Keyboard support
+document.addEventListener('keydown', (e) => {
+  if (!gameRunning) return;
+  if (e.key === 'ArrowLeft' || e.key === 'a') ship.targetX = Math.max(20, ship.x - 60);
+  if (e.key === 'ArrowRight' || e.key === 'd') ship.targetX = Math.min(W - 20, ship.x + 60);
+  if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') { ship.thrusting = true; thrustBtn.classList.add('firing'); }
+});
+document.addEventListener('keyup', (e) => {
+  if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') { ship.thrusting = false; thrustBtn.classList.remove('firing'); ship.engineGlow = 1; }
+});
+
+// ─── SHOOTING STARS (title screen ambience) ──────
+setInterval(() => {
+  if (!gameRunning) {
+    const x = Math.random() * W;
+    const angle = Math.PI / 6 + Math.random() * Math.PI / 8;
+    const speed_ = 6 + Math.random() * 6;
+    const len = 40 + Math.random() * 80;
+    let t = 0;
+    const sx = x, sy = -10;
+    function shootStar() {
+      if (t > 1) return;
+      t += 0.04;
+      bgCtx.globalAlpha = Math.min(1, (1 - Math.abs(t - 0.5) * 2)) * 0.8;
+      bgCtx.strokeStyle = 'white';
+      bgCtx.lineWidth = 1;
+      bgCtx.beginPath();
+      bgCtx.moveTo(sx + Math.cos(angle) * speed_ * t * 20, sy + Math.sin(angle) * speed_ * t * 20);
+      bgCtx.lineTo(sx + Math.cos(angle) * (speed_ * t * 20 - len), sy + Math.sin(angle) * (speed_ * t * 20 - len));
+      bgCtx.stroke();
+      bgCtx.globalAlpha = 1;
+      requestAnimationFrame(shootStar);
+    }
+    shootStar();
+  }
+}, 1800);
+</script>
+</body>
+</html>
