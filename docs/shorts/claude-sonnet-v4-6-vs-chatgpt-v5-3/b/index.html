@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cosmic Drift</title>
+<style>
+/* ===== RESET ===== */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#000;overflow:hidden;font-family:system-ui, sans-serif}
+canvas{display:block}
+
+/* ===== UI LAYER ===== */
+#ui{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+pointer-events:none;
+color:#fff;
+}
+
+#instructions{
+position:absolute;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+font-size:14px;
+opacity:.8;
+text-align:center;
+}
+
+#score{
+position:absolute;
+top:20px;
+left:20px;
+font-size:18px;
+font-weight:bold;
+}
+
+#energy{
+position:absolute;
+top:20px;
+right:20px;
+width:120px;
+height:8px;
+background:rgba(255,255,255,0.2);
+border-radius:4px;
+overflow:hidden;
+}
+
+#energyBar{
+height:100%;
+width:100%;
+background:linear-gradient(90deg,#00f0ff,#7affff);
+}
+
+#gameOver{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:28px;
+display:none;
+text-align:center;
+pointer-events:auto;
+}
+
+button{
+padding:12px 20px;
+margin-top:20px;
+background:#111;
+color:#fff;
+border:1px solid #555;
+border-radius:6px;
+}
+</style>
+</head>
+<body>
+
+<canvas id="space"></canvas>
+
+<div id="ui">
+<div id="score">0</div>
+<div id="energy"><div id="energyBar"></div></div>
+<div id="instructions">DRAG to fly • COLLECT blue stars • AVOID red asteroids</div>
+<div id="gameOver">
+<div>MISSION FAILED</div>
+<button onclick="restart()">RESTART</button>
+</div>
+</div>
+
+<script>
+// ===== CANVAS SETUP =====
+const canvas = document.getElementById('space');
+const ctx = canvas.getContext('2d');
+
+function resize(){
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ===== GAME STATE =====
+let ship = {x: canvas.width/2, y: canvas.height*0.7, vx:0, vy:0};
+let particles = [];
+let stars = [];
+let asteroids = [];
+let explosions = [];
+let dragging = false;
+let score = 0;
+let energy = 100;
+let gameOver = false;
+
+// ===== INPUT =====
+canvas.addEventListener('pointerdown', e=> dragging=true);
+canvas.addEventListener('pointerup', e=> dragging=false);
+canvas.addEventListener('pointermove', e=>{
+if(dragging){
+ship.vx += (e.clientX - ship.x)*0.01;
+ship.vy += (e.clientY - ship.y)*0.01;
+}
+});
+
+// ===== PARTICLE SYSTEM =====
+function spawnParticle(x,y){
+particles.push({x,y,vx:(Math.random()-0.5)*2,vy:(Math.random()-0.5)*2,life:60});
+}
+
+// ===== STARS =====
+function spawnStar(){
+stars.push({
+x:Math.random()*canvas.width,
+y:-20,
+vy:1+Math.random()*2,
+r:3
+});
+}
+
+// ===== ASTEROIDS =====
+function spawnAsteroid(){
+asteroids.push({
+x:Math.random()*canvas.width,
+y:-40,
+vy:2+Math.random()*3,
+r:10+Math.random()*20
+});
+}
+
+// ===== EXPLOSION =====
+function explode(x,y){
+for(let i=0;i<40;i++){
+explosions.push({x,y,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,life:50});
+}
+}
+
+// ===== BACKGROUND STARFIELD =====
+let bgStars = [];
+for(let i=0;i<200;i++){
+bgStars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,z:Math.random()*2});
+}
+
+function drawBackground(){
+ctx.fillStyle="#000";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+bgStars.forEach(s=>{
+s.y += s.z;
+if(s.y>canvas.height){s.y=0; s.x=Math.random()*canvas.width}
+ctx.fillStyle="white";
+ctx.fillRect(s.x,s.y,s.z,s.z);
+});
+}
+
+// ===== DRAW SHIP =====
+function drawShip(){
+ctx.save();
+ctx.translate(ship.x, ship.y);
+ctx.rotate(ship.vx*0.05);
+
+ctx.beginPath();
+ctx.moveTo(0,-12);
+ctx.lineTo(8,10);
+ctx.lineTo(-8,10);
+ctx.closePath();
+ctx.fillStyle="#00e5ff";
+ctx.fill();
+
+ctx.restore();
+}
+
+// ===== GAME LOOP =====
+function update(){
+if(gameOver) return;
+
+// movement
+ship.x += ship.vx;
+ship.y += ship.vy;
+ship.vx *= 0.95;
+ship.vy *= 0.95;
+
+// bounds
+ship.x = Math.max(0, Math.min(canvas.width, ship.x));
+ship.y = Math.max(0, Math.min(canvas.height, ship.y));
+
+spawnParticle(ship.x, ship.y+10);
+
+// particles
+particles.forEach((p,i)=>{
+p.x+=p.vx; p.y+=p.vy; p.life--;
+if(p.life<=0) particles.splice(i,1);
+});
+
+// stars
+if(Math.random()<0.03) spawnStar();
+stars.forEach((s,i)=>{
+s.y+=s.vy;
+if(dist(ship,s)<15){
+score+=10;
+energy=Math.min(100, energy+10);
+stars.splice(i,1);
+explode(s.x,s.y);
+}
+if(s.y>canvas.height) stars.splice(i,1);
+});
+
+// asteroids
+if(Math.random()<0.02) spawnAsteroid();
+asteroids.forEach((a,i)=>{
+a.y+=a.vy;
+if(dist(ship,a)<a.r){
+energy-=20;
+explode(a.x,a.y);
+asteroids.splice(i,1);
+if(energy<=0) endGame();
+}
+if(a.y>canvas.height) asteroids.splice(i,1);
+});
+
+// explosions
+explosions.forEach((e,i)=>{
+e.x+=e.vx; e.y+=e.vy; e.life--;
+if(e.life<=0) explosions.splice(i,1);
+});
+
+energy-=0.02;
+if(energy<=0) endGame();
+
+// UI
+scoreEl.textContent = score;
+energyBar.style.width = energy + "%";
+}
+
+function draw(){
+drawBackground();
+
+// particles
+particles.forEach(p=>{
+ctx.fillStyle="rgba(0,255,255,0.5)";
+ctx.fillRect(p.x,p.y,2,2);
+});
+
+// stars
+stars.forEach(s=>{
+ctx.beginPath();
+ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+ctx.fillStyle="#66ccff";
+ctx.fill();
+});
+
+// asteroids
+asteroids.forEach(a=>{
+ctx.beginPath();
+ctx.arc(a.x,a.y,a.r,0,Math.PI*2);
+ctx.fillStyle="#ff5555";
+ctx.fill();
+});
+
+// explosions
+explosions.forEach(e=>{
+ctx.fillStyle="orange";
+ctx.fillRect(e.x,e.y,3,3);
+});
+
+// ship
+if(!gameOver) drawShip();
+}
+
+function loop(){
+update();
+draw();
+requestAnimationFrame(loop);
+}
+
+// ===== UTIL =====
+function dist(a,b){
+return Math.hypot(a.x-b.x, a.y-b.y);
+}
+
+// ===== GAME OVER =====
+const scoreEl = document.getElementById('score');
+const energyBar = document.getElementById('energyBar');
+const gameOverEl = document.getElementById('gameOver');
+
+function endGame(){
+gameOver = true;
+gameOverEl.style.display='block';
+}
+
+function restart(){
+ship = {x: canvas.width/2, y: canvas.height*0.7, vx:0, vy:0};
+particles=[];stars=[];asteroids=[];explosions=[];
+score=0;energy=100;gameOver=false;
+gameOverEl.style.display='none';
+}
+
+// ===== START =====
+loop();
+
+// ===== EXTRA VISUAL LAYERS (DEPTH GLOW) =====
+for(let i=0;i<50;i++){
+particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:0,vy:0,life:999});
+}
+
+// ===== AMBIENT PULSE =====
+setInterval(()=>{
+for(let i=0;i<5;i++){
+spawnParticle(Math.random()*canvas.width, Math.random()*canvas.height);
+}
+}, 500);
+
+</script>
+
+</body>
+</html>
