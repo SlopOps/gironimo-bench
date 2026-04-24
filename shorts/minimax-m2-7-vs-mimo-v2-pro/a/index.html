@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pizza Universe</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Bebas+Neue&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --tomato: #e63946;
+            --cheese: #f4a236;
+            --cheese-light: #ffd166;
+            --dough: #d4a373;
+            --dough-dark: #bc6c25;
+            --pepperoni: #c1121f;
+            --basil: #2d6a4f;
+            --olive: #1d3557;
+            --cream: #fefae0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Bebas Neue', sans-serif;
+            background: linear-gradient(180deg, #1a0a00 0%, #2d1810 50%, #4a2512 100%);
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .ui-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .title {
+            font-family: 'Permanent Marker', cursive;
+            font-size: clamp(2rem, 8vw, 4rem);
+            color: var(--cheese);
+            text-shadow:
+                4px 4px 0 var(--tomato),
+                8px 8px 0 rgba(0,0,0,0.3);
+            letter-spacing: 4px;
+            animation: titleBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes titleBounce {
+            0%, 100% { transform: translateX(-50%) scale(1) rotate(-2deg); }
+            50% { transform: translateX(-50%) scale(1.05) rotate(2deg); }
+        }
+
+        .subtitle {
+            font-size: clamp(0.8rem, 3vw, 1.2rem);
+            color: var(--cream);
+            opacity: 0.8;
+            letter-spacing: 3px;
+            margin-top: 5px;
+        }
+
+        .score-panel {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: rgba(230, 57, 70, 0.9);
+            padding: 15px 20px;
+            border-radius: 20px;
+            border: 4px solid var(--cheese);
+            box-shadow: 0 8px 0 var(--dough-dark);
+            pointer-events: auto;
+        }
+
+        .score-label {
+            font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+            color: var(--cream);
+            letter-spacing: 2px;
+        }
+
+        .score-value {
+            font-family: 'Permanent Marker', cursive;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            color: var(--cheese-light);
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+
+        .game-mode-panel {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            background: rgba(45, 106, 79, 0.9);
+            padding: 15px 20px;
+            border-radius: 20px;
+            border: 4px solid var(--cheese);
+            box-shadow: 0 8px 0 var(--dough-dark);
+            pointer-events: auto;
+            transition: all 0.3s ease;
+        }
+
+        .game-mode-panel.active {
+            background: rgba(193, 18, 31, 0.9);
+            animation: pulse 0.5s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .mode-label {
+            font-size: clamp(0.6rem, 2vw, 0.8rem);
+            color: var(--cream);
+            letter-spacing: 2px;
+        }
+
+        .mode-value {
+            font-family: 'Permanent Marker', cursive;
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            color: var(--cheese-light);
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .instructions.hidden {
+            opacity: 0;
+        }
+
+        .instruction-text {
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
+            color: var(--cream);
+            background: rgba(0,0,0,0.6);
+            padding: 12px 24px;
+            border-radius: 30px;
+            border: 3px solid var(--cheese);
+            animation: instructionPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes instructionPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(244, 162, 54, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(244, 162, 54, 0.6); }
+        }
+
+        .pizza-slices-left {
+            position: absolute;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .slice-indicator {
+            width: clamp(30px, 8vw, 50px);
+            height: clamp(30px, 8vw, 50px);
+            background: var(--cheese);
+            border-radius: 50%;
+            border: 3px solid var(--tomato);
+            transition: all 0.3s ease;
+        }
+
+        .slice-indicator.used {
+            opacity: 0.2;
+            transform: scale(0.8);
+        }
+
+        .mode-buttons {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            pointer-events: auto;
+        }
+
+        .mode-btn {
+            padding: 15px 25px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            letter-spacing: 2px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 0 var(--dough-dark);
+        }
+
+        .mode-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 var(--dough-dark);
+        }
+
+        .btn-experience {
+            background: linear-gradient(180deg, var(--cheese) 0%, var(--cheese-light) 100%);
+            color: var(--dough-dark);
+        }
+
+        .btn-play {
+            background: linear-gradient(180deg, var(--tomato) 0%, #c1121f 100%);
+            color: var(--cream);
+        }
+
+        .combo-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Permanent Marker', cursive;
+            font-size: clamp(3rem, 15vw, 8rem);
+            color: var(--cheese-light);
+            text-shadow:
+                4px 4px 0 var(--tomato),
+                8px 8px 0 rgba(0,0,0,0.3);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .combo-display.show {
+            animation: comboPopup 0.8s ease forwards;
+        }
+
+        @keyframes comboPopup {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5) translateY(-50px); }
+        }
+
+        .floating-topping {
+            position: absolute;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            pointer-events: none;
+            animation: floatUp 2s ease forwards;
+            z-index: 5;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-200px) scale(0); }
+        }
+
+        .cheese-stretch-indicator {
+            position: absolute;
+            bottom: 250px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(244, 162, 54, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 3px solid var(--cream);
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
+            color: var(--dough-dark);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .cheese-stretch-indicator.visible {
+            opacity: 1;
+        }
+
+        .game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .game-over-screen.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .game-over-title {
+            font-family: 'Permanent Marker', cursive;
+            font-size: clamp(2.5rem, 10vw, 5rem);
+            color: var(--tomato);
+            text-shadow: 4px 4px 0 var(--cheese);
+            margin-bottom: 20px;
+        }
+
+        .final-score {
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            color: var(--cream);
+            margin-bottom: 30px;
+        }
+
+        .final-score span {
+            color: var(--cheese-light);
+            font-family: 'Permanent Marker', cursive;
+        }
+
+        .restart-btn {
+            padding: 20px 40px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            letter-spacing: 3px;
+            background: linear-gradient(180deg, var(--cheese) 0%, var(--cheese-light) 100%);
+            color: var(--dough-dark);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 var(--dough-dark);
+            transition: all 0.2s ease;
+        }
+
+        .restart-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 var(--dough-dark);
+        }
+
+        .particle-burst {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .topping-catcher {
+            position: absolute;
+            bottom: 280px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: clamp(100px, 30vw, 150px);
+            height: clamp(40px, 10vw, 60px);
+            background: linear-gradient(180deg, var(--cheese) 0%, var(--cheese-light) 50%, var(--dough) 100%);
+            border-radius: 50% 50% 10px 10px / 30% 30% 10px 10px;
+            border: 4px solid var(--dough-dark);
+            box-shadow: 0 10px 0 var(--dough-dark);
+            transition: left 0.1s ease-out;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .topping-catcher::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 60%;
+            background: var(--tomato);
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+
+        .falling-topping {
+            position: absolute;
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            pointer-events: none;
+            z-index: 4;
+            filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.5));
+        }
+
+        .pizza-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a0a00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 0.5s ease;
+        }
+
+        .pizza-loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-pizza {
+            width: clamp(80px, 25vw, 120px);
+            height: clamp(80px, 25vw, 120px);
+            border-radius: 50%;
+            background: var(--dough);
+            border: 8px solid var(--cheese);
+            animation: spin 1s linear infinite;
+            position: relative;
+        }
+
+        .loader-pizza::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 20%;
+            width: 25%;
+            height: 25%;
+            background: var(--tomato);
+            border-radius: 50%;
+            box-shadow:
+                60% 0 0 var(--tomato),
+                0 60% 0 var(--tomato),
+                60% 60% 0 var(--tomato),
+                30% -20% 0 var(--tomato),
+                -20% 30% 0 var(--tomato);
+        }
+
+        .loader-pizza::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30%;
+            height: 30%;
+            border: 4px dashed var(--cheese-light);
+            border-radius: 50%;
+            animation: spin 0.5s linear infinite reverse;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="pizza-loader" id="loader">
+        <div class="loader-pizza"></div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div class="ui-layer">
+        <div class="header">
+            <h1 class="title">PIZZA UNIVERSE</h1>
+            <p class="subtitle">DRAG • TOSS • CATCH</p>
+        </div>
+
+        <div class="game-mode-panel" id="gameModePanel">
+            <div class="mode-label">MODE</div>
+            <div class="mode-value" id="modeValue">EXPERIENCE</div>
+        </div>
+
+        <div class="score-panel" id="scorePanel">
+            <div class="score-label">SCORE</div>
+            <div class="score-value" id="scoreValue">0</div>
+        </div>
+
+        <div class="instructions" id="instructions">
+            <div class="instruction-text" id="instructionText">DRAG THE PIZZA TO STRETCH THE CHEESE!</div>
+        </div>
+
+        <div class="pizza-slices-left" id="slicesLeft">
+            <div class="slice-indicator" data-index="0"></div>
+            <div class="slice-indicator" data-index="1"></div>
+            <div class="slice-indicator" data-index="2"></div>
+            <div class="slice-indicator" data-index="3"></div>
+            <div class="slice-indicator" data-index="4"></div>
+        </div>
+
+        <div class="topping-catcher" id="toppingCatcher"></div>
+
+        <div class="cheese-stretch-indicator" id="stretchIndicator">
+            STRETCH POWER: <span id="stretchPower">0</span>%
+        </div>
+
+        <div class="combo-display" id="comboDisplay"></div>
+
+        <div class="game-over-screen" id="gameOverScreen">
+            <div class="game-over-title">GAME OVER!</div>
+            <div class="final-score">FINAL SCORE: <span id="finalScore">0</span></div>
+            <button class="restart-btn" id="restartBtn">PLAY AGAIN</button>
+        </div>
+
+        <div class="mode-buttons">
+            <button class="mode-btn btn-experience" id="btnExperience">EXPERIENCE</button>
+            <button class="mode-btn btn-play" id="btnPlay">PLAY GAME</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ============================================
+        // PIZZA UNIVERSE - Main Application
+        // ============================================
+
+        class PizzaUniverse {
+            constructor() {
+                // Core state
+                this.mode = 'experience'; // 'experience' or 'game'
+                this.score = 0;
+                this.combo = 0;
+                this.lives = 5;
+                this.isDragging = false;
+                this.lastDragPos = { x: 0, y: 0 };
+                this.stretchPower = 0;
+                this.gameRunning = false;
+                this.fallingToppings = [];
+                this.particles = [];
+                this.cheeseStrings = [];
+
+                // Three.js components
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.pizza = null;
+                this.cheeseMesh = null;
+                this.toppingMeshes = [];
+
+                // Animation
+                this.clock = new THREE.Clock();
+                this.mouse = new THREE.Vector2();
+                this.targetRotation = { x: 0, y: 0 };
+
+                // DOM elements
+                this.container = document.getElementById('canvas-container');
+                this.scorePanel = document.getElementById('scorePanel');
+                this.gameModePanel = document.getElementById('gameModePanel');
+                this.modeValue = document.getElementById('modeValue');
+                this.slicesLeft = document.getElementById('slicesLeft');
+                this.toppingCatcher = document.getElementById('toppingCatcher');
+                this.stretchIndicator = document.getElementById('stretchIndicator');
+                this.stretchPower = document.getElementById('stretchPower');
+                this.comboDisplay = document.getElementById('comboDisplay');
+                this.instructions = document.getElementById('instructions');
+                this.instructionText = document.getElementById('instructionText');
+                this.gameOverScreen = document.getElementById('gameOverScreen');
+                this.loader = document.getElementById('loader');
+
+                this.init();
+            }
+
+            init() {
+                this.setupThreeJS();
+                this.createPizzaScene();
+                this.setupEventListeners();
+                this.createParticleSystem();
+                this.animate();
+
+                // Hide loader after setup
+                setTimeout(() => {
+                    this.loader.classList.add('hidden');
+                }, 1500);
+            }
+
+            setupThreeJS() {
+                // Scene
+                this.scene = new THREE.Scene();
+                this.scene.fog = new THREE.FogExp2(0x1a0a00, 0.015);
+
+                // Camera
+                const aspect = window.innerWidth / window.innerHeight;
+                this.camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
+                this.camera.position.z = 8;
+                this.camera.position.y = 2;
+                this.camera.lookAt(0, 0, 0);
+
+                // Renderer
+                this.renderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: true,
+                    powerPreference: 'high-performance'
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.setClearColor(0x000000, 0);
+                this.container.appendChild(this.renderer.domElement);
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0xffd699, 0.4);
+                this.scene.add(ambientLight);
+
+                const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+                mainLight.position.set(5, 10, 7);
+                mainLight.castShadow = true;
+                this.scene.add(mainLight);
+
+                const fillLight = new THREE.DirectionalLight(0xffe6cc, 0.5);
+                fillLight.position.set(-5, 5, -5);
+                this.scene.add(fillLight);
+
+                const rimLight = new THREE.PointLight(0xe63946, 0.8, 20);
+                rimLight.position.set(0, -3, 5);
+                this.scene.add(rimLight);
+
+                // Background stars
+                this.createStarfield();
+            }
+
+            createStarfield() {
+                const starGeometry = new THREE.BufferGeometry();
+                const starCount = 500;
+                const positions = new Float32Array(starCount * 3);
+                const colors = new Float32Array(starCount * 3);
+
+                for (let i = 0; i < starCount; i++) {
+                    const i3 = i * 3;
+                    const radius = 50 + Math.random() * 150;
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.random() * Math.PI;
+
+                    positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
+                    positions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                    positions[i3 + 2] = radius * Math.cos(phi);
+
+                    // Warm star colors
+                    const colorChoice = Math.random();
+                    if (colorChoice < 0.3) {
+                        colors[i3] = 1; colors[i3 + 1] = 0.85; colors[i3 + 2] = 0.4; // Cheese color
+                    } else if (colorChoice < 0.5) {
+                        colors[i3] = 0.9; colors[i3 + 1] = 0.4; colors[i3 + 2] = 0.2; // Tomato
+                    } else {
+                        colors[i3] = 1; colors[i3 + 1] = 1; colors[i3 + 2] = 0.8; // Warm white
+                    }
+                }
+
+                starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                starGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+                const starMaterial = new THREE.PointsMaterial({
+                    size: 0.5,
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 0.8,
+                    blending: THREE.AdditiveBlending
+                });
+
+                const stars = new THREE.Points(starGeometry, starMaterial);
+                this.scene.add(stars);
+                this.stars = stars;
+            }
+
+            createPizzaScene() {
+                // Pizza base (dough)
+                const doughGeometry = new THREE.CylinderGeometry(2.5, 2.8, 0.4, 64);
+                const doughMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xd4a373,
+                    roughness: 0.9,
+                    metalness: 0.0
+                });
+                this.doughMesh = new THREE.Mesh(doughGeometry, doughMaterial);
+                this.doughMesh.rotation.x = -0.3;
+                this.doughMesh.position.y = -0.5;
+                this.scene.add(this.doughMesh);
+
+                // Crust edge
+                const crustGeometry = new THREE.TorusGeometry(2.65, 0.35, 16, 64);
+                const crustMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xbc6c25,
+                    roughness: 0.95,
+                    metalness: 0.0
+                });
+                this.crustMesh = new THREE.Mesh(crustGeometry, crustMaterial);
+                this.crustMesh.rotation.x = Math.PI / 2;
+                this.crustMesh.position.y = -0.35;
+                this.scene.add(this.crustMesh);
+
+                // Sauce layer
+                const sauceGeometry = new THREE.CylinderGeometry(2.3, 2.3, 0.15, 64);
+                const sauceMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xe63946,
+                    roughness: 0.7,
+                    metalness: 0.0
+                });
+                this.sauceMesh = new THREE.Mesh(sauceGeometry, sauceMaterial);
+                this.sauceMesh.rotation.x = -0.3;
+                this.sauceMesh.position.y = -0.15;
+                this.scene.add(this.sauceMesh);
+
+                // Cheese layer with custom shader for melting effect
+                this.createCheeseLayer();
+
+                // Pepperoni
+                this.createToppings();
+
+                // Group for pizza
+                this.pizza = new THREE.Group();
+                this.pizza.add(this.doughMesh);
+                this.pizza.add(this.crustMesh);
+                this.pizza.add(this.sauceMesh);
+                this.pizza.add(this.cheeseMesh);
+                this.toppingMeshes.forEach(t => this.pizza.add(t));
+
+                this.pizza.position.y = 0.5;
+                this.scene.add(this.pizza);
+            }
+
+            createCheeseLayer() {
+                // Create cheese with wavy top for melted effect
+                const cheeseGeometry = new THREE.CylinderGeometry(2.2, 2.2, 0.2, 64, 32);
+
+                // Modify vertices for melted cheese look
+                const positions = cheeseGeometry.attributes.position;
+                for (let i = 0; i < positions.count; i++) {
+                    const x = positions.getX(i);
+                    const y = positions.getY(i);
+                    const z = positions.getZ(i);
+
+                    if (y > 0) {
+                        // Wavy top
+                        const distFromCenter = Math.sqrt(x * x + z * z);
+                        const wave = Math.sin(distFromCenter * 4) * 0.1 +
+                                    Math.sin(Math.atan2(z, x) * 6) * 0.05;
+                        positions.setY(i, y + wave);
+                    }
+                }
+                cheeseGeometry.computeVertexNormals();
+
+                const cheeseMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xf4a236,
+                    roughness: 0.6,
+                    metalness: 0.1,
+                    emissive: 0xf4a236,
+                    emissiveIntensity: 0.05
+                });
+
+                this.cheeseMesh = new THREE.Mesh(cheeseGeometry, cheeseMaterial);
+                this.cheeseMesh.rotation.x = -0.3;
+                this.cheeseMesh.position.y = 0;
+
+                // Store original cheese geometry for animation
+                this.originalCheesePositions = cheeseGeometry.attributes.position.array.slice();
+            }
+
+            createToppings() {
+                const toppings = [
+                    { type: 'pepperoni', color: 0xc1121f, size: 0.35, count: 12 },
+                    { type: 'olive', color: 0x1d3557, size: 0.15, count: 8 },
+                    { type: 'pepper', color: 0x2d6a4f, size: 0.2, count: 6 },
+                    { type: 'basil', color: 0x40916c, size: 0.12, count: 10 }
+                ];
+
+                toppings.forEach(topping => {
+                    for (let i = 0; i < topping.count; i++) {
+                        let geometry;
+
+                        if (topping.type === 'pepperoni') {
+                            geometry = new THREE.CylinderGeometry(topping.size, topping.size, 0.1, 16);
+                        } else if (topping.type === 'olive') {
+                            geometry = new THREE.SphereGeometry(topping.size, 12, 12);
+                        } else if (topping.type === 'pepper') {
+                            geometry = new THREE.TorusGeometry(topping.size, topping.size * 0.3, 8, 16);
+                        } else {
+                            geometry = new THREE.ConeGeometry(topping.size, topping.size * 2, 4);
+                        }
+
+                        const material = new THREE.MeshStandardMaterial({
+                            color: topping.color,
+                            roughness: 0.8,
+                            metalness: 0.0
+                        });
+
+                        const mesh = new THREE.Mesh(geometry, material);
+
+                        // Random position on pizza
+                        const angle = (i / topping.count) * Math.PI * 2 + Math.random() * 0.5;
+                        const radius = 0.5 + Math.random() * 1.5;
+                        mesh.position.x = Math.cos(angle) * radius;
+                        mesh.position.z = Math.sin(angle) * radius;
+                        mesh.position.y = 0.15;
+
+                        mesh.rotation.x = -0.3;
+                        mesh.rotation.y = Math.random() * Math.PI;
+
+                        this.toppingMeshes.push(mesh);
+                    }
+                });
+            }
+
+            createParticleSystem() {
+                // Create floating topping particles
+                this.particleGroup = new THREE.Group();
+                this.scene.add(this.particleGroup);
+
+                const particleCount = 50;
+                const emojis = ['🍕', '🧀', '🍅', '🫒', '🌿', '🔥'];
+
+                for (let i = 0; i < particleCount; i++) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 64;
+                    canvas.height = 64;
+                    const ctx = canvas.getContext('2d');
+
+                    ctx.font = '48px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(emojis[Math.floor(Math.random() * emojis.length)], 32, 32);
+
+                    const texture = new THREE.CanvasTexture(canvas);
+                    const material = new THREE.SpriteMaterial({
+                        map: texture,
+                        transparent: true,
+                        opacity: 0.8,
+                        blending: THREE.AdditiveBlending
+                    });
+
+                    const sprite = new THREE.Sprite(material);
+                    sprite.position.set(
+                        (Math.random() - 0.5) * 20,
+                        Math.random() * 10 - 5,
+                        (Math.random() - 0.5) * 20 - 5
+                    );
+                    sprite.scale.set(0.5, 0.5, 1);
+                    sprite.userData = {
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.02,
+                            (Math.random() - 0.5) * 0.02,
+                            (Math.random() - 0.5) * 0.02
+                        ),
+                        rotationSpeed: (Math.random() - 0.5) * 0.1,
+                        bobSpeed: Math.random() * 2 + 1,
+                        bobOffset: Math.random() * Math.PI * 2
+                    };
+
+                    this.particleGroup.add(sprite);
+                }
+            }
+
+            setupEventListeners() {
+                // Touch/Mouse events
+                const canvas = this.renderer.domElement;
+
+                canvas.addEventListener('mousedown', (e) => this.onPointerDown(e));
+                canvas.addEventListener('mousemove', (e) => this.onPointerMove(e));
+                canvas.addEventListener('mouseup', () => this.onPointerUp());
+                canvas.addEventListener('mouseleave', () => this.onPointerUp());
+
+                canvas.addEventListener('touchstart', (e) => this.onPointerDown(e.touches[0]));
+                canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    this.onPointerMove(e.touches[0]);
+                }, { passive: false });
+                canvas.addEventListener('touchend', () => this.onPointerUp());
+
+                // Click for pizza launch
+                canvas.addEventListener('click', (e) => this.onCanvasClick(e));
+                canvas.addEventListener('touchend', (e) => {
+                    if (!this.isDragging) this.onCanvasClick(e.changedTouches[0]);
+                });
+
+                // Mode buttons
+                document.getElementById('btnExperience').addEventListener('click', () => this.setMode('experience'));
+                document.getElementById('btnPlay').addEventListener('click', () => this.setMode('game'));
+                document.getElementById('restartBtn').addEventListener('click', () => this.restartGame());
+
+                // Keyboard controls for game mode
+                document.addEventListener('keydown', (e) => this.onKeyDown(e));
+
+                // Window resize
+                window.addEventListener('resize', () => this.onWindowResize());
+            }
+
+            onPointerDown(e) {
+                this.isDragging = true;
+                this.lastDragPos = { x: e.clientX, y: e.clientY };
+
+                if (this.mode === 'experience') {
+                    this.stretchIndicator.classList.add('visible');
+                }
+            }
+
+            onPointerMove(e) {
+                if (!this.isDragging) return;
+
+                const deltaX = e.clientX - this.lastDragPos.x;
+                const deltaY = e.clientY - this.lastDragPos.y;
+
+                // Rotate pizza with drag
+                if (this.pizza) {
+                    this.pizza.rotation.y += deltaX * 0.01;
+                    this.pizza.rotation.x += deltaY * 0.005;
+                }
+
+                // Calculate stretch power
+                if (this.mode === 'experience') {
+                    this.stretchPower = Math.min(100, Math.abs(deltaX) + Math.abs(deltaY));
+                    document.getElementById('stretchPower').textContent = Math.round(this.stretchPower);
+
+                    // Animate cheese stretching
+                    this.animateCheeseStretch(this.stretchPower);
+
+                    // Create cheese strings when stretching
+                    if (this.stretchPower > 30) {
+                        this.createCheeseString(e.clientX, e.clientY);
+                    }
+                }
+
+                this.lastDragPos = { x: e.clientX, y: e.clientY };
+            }
+
+            onPointerUp() {
+                if (this.isDragging && this.stretchPower > 50) {
+                    this.createCheeseExplosion();
+                }
+
+                this.isDragging = false;
+                this.stretchPower = 0;
+                this.stretchIndicator.classList.remove('visible');
+                document.getElementById('stretchPower').textContent = '0';
+
+                // Reset cheese
+                this.resetCheeseGeometry();
+            }
+
+            onCanvasClick(e) {
+                if (this.mode === 'experience') {
+                    this.launchPizzaSlice(e.clientX, e.clientY);
+                }
+            }
+
+            onKeyDown(e) {
+                if (this.mode === 'game') {
+                    const catcher = this.toppingCatcher;
+                    const rect = catcher.getBoundingClientRect();
+                    const moveAmount = 50;
+
+                    if (e.key === 'ArrowLeft' || e.key === 'a') {
+                        const newX = Math.max(50, rect.left + rect.width / 2 - moveAmount);
+                        catcher.style.left = `${newX}px`;
+                    } else if (e.key === 'ArrowRight' || e.key === 'd') {
+                        const newX = Math.min(window.innerWidth - 50, rect.left + rect.width / 2 + moveAmount);
+                        catcher.style.left = `${newX}px`;
+                    }
+                }
+            }
+
+            animateCheeseStretch(power) {
+                if (!this.cheeseMesh) return;
+
+                const positions = this.cheeseMesh.geometry.attributes.position;
+                const stretchFactor = power / 100;
+
+                for (let i = 0; i < positions.count; i++) {
+                    const x = positions.getX(i);
+                    const originalY = this.originalCheesePositions[i * 3 + 1];
+                    const z = positions.getZ(i);
+
+                    if (originalY > 0) {
+                        // Stretch the cheese peaks
+                        const stretch = 1 + stretchFactor * 2 * Math.random();
+                        positions.setY(i, originalY * stretch);
+
+                        // Add wobble
+                        positions.setX(i, x + Math.sin(Date.now() * 0.01 + i) * stretchFactor * 0.2);
+                        positions.setZ(i, z + Math.cos(Date.now() * 0.01 + i) * stretchFactor * 0.2);
+                    }
+                }
+
+                positions.needsUpdate = true;
+                this.cheeseMesh.geometry.computeVertexNormals();
+            }
+
+            resetCheeseGeometry() {
+                if (!this.cheeseMesh) return;
+
+                const positions = this.cheeseMesh.geometry.attributes.position;
+
+                for (let i = 0; i < positions.count; i++) {
+                    const i3 = i * 3;
+                    positions.setX(i, this.originalCheesePositions[i3]);
+                    positions.setY(i, this.originalCheesePositions[i3 + 1]);
+                    positions.setZ(i, this.originalCheesePositions[i3 + 2]);
+                }
+
+                positions.needsUpdate = true;
+                this.cheeseMesh.geometry.computeVertexNormals();
+            }
+
+            createCheeseString(x, y) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 20;
+                canvas.height = 100;
+                const ctx = canvas.getContext('2d');
+
+                const gradient = ctx.createLinearGradient(0, 0, 0, 100);
+                gradient.addColorStop(0, 'rgba(244, 162, 54, 0.8)');
+                gradient.addColorStop(1, 'rgba(244, 162, 54, 0)');
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(8, 0, 4, 100);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                const material = new THREE.SpriteMaterial({
+                    map: texture,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending
+                });
+
+                const sprite = new THREE.Sprite(material);
+                sprite.position.set(
+                    (Math.random() - 0.5) * 2,
+                    0.5,
+                    (Math.random() - 0.5) * 2
+                );
+                sprite.scale.set(0.5, 2, 1);
+
+                this.scene.add(sprite);
+                this.cheeseStrings.push({
+                    sprite,
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.1,
+                        0.1 + Math.random() * 0.1,
+                        (Math.random() - 0.5) * 0.1
+                    ),
+                    life: 1
+                });
+            }
+
+            createCheeseExplosion() {
+                // Create particle burst
+                for (let i = 0; i < 30; i++) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 32;
+                    canvas.height = 32;
+                    const ctx = canvas.getContext('2d');
+                    ctx.beginPath();
+                    ctx.arc(16, 16, 14, 0, Math.PI * 2);
+                    ctx.fillStyle = Math.random() > 0.5 ? '#f4a236' : '#ffd166';
+                    ctx.fill();
+
+                    const texture = new THREE.CanvasTexture(canvas);
+                    const material = new THREE.SpriteMaterial({
+                        map: texture,
+                        transparent: true,
+                        blending: THREE.AdditiveBlending
+                    });
+
+                    const sprite = new THREE.Sprite(material);
+                    sprite.position.copy(this.pizza.position);
+                    sprite.position.y += 0.5;
+
+                    this.scene.add(sprite);
+                    this.particles.push({
+                        sprite,
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.3,
+                            Math.random() * 0.3,
+                            (Math.random() - 0.5) * 0.3
+                        ),
+                        life: 1,
+                        decay: 0.02 + Math.random() * 0.02
+                    });
+                }
+
+                // Add score
+                this.addScore(10, this.pizza.position.x, this.pizza.position.y + 2);
+            }
+
+            launchPizzaSlice(x, y) {
+                // Animate pizza jumping
+                if (this.pizza) {
+                    this.pizza.position.y = 2;
+                    setTimeout(() => {
+                        this.pizza.position.y = 0.5;
+                    }, 300);
+                }
+
+                // Create flying slice effect
+                const canvas = document.createElement('canvas');
+                canvas.width = 128;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+
+                // Draw pizza slice
+                ctx.fillStyle = '#d4a373';
+                ctx.beginPath();
+                ctx.moveTo(64, 64);
+                ctx.arc(64, 64, 55, 0, Math.PI, true);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#e63946';
+                ctx.beginPath();
+                ctx.moveTo(64, 64);
+                ctx.arc(64, 64, 45, 0, Math.PI, true);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#f4a236';
+                ctx.beginPath();
+                ctx.moveTo(64, 64);
+                ctx.arc(64, 64, 40, 0, Math.PI, true);
+                ctx.closePath();
+                ctx.fill();
+
+                // Add pepperoni
+                ctx.fillStyle = '#c1121f';
+                ctx.beginPath();
+                ctx.arc(40, 45, 8, 0, Math.PI * 2);
+                ctx.arc(75, 50, 8, 0, Math.PI * 2);
+                ctx.arc(55, 35, 8, 0, Math.PI * 2);
+                ctx.fill();
+
+                const texture = new THREE.CanvasTexture(canvas);
+                const material = new THREE.SpriteMaterial({
+                    map: texture,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending
+                });
+
+                const slice = new THREE.Sprite(material);
+                slice.position.set(
+                    (Math.random() - 0.5) * 3,
+                    1,
+                    -2
+                );
+                slice.scale.set(1.5, 1.5, 1);
+
+                this.scene.add(slice);
+
+                // Animate slice flying
+                const targetX = (x / window.innerWidth - 0.5) * 10;
+                const targetY = (1 - y / window.innerHeight) * 10;
+
+                const animate = () => {
+                    slice.position.x += (targetX - slice.position.x) * 0.1;
+                    slice.position.y += (targetY - slice.position.y) * 0.1;
+                    slice.position.z += 0.1;
+                    slice.rotation.z += 0.2;
+                    slice.material.opacity -= 0.02;
+
+                    if (slice.material.opacity > 0) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        this.scene.remove(slice);
+                    }
+                };
+                animate();
+
+                // Create particle burst
+                this.createParticleBurst(x, y, ['🍕', '🧀', '🍅', '🔥']);
+
+                // Score
+                this.combo++;
+                this.addScore(this.combo * 5);
+
+                if (this.combo > 1) {
+                    this.showCombo(this.combo);
+                }
+            }
+
+            createParticleBurst(x, y, emojis) {
+                emojis.forEach((emoji, i) => {
+                    setTimeout(() => {
+                        const el = document.createElement('div');
+                        el.className = 'floating-topping';
+                        el.textContent = emoji;
+                        el.style.left = `${x + (Math.random() - 0.5) * 100}px`;
+                        el.style.top = `${y + (Math.random() - 0.5) * 100}px`;
+                        document.body.appendChild(el);
+
+                        setTimeout(() => el.remove(), 2000);
+                    }, i * 50);
+                });
+            }
+
+            addScore(points, x = null, y = null) {
+                this.score += points;
+                document.getElementById('scoreValue').textContent = this.score;
+
+                // Animate score
+                const scoreEl = document.getElementById('scoreValue');
+                scoreEl.style.transform = 'scale(1.3)';
+                setTimeout(() => {
+                    scoreEl.style.transform = 'scale(1)';
+                }, 200);
+            }
+
+            showCombo(combo) {
+                const comboDisplay = this.comboDisplay;
+                comboDisplay.textContent = `${combo}x COMBO!`;
+                comboDisplay.classList.remove('show');
+                void comboDisplay.offsetWidth; // Trigger reflow
+                comboDisplay.classList.add('show');
+
+                setTimeout(() => {
+                    comboDisplay.classList.remove('show');
+                }, 800);
+            }
+
+            setMode(mode) {
+                this.mode = mode;
+                this.modeValue.textContent = mode.toUpperCase();
+
+                if (mode === 'game') {
+                    this.startGame();
+                    this.gameModePanel.classList.add('active');
+                    this.instructions.classList.add('hidden');
+                } else {
+                    this.stopGame();
+                    this.gameModePanel.classList.remove('active');
+                    this.instructionText.textContent = 'DRAG THE PIZZA TO STRETCH THE CHEESE!';
+                    this.instructions.classList.remove('hidden');
+                }
+            }
+
+            startGame() {
+                this.gameRunning = true;
+                this.score = 0;
+                this.lives = 5;
+                this.fallingToppings = [];
+
+                document.getElementById('scoreValue').textContent = '0';
+                this.updateLives();
+                this.gameOverScreen.classList.remove('show');
+
+                // Show game elements
+                this.slicesLeft.style.display = 'flex';
+                this.toppingCatcher.style.display = 'block';
+                this.instructionText.textContent = 'CATCH FALLING TOPPINGS! USE ARROW KEYS OR DRAG';
+
+                // Start spawning toppings
+                this.gameLoop = setInterval(() => this.spawnFallingTopping(), 1000);
+            }
+
+            stopGame() {
+                this.gameRunning = false;
+                clearInterval(this.gameLoop);
+
+                // Clear falling toppings
+                this.fallingToppings.forEach(t => t.element.remove());
+                this.fallingToppings = [];
+
+                // Hide game elements
+                this.slicesLeft.style.display = 'none';
+                this.toppingCatcher.style.display = 'none';
+            }
+
+            spawnFallingTopping() {
+                if (!this.gameRunning) return;
+
+                const emojis = ['🍕', '🧀', '🍅', '🫒', '🌿'];
+                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+                const el = document.createElement('div');
+                el.className = 'falling-topping';
+                el.textContent = emoji;
+                el.style.left = `${Math.random() * (window.innerWidth - 50) + 25}px`;
+                el.style.top = '-50px';
+                document.body.appendChild(el);
+
+                this.fallingToppings.push({
+                    element: el,
+                    x: parseFloat(el.style.left),
+                    y: -50,
+                    speed: 3 + Math.random() * 3 + (this.score / 100),
+                    size: 1.5 + Math.random() * 0.5
+                });
+
+                el.style.fontSize = `${24 * (1.5 + Math.random() * 0.5)}px`;
+            }
+
+            updateFallingToppings(delta) {
+                const catcher = this.toppingCatcher.getBoundingClientRect();
+                const catcherCenter = catcher.left + catcher.width / 2;
+                const catcherTop = catcher.top;
+                const catcherWidth = catcher.width * 1.2;
+
+                for (let i = this.fallingToppings.length - 1; i >= 0; i--) {
+                    const topping = this.fallingToppings[i];
+                    topping.y += topping.speed;
+                    topping.element.style.top = `${topping.y}px`;
+
+                    // Check collision with catcher
+                    const toppingX = topping.x;
+                    if (topping.y > catcherTop - 30 && topping.y < catcherTop + 30) {
+                        if (Math.abs(toppingX - catcherCenter) < catcherWidth / 2) {
+                            // Caught!
+                            this.combo++;
+                            this.addScore(10 * this.combo);
+
+                            if (this.combo > 2) {
+                                this.showCombo(this.combo);
+                            }
+
+                            // Visual feedback
+                            topping.element.style.transform = 'scale(0)';
+                            topping.element.style.opacity = '0';
+
+                            setTimeout(() => topping.element.remove(), 100);
+                            this.fallingToppings.splice(i, 1);
+                            continue;
+                        }
+                    }
+
+                    // Check if missed
+                    if (topping.y > window.innerHeight) {
+                        this.combo = 0;
+                        this.lives--;
+                        this.updateLives();
+
+                        topping.element.remove();
+                        this.fallingToppings.splice(i, 1);
+
+                        if (this.lives <= 0) {
+                            this.endGame();
+                        }
+                    }
+                }
+            }
+
+            updateLives() {
+                const indicators = document.querySelectorAll('.slice-indicator');
+                indicators.forEach((ind, i) => {
+                    if (i < this.lives) {
+                        ind.classList.remove('used');
+                    } else {
+                        ind.classList.add('used');
+                    }
+                });
+            }
+
+            endGame() {
+                this.gameRunning = false;
+                clearInterval(this.gameLoop);
+
+                document.getElementById('finalScore').textContent = this.score;
+                this.gameOverScreen.classList.add('show');
+
+                // Clear remaining toppings
+                this.fallingToppings.forEach(t => t.element.remove());
+                this.fallingToppings = [];
+            }
+
+            restartGame() {
+                this.gameOverScreen.classList.remove('show');
+                setTimeout(() => this.startGame(), 300);
+            }
+
+            onWindowResize() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(width, height);
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                const delta = this.clock.getDelta();
+                const time = this.clock.getElapsedTime();
+
+                // Rotate pizza slowly in experience mode
+                if (this.mode === 'experience' && !this.isDragging && this.pizza) {
+                    this.pizza.rotation.y += 0.003;
+                }
+
+                // Animate particles
+                this.particleGroup.children.forEach(particle => {
+                    particle.position.add(particle.userData.velocity);
+                    particle.material.rotation += particle.userData.rotationSpeed;
+
+                    // Bobbing motion
+                    particle.position.y += Math.sin(time * particle.userData.bobSpeed + particle.userData.bobOffset) * 0.005;
+
+                    // Keep in bounds
+                    if (Math.abs(particle.position.x) > 15) particle.userData.velocity.x *= -1;
+                    if (Math.abs(particle.position.z) > 15) particle.userData.velocity.z *= -1;
+                });
+
+                // Animate cheese strings
+                for (let i = this.cheeseStrings.length - 1; i >= 0; i--) {
+                    const string = this.cheeseStrings[i];
+                    string.sprite.position.add(string.velocity);
+                    string.life -= 0.02;
+                    string.sprite.material.opacity = string.life;
+                    string.sprite.scale.y += 0.1;
+
+                    if (string.life <= 0) {
+                        this.scene.remove(string.sprite);
+                        this.cheeseStrings.splice(i, 1);
+                    }
+                }
+
+                // Animate particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const particle = this.particles[i];
+                    particle.sprite.position.add(particle.velocity);
+                    particle.velocity.y -= 0.01; // Gravity
+                    particle.life -= particle.decay;
+                    particle.sprite.material.opacity = particle.life;
+
+                    if (particle.life <= 0) {
+                        this.scene.remove(particle.sprite);
+                        this.particles.splice(i, 1);
+                    }
+                }
+
+                // Rotate stars
+                if (this.stars) {
+                    this.stars.rotation.y += 0.0002;
+                    this.stars.rotation.x += 0.0001;
+                }
+
+                // Animate pizza bounce
+                if (this.pizza) {
+                    this.pizza.position.y = 0.5 + Math.sin(time * 2) * 0.1;
+                }
+
+                // Update game if running
+                if (this.gameRunning) {
+                    this.updateFallingToppings(delta);
+                }
+
+                // Mouse follow for subtle camera movement
+                if (!this.isDragging) {
+                    this.camera.position.x += (this.mouse.x * 2 - this.camera.position.x) * 0.02;
+                    this.camera.position.y += (2 + this.mouse.y * 1 - this.camera.position.y) * 0.02;
+                    this.camera.lookAt(0, 0, 0);
+                }
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            window.pizzaUniverse = new PizzaUniverse();
+        });
+    </script>
+
+<script>
+/**
+ * Iframe 元素高亮注入脚本
+ * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
+ *
+ * 使用方法：
+ * 1. 将此脚本添加到目标网站的 HTML 中
+ * 2. 或通过浏览器扩展、用户脚本等方式注入
+ */
+
+(function () {
+  "use strict";
+
+  // 检查是否在 iframe 中
+  if (window.self === window.top) {
+    return; // 不在 iframe 中，不执行
+  }
+
+  // 检查是否已经初始化过
+  if (window.__iframeHighlightInitialized) {
+    return;
+  }
+  window.__iframeHighlightInitialized = true;
+  console.log("Iframe 高亮脚本已加载");
+
+  // 创建高亮覆盖层
+  var overlay = document.createElement("div");
+  overlay.id = "iframe-highlight-overlay";
+  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
+
+  // 创建悬停高亮框（虚线边框）
+  var highlightBox = document.createElement("div");
+  highlightBox.id = "iframe-highlight-box";
+  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
+
+  // 创建选中节点的常驻高亮框（实线边框）
+  var selectedBox = document.createElement("div");
+  selectedBox.id = "iframe-selected-box";
+  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
+
+  // 创建悬停标签显示
+  var tagLabel = document.createElement("div");
+  tagLabel.id = "iframe-tag-label";
+  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
+
+  // 创建选中节点标签
+  var selectedLabel = document.createElement("div");
+  selectedLabel.id = "iframe-selected-label";
+  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
+  overlay.appendChild(highlightBox);
+  overlay.appendChild(selectedBox);
+  overlay.appendChild(tagLabel);
+  overlay.appendChild(selectedLabel);
+  document.body.appendChild(overlay);
+
+  // 存储当前选中的元素
+  var selectedElement = null;
+  var highlightEnabled = false;
+
+  // 更新选中元素的高亮显示
+  function updateSelectedHighlight(element) {
+    console.log("updateSelectedHighlight called with:", element);
+    if (!element) {
+      selectedBox.style.display = "none";
+      selectedLabel.style.display = "none";
+      selectedElement = null;
+      console.log("Cleared selected highlight");
+      return;
+    }
+    selectedElement = element;
+    var rect = element.getBoundingClientRect();
+    console.log("Selected element rect:", rect);
+
+    // 更新选中高亮框位置
+    selectedBox.style.display = "block";
+    selectedBox.style.left = "".concat(rect.left - 2, "px");
+    selectedBox.style.top = "".concat(rect.top - 2, "px");
+    selectedBox.style.width = "".concat(rect.width + 4, "px");
+    selectedBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新选中标签位置和内容
+    selectedLabel.style.display = "block";
+    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 28;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 5) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
+    if (labelLeft + labelWidth > window.innerWidth - 10) {
+      labelLeft = window.innerWidth - labelWidth - 10;
+    }
+    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
+    selectedLabel.style.top = "".concat(labelTop, "px");
+    console.log("Selected highlight positioned at:", {
+      left: selectedBox.style.left,
+      top: selectedBox.style.top,
+      width: selectedBox.style.width,
+      height: selectedBox.style.height
+    });
+  }
+  function getElementSelector(element) {
+    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
+    var segments = [];
+    var current = element;
+    while (current !== document.documentElement) {
+      var selector = '';
+      // 优先检查唯一ID
+      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
+        segments.unshift("#".concat(current.id));
+        break; // ID唯一，无需继续向上
+      }
+
+      // 生成类名选择器（取第一个有效类名）
+      var classes = Array.from(current.classList).filter(function (c) {
+        return !c.startsWith('js-');
+      });
+      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
+
+      // 生成位置索引（nth-child）
+      var tag = current.tagName.toLowerCase();
+      if (!className) {
+        var siblings = Array.from(current.parentNode.children);
+        var index = siblings.findIndex(function (el) {
+          return el === current;
+        }) + 1;
+        selector = "".concat(tag, ":nth-child(").concat(index, ")");
+      } else {
+        selector = className;
+      }
+      segments.unshift(selector);
+      current = current.parentElement;
+    }
+
+    // 处理根元素
+    if (current === document.documentElement) {
+      segments.unshift('html');
+    }
+    return segments.join(' > ');
+  }
+
+  // 获取元素文本内容
+  function getElementText(element) {
+    var _element$textContent;
+    if (element.tagName === "INPUT") {
+      return element.value || element.placeholder || "";
+    }
+    if (element.tagName === "TEXTAREA") {
+      return element.value || element.placeholder || "";
+    }
+    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
+    return text.length > 50 ? text.substring(0, 50) + "..." : text;
+  }
+
+  // 获取元素属性信息
+  function getElementAttributes(element) {
+    var attrs = {};
+    for (var i = 0; i < element.attributes.length; i++) {
+      var attr = element.attributes[i];
+      attrs[attr.name] = attr.value;
+    }
+    return attrs;
+  }
+
+  // 鼠标悬停事件处理
+  function handleMouseOver(e) {
+    if (!highlightEnabled) return;
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免高亮 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 如果是已选中的元素，不显示悬停高亮
+    if (target === selectedElement) {
+      highlightBox.style.display = "none";
+      tagLabel.style.display = "none";
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+
+    // 更新悬停高亮框位置
+    highlightBox.style.display = "block";
+    highlightBox.style.left = "".concat(rect.left - 2, "px");
+    highlightBox.style.top = "".concat(rect.top - 2, "px");
+    highlightBox.style.width = "".concat(rect.width + 4, "px");
+    highlightBox.style.height = "".concat(rect.height + 4, "px");
+
+    // 更新标签位置和内容
+    tagLabel.style.display = "block";
+    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
+
+    // 计算标签位置，确保不超出视窗
+    var labelTop = rect.top - 22;
+    var labelLeft = rect.left;
+
+    // 如果标签会超出顶部，显示在元素下方
+    if (labelTop < 0) {
+      labelTop = rect.bottom + 5;
+    }
+
+    // 如果标签会超出右侧，向左调整
+    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
+      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
+    }
+    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
+    tagLabel.style.top = "".concat(labelTop, "px");
+
+    // 发送消息到父窗口
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 鼠标离开事件处理
+  function handleMouseOut(e) {
+    if (!highlightEnabled) return;
+    var relatedTarget = e.relatedTarget;
+
+    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
+    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
+      return;
+    }
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-hover",
+        data: null,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 点击事件处理
+  function handleClick(e) {
+    var target = e.target;
+    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
+      return;
+    }
+
+    // 避免处理 html 和 body 元素
+    if (target === document.documentElement || target === document.body) {
+      return;
+    }
+
+    // 检查是否是交互元素，这些元素需要保留默认行为
+    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
+
+    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
+    if (highlightEnabled) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    var rect = target.getBoundingClientRect();
+    var selector = getElementSelector(target);
+    var text = getElementText(target);
+    var attributes = getElementAttributes(target);
+    console.log("Element clicked:", {
+      tagName: target.tagName,
+      selector: selector,
+      rect: rect
+    });
+
+    // 立即更新选中高亮
+    updateSelectedHighlight(target);
+
+    // 隐藏悬停高亮，因为现在是选中状态
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    var elementInfo = {
+      tagName: target.tagName.toLowerCase(),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y
+      },
+      selector: selector,
+      text: text,
+      attributes: attributes,
+      url: window.location.href,
+      path: window.location.pathname,
+      timestamp: Date.now()
+    };
+    try {
+      window.parent.postMessage({
+        type: "iframe-element-click",
+        data: elementInfo,
+        source: "iframe-highlight-injector"
+      }, "*");
+    } catch (error) {
+      console.warn("无法发送消息到父窗口:", error);
+    }
+  }
+
+  // 监听来自父窗口的消息
+  function handleParentMessage(event) {
+    console.log("Received message from parent:", event.data);
+    if (event.data.type === "iframe-highlight-toggle") {
+      var enabled = event.data.enabled;
+      console.log("Highlight toggle:", enabled);
+      if (enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "enable-iframe-highlight") {
+      console.log("Enable iframe highlight");
+      enableHighlight();
+    } else if (event.data.type === "disable-iframe-highlight") {
+      console.log("Disable iframe highlight");
+      disableHighlight();
+    } else if (event.data.type === "toggle-iframe-highlight") {
+      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
+      console.log("Toggle iframe highlight to:", _enabled);
+      if (_enabled) {
+        enableHighlight();
+      } else {
+        disableHighlight();
+      }
+    } else if (event.data.type === "update-selected-element") {
+      var selector = event.data.selector;
+      console.log("Update selected element with selector:", selector);
+      if (selector) {
+        try {
+          var element = document.querySelector(selector);
+          console.log("Found element by selector:", element);
+          updateSelectedHighlight(element);
+        } catch (error) {
+          console.warn("Failed to select element:", error);
+          updateSelectedHighlight(null);
+        }
+      } else {
+        updateSelectedHighlight(null);
+      }
+    } else if (event.data.type === "clear-selected-element") {
+      console.log("Clear selected element");
+      updateSelectedHighlight(null);
+    }
+  }
+
+  // 启用高亮功能
+  function enableHighlight() {
+    console.log("Enabling highlight");
+    document.addEventListener("mouseover", handleMouseOver, true);
+    document.addEventListener("mouseout", handleMouseOut, true);
+    document.addEventListener("click", handleClick, true);
+    highlightEnabled = true;
+    overlay.style.display = "block";
+  }
+
+  // 禁用高亮功能
+  function disableHighlight() {
+    console.log("Disabling highlight");
+    highlightEnabled = false;
+    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
+    // 这样可以保留选中状态的显示
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
+  }
+
+  // 完全禁用高亮功能（移除所有监听器）
+  function fullyDisableHighlight() {
+    console.log("Fully disabling highlight");
+    highlightEnabled = false;
+    document.removeEventListener("mouseover", handleMouseOver, true);
+    document.removeEventListener("mouseout", handleMouseOut, true);
+    document.removeEventListener("click", handleClick, true);
+    overlay.style.display = "none";
+    highlightBox.style.display = "none";
+    tagLabel.style.display = "none";
+    selectedBox.style.display = "none";
+    selectedLabel.style.display = "none";
+  }
+
+  // 添加事件监听
+  enableHighlight();
+  window.addEventListener("message", handleParentMessage);
+
+  // 暴露全局函数供外部调用
+  window.__iframeHighlightControl = {
+    enable: enableHighlight,
+    disable: disableHighlight,
+    fullyDisable: fullyDisableHighlight,
+    isEnabled: function isEnabled() {
+      return highlightEnabled;
+    },
+    getSelectedElement: function getSelectedElement() {
+      return selectedElement;
+    },
+    updateSelected: updateSelectedHighlight,
+    // 通过消息发送开关控制
+    sendToggleMessage: function sendToggleMessage(enabled) {
+      window.parent.postMessage({
+        type: 'iframe-highlight-status',
+        enabled: enabled || highlightEnabled,
+        source: 'iframe-highlight-injector'
+      }, '*');
+    }
+  };
+
+  // 通知父窗口脚本已加载
+  try {
+    window.parent.postMessage({
+      type: "iframe-highlight-ready",
+      data: {
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: Date.now()
+      },
+      source: "iframe-highlight-injector"
+    }, "*");
+  } catch (error) {
+    console.warn("无法发送就绪消息到父窗口:", error);
+  }
+
+  // 清理函数
+  window.__iframeHighlightCleanup = function () {
+    fullyDisableHighlight();
+    window.removeEventListener("message", handleParentMessage);
+    if (overlay.parentElement) {
+      overlay.parentElement.removeChild(overlay);
+    }
+    delete window.__iframeHighlightInitialized;
+    delete window.__iframeHighlightCleanup;
+  };
+})();
+
+</script>
+</body>
+</html>
