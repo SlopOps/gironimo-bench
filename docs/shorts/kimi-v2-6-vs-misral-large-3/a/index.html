@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html model=mistral lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wild West Saloon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            overflow: hidden;
+            background: linear-gradient(to bottom, #FFD700 0%, #8B4513 30%, #CD853F 70%, #F5DEB3 100%);
+            height: 100vh;
+            width: 100vw;
+            touch-action: none;
+            position: relative;
+        }
+        #app {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+        #saloon-doors {
+            position: absolute;
+            bottom: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60vw;
+            height: 40vh;
+            z-index: 10;
+            cursor: grab;
+            touch-action: none;
+        }
+        #door-left, #door-right {
+            position: absolute;
+            width: 30vw;
+            height: 40vh;
+            background: #8B4513;
+            border: 3px solid #D2B48C;
+            top: 0;
+            border-radius: 5px;
+            transition: transform 0.3s ease;
+        }
+        #door-left {
+            left: 0;
+            transform-origin: right center;
+        }
+        #door-right {
+            right: 0;
+            transform-origin: left center;
+        }
+        #cactus-container {
+            position: absolute;
+            bottom: 10vh;
+            width: 100%;
+            height: 30vh;
+            z-index: 5;
+        }
+        .cactus {
+            position: absolute;
+            width: 8vw;
+            height: 20vh;
+            background: #228B22;
+            border-radius: 3px;
+            bottom: 0;
+            cursor: pointer;
+        }
+        .cactus::before {
+            content: '';
+            position: absolute;
+            width: 6vw;
+            height: 5vh;
+            background: #228B22;
+            border-radius: 50%;
+            top: -2.5vh;
+            left: 1vw;
+        }
+        #particle-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 15vh;
+            background: #CD853F;
+            z-index: 2;
+        }
+        #horizon {
+            position: absolute;
+            bottom: 15vh;
+            width: 100%;
+            height: 5vh;
+            background: linear-gradient(to top, rgba(205,133,63,0.8), transparent);
+            z-index: 1;
+        }
+        #sun {
+            position: absolute;
+            top: 10vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15vw;
+            height: 15vw;
+            background: radial-gradient(circle, #FFD700 0%, #FF8C00 50%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            box-shadow: 0 0 30px #FF8C00;
+        }
+        #instructions {
+            position: absolute;
+            top: 5vh;
+            width: 100%;
+            text-align: center;
+            color: #8B4513;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            z-index: 20;
+            pointer-events: none;
+        }
+        @media (min-aspect-ratio: 1/1) {
+            #saloon-doors {
+                width: 30vw;
+                height: 50vh;
+            }
+            #door-left, #door-right {
+                width: 15vw;
+                height: 50vh;
+            }
+            .cactus {
+                width: 4vw;
+                height: 30vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="sun"></div>
+        <div id="horizon"></div>
+        <div id="ground"></div>
+        <div id="saloon-doors">
+            <div id="door-left"></div>
+            <div id="door-right"></div>
+        </div>
+        <div id="cactus-container"></div>
+        <div id="particle-container"></div>
+        <div id="instructions">TAP CACTI • DRAG DOORS</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script>
+        // --- Wild West 3D Saloon Scene ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const app = document.getElementById('app');
+            const saloonDoors = document.getElementById('saloon-doors');
+            const doorLeft = document.getElementById('door-left');
+            const doorRight = document.getElementById('door-right');
+            const cactusContainer = document.getElementById('cactus-container');
+            const particleContainer = document.getElementById('particle-container');
+            const instructions = document.getElementById('instructions');
+
+            // --- Particle System ---
+            class ParticleSystem {
+                constructor() {
+                    this.particles = [];
+                    this.maxParticles = 100;
+                }
+
+                create(x, y, color) {
+                    for (let i = 0; i < 20; i++) {
+                        if (this.particles.length >= this.maxParticles) {
+                            this.particles.shift();
+                        }
+
+                        const particle = document.createElement('div');
+                        particle.classList.add('particle');
+                        particle.style.left = `${x}px`;
+                        particle.style.top = `${y}px`;
+                        particle.style.backgroundColor = color;
+                        particle.style.width = `${Math.random() * 10 + 5}px`;
+                        particle.style.height = particle.style.width;
+
+                        const angle = Math.random() * Math.PI * 2;
+                        const velocity = Math.random() * 5 + 2;
+                        const vx = Math.cos(angle) * velocity;
+                        const vy = Math.sin(angle) * velocity;
+                        const life = Math.random() * 1000 + 500;
+
+                        particle.dataset = { vx, vy, life, start: Date.now() };
+                        particleContainer.appendChild(particle);
+                        this.particles.push(particle);
+                    }
+                }
+
+                update() {
+                    const now = Date.now();
+                    this.particles.forEach((p, i) => {
+                        const elapsed = now - parseFloat(p.dataset.start);
+                        const progress = elapsed / parseFloat(p.dataset.life);
+
+                        if (progress >= 1) {
+                            p.remove();
+                            this.particles.splice(i, 1);
+                            return;
+                        }
+
+                        const x = parseFloat(p.style.left) + parseFloat(p.dataset.vx);
+                        const y = parseFloat(p.style.top) + parseFloat(p.dataset.vy) + (0.1 * elapsed);
+                        p.style.left = `${x}px`;
+                        p.style.top = `${y}px`;
+                        p.style.opacity = 1 - progress;
+                    });
+                }
+            }
+
+            const particleSystem = new ParticleSystem();
+
+            // --- Cactus Interaction ---
+            function createCacti() {
+                const count = window.innerWidth > 600 ? 8 : 4;
+                for (let i = 0; i < count; i++) {
+                    const cactus = document.createElement('div');
+                    cactus.classList.add('cactus');
+                    cactus.style.left = `${Math.random() * 90 + 5}vw`;
+                    cactus.addEventListener('click', () => {
+                        const rect = cactus.getBoundingClientRect();
+                        const x = rect.left + rect.width / 2;
+                        const y = rect.top + rect.height / 2;
+                        particleSystem.create(x, y, '#228B22');
+                        cactus.style.transform = 'scale(0.8)';
+                        setTimeout(() => cactus.style.transform = 'scale(1)', 200);
+                    });
+                    cactusContainer.appendChild(cactus);
+                }
+            }
+
+            // --- Saloon Doors Physics ---
+            let isDragging = false;
+            let startX, startLeft, startRight;
+
+            function initDrag(e) {
+                isDragging = true;
+                startX = e.clientX || e.touches[0].clientX;
+                const leftRect = doorLeft.getBoundingClientRect();
+                const rightRect = doorRight.getBoundingClientRect();
+                startLeft = leftRect.left;
+                startRight = rightRect.right;
+                document.body.style.cursor = 'grabbing';
+                e.preventDefault();
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                const x = e.clientX || e.touches[0].clientX;
+                const delta = x - startX;
+
+                const maxOpen = window.innerWidth * 0.3;
+                const openAmount = Math.min(Math.max(delta, -maxOpen), maxOpen);
+
+                doorLeft.style.transform = `rotateY(${openAmount * 0.05}deg)`;
+                doorRight.style.transform = `rotateY(${-openAmount * 0.05}deg)`;
+            }
+
+            function endDrag() {
+                isDragging = false;
+                document.body.style.cursor = '';
+                doorLeft.style.transition = 'transform 0.5s ease';
+                doorRight.style.transition = 'transform 0.5s ease';
+                doorLeft.style.transform = '';
+                doorRight.style.transform = '';
+                setTimeout(() => {
+                    doorLeft.style.transition = '';
+                    doorRight.style.transition = '';
+                }, 500);
+            }
+
+            saloonDoors.addEventListener('mousedown', initDrag);
+            saloonDoors.addEventListener('touchstart', initDrag);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag);
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+
+            // --- 3D Saloon Scene (Three.js) ---
+            let scene, camera, renderer, saloon;
+            function initThreeJS() {
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xF5DEB3);
+
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(0, 2, 5);
+
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.domElement.style.position = 'absolute';
+                renderer.domElement.style.top = '0';
+                renderer.domElement.style.left = '0';
+                renderer.domElement.style.zIndex = '3';
+                app.prepend(renderer.domElement);
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.5);
+                scene.add(ambientLight);
+
+                const directionalLight = new THREE.DirectionalLight(0xFFD700, 0.8);
+                directionalLight.position.set(1, 1, 1);
+                scene.add(directionalLight);
+
+                // Saloon Building
+                const saloonGeometry = new THREE.BoxGeometry(4, 2, 3);
+                const saloonMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x8B4513,
+                    roughness: 0.7,
+                    metalness: 0.1
+                });
+                saloon = new THREE.Mesh(saloonGeometry, saloonMaterial);
+                saloon.position.y = 1;
+                scene.add(saloon);
+
+                // Roof
+                const roofGeometry = new THREE.ConeGeometry(2.5, 1, 4);
+                roofGeometry.rotateX(Math.PI / 2);
+                const roofMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xCD853F,
+                    roughness: 0.8
+                });
+                const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+                roof.position.set(0, 2.5, 0);
+                scene.add(roof);
+
+                // Windows
+                const windowGeometry = new THREE.PlaneGeometry(0.5, 0.5);
+                const windowMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xADD8E6,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const window1 = new THREE.Mesh(windowGeometry, windowMaterial);
+                window1.position.set(1, 1, 1.51);
+                scene.add(window1);
+
+                const window2 = new THREE.Mesh(windowGeometry, windowMaterial);
+                window2.position.set(-1, 1, 1.51);
+                scene.add(window2);
+
+                // Animate
+                function animate() {
+                    requestAnimationFrame(animate);
+                    particleSystem.update();
+                    renderer.render(scene, camera);
+                }
+                animate();
+            }
+
+            // --- Parallax Scroll Effect ---
+            function setupParallax() {
+                window.addEventListener('scroll', () => {
+                    const scrollY = window.scrollY;
+                    const sun = document.getElementById('sun');
+                    const horizon = document.getElementById('horizon');
+                    sun.style.transform = `translateX(-50%) translateY(${scrollY * 0.3}px)`;
+                    horizon.style.bottom = `${15 + scrollY * 0.5}vh`;
+                });
+            }
+
+            // --- Initialize ---
+            createCacti();
+            initThreeJS();
+            setupParallax();
+
+            // --- Resize Handling ---
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        });
+    </script>
+</body>
+</html>
