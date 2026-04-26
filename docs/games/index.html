@@ -10,8 +10,8 @@
     padding: 0;
     overflow-x: hidden;
     font-family: system-ui, -apple-system, sans-serif;
-    background: radial-gradient(circle at top, #ffe6f0, #d4ffe9);
-    color: #111;
+    background: linear-gradient(180deg, #0f172a, #020617);
+    color: white;
   }
 
   canvas {
@@ -21,90 +21,118 @@
     z-index: 0;
   }
 
-  .content {
+  .wrap {
     position: relative;
     z-index: 2;
-    padding: 24px;
-    max-width: 700px;
-    margin: auto;
+    padding: 24px 16px 80px;
   }
 
   h1 {
     text-align: center;
-    font-size: 2.5rem;
+    font-size: 2.4rem;
     margin-bottom: 20px;
+    background: linear-gradient(90deg, #00ffa3, #ff4ecd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  .game {
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 16px;
-    margin-bottom: 16px;
+  .gallery {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: transform 0.2s ease;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 16px;
+    scroll-snap-type: x mandatory;
   }
 
-  .game:hover {
-    transform: translateY(-4px) scale(1.02);
+  .card {
+    min-width: 240px;
+    max-width: 240px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
+    padding: 16px;
+    scroll-snap-align: center;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
 
-  .game a {
-    text-decoration: none;
-    color: #111;
+  .card:hover {
+    transform: translateY(-6px) scale(1.05);
+    box-shadow: 0 20px 40px rgba(0,255,163,0.2);
+  }
+
+  .thumb {
+    width: 100%;
+    height: 140px;
+    border-radius: 12px;
+    object-fit: cover;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #00ffa3, #ff4ecd);
+  }
+
+  .title {
     font-weight: bold;
+    margin-bottom: 8px;
+    display: block;
+    text-decoration: none;
+    color: white;
   }
 
   .watch {
-    font-size: 0.9rem;
-    color: #ff0080;
+    font-size: 0.85rem;
+    color: #00ffa3;
+    text-decoration: none;
   }
 
   @media (max-width: 600px) {
-    h1 { font-size: 2rem; }
-    .game { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .card { min-width: 200px; }
   }
 </style>
 </head>
 <body>
 <canvas id="bg"></canvas>
 
-<div class="content">
+<div class="wrap">
   <h1>🎮 Games</h1>
-  <div id="games"></div>
+  <div class="gallery" id="games"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
-// THREE.JS BACKGROUND
+// --- FUN COLORFUL 3D BACKGROUND ---
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-const geometry = new THREE.SphereGeometry(0.5, 32, 32);
-const material = new THREE.MeshStandardMaterial({ color: 0xff66cc, metalness: 0.6, roughness: 0.2 });
-
 const balls = [];
-for (let i = 0; i < 40; i++) {
-  const mesh = new THREE.Mesh(geometry, material.clone());
+for (let i = 0; i < 60; i++) {
+  const geo = new THREE.SphereGeometry(Math.random() * 0.4 + 0.2, 32, 32);
+  const mat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color().setHSL(Math.random(), 0.8, 0.6),
+    metalness: 0.5,
+    roughness: 0.2
+  });
+
+  const mesh = new THREE.Mesh(geo, mat);
   mesh.position.set(
-    (Math.random() - 0.5) * 10,
-    (Math.random() - 0.5) * 10,
-    (Math.random() - 0.5) * 10
+    (Math.random() - 0.5) * 15,
+    (Math.random() - 0.5) * 15,
+    (Math.random() - 0.5) * 15
   );
-  mesh.material.color.setHSL(Math.random(), 0.7, 0.7);
+
   scene.add(mesh);
   balls.push(mesh);
 }
 
-const light = new THREE.PointLight(0xffffff, 2);
-light.position.set(5,5,5);
-scene.add(light);
+const light1 = new THREE.PointLight(0xffffff, 1.5);
+light1.position.set(5,5,5);
+scene.add(light1);
 
-camera.position.z = 5;
+const light2 = new THREE.PointLight(0xff4ecd, 1);
+light2.position.set(-5,-5,5);
+scene.add(light2);
+
+camera.position.z = 6;
 
 function animate() {
   requestAnimationFrame(animate);
@@ -122,7 +150,7 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
 });
 
-// LOAD CSV
+// --- LOAD CSV + BUILD GALLERY ---
 fetch('/docs/games/games.csv')
   .then(res => res.text())
   .then(text => {
@@ -130,28 +158,40 @@ fetch('/docs/games/games.csv')
     const container = document.getElementById('games');
 
     rows.forEach(row => {
-      const [path, name, live, youtube] = row.split(',');
+      const parts = row.split(',');
+      const path = parts[0];
+      const name = parts[1];
+      const live = parts[2];
+      const youtube = parts.slice(3).join(',');
+
       if (!name) return;
 
-      const div = document.createElement('div');
-      div.className = 'game';
+      const card = document.createElement('div');
+      card.className = 'card';
 
-      const gameLink = document.createElement('a');
-      gameLink.href = `/docs/games/${path}/index.html`;
-      gameLink.textContent = name;
+      const img = document.createElement('img');
+      img.className = 'thumb';
+      img.src = `/docs/games/${path}/thumbnail.png`;
+      img.onerror = () => img.style.display = 'none';
 
-      div.appendChild(gameLink);
+      const title = document.createElement('a');
+      title.href = `/docs/games/${path}/index.html`;
+      title.className = 'title';
+      title.textContent = name;
+
+      card.appendChild(img);
+      card.appendChild(title);
 
       if (live === 'true') {
         const watch = document.createElement('a');
         watch.href = youtube;
         watch.target = '_blank';
         watch.className = 'watch';
-        watch.textContent = 'Watch';
-        div.appendChild(watch);
+        watch.textContent = '▶ Watch';
+        card.appendChild(watch);
       }
 
-      container.appendChild(div);
+      container.appendChild(card);
     });
   });
 </script>
