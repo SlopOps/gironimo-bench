@@ -175,47 +175,104 @@
       position: relative;
       padding: 12px 22px;
       border-radius: 10px;
-      border: 1px solid rgba(180, 40, 0, 0.4);
+      border: none;
       text-decoration: none;
       font-weight: 700;
       font-size: 15px;
-      color: #ffcca0;
-      background: #0d0200;
+      color: #fff;
+      background: #1a0a00;
       cursor: pointer;
-      overflow: hidden;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      overflow: visible;
+      display: inline-block;
+      transition: color 0.2s ease, background 0.2s ease;
       letter-spacing: 0.02em;
       z-index: 0;
-      transition: color 0.3s ease, border-color 0.3s ease;
-      min-width: 140px;
-      min-height: 44px;
-      vertical-align: middle;
     }
 
-    .btn-fire canvas {
+    .btn-fire::before {
+      content: '';
       position: absolute;
       inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
       border-radius: 10px;
+      background: linear-gradient(180deg, #ff6a00, #ee0979);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      z-index: -1;
     }
 
-    .btn-fire .btn-fire-label {
-      position: relative;
-      z-index: 2;
-      text-shadow: 0 0 8px rgba(255, 120, 0, 0.8);
+    .btn-fire:hover::before { opacity: 1; }
+
+    /* Flame particles container — sits above the button */
+    .btn-fire .flames {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: 100%;
+      height: 60px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      overflow: visible;
+    }
+
+    .btn-fire:hover .flames { opacity: 1; }
+
+    .btn-fire .flame {
+      position: absolute;
+      bottom: -4px;
+      width: 18px;
+      border-radius: 50% 50% 20% 20%;
+      animation: flicker 0.5s ease-in-out infinite alternate;
+      transform-origin: center bottom;
+      filter: blur(1px);
+    }
+
+    .btn-fire .flame:nth-child(1)  { left: 4%;  height: 38px; background: radial-gradient(ellipse at 50% 80%, #fff700 0%, #ff6a00 50%, #c0390060 100%); animation-duration: 0.38s; }
+    .btn-fire .flame:nth-child(2)  { left: 12%; height: 50px; background: radial-gradient(ellipse at 50% 80%, #fff700 0%, #ff4500 45%, #9b000060 100%); animation-duration: 0.44s; animation-delay: 0.05s; }
+    .btn-fire .flame:nth-child(3)  { left: 20%; height: 42px; background: radial-gradient(ellipse at 50% 80%, #fffa00 0%, #ff6000 50%, #a0200060 100%); animation-duration: 0.41s; animation-delay: 0.10s; }
+    .btn-fire .flame:nth-child(4)  { left: 28%; height: 56px; background: radial-gradient(ellipse at 50% 80%, #ffffff 0%, #ffee00 20%, #ff4500 55%, #88000060 100%); animation-duration: 0.35s; animation-delay: 0.02s; }
+    .btn-fire .flame:nth-child(5)  { left: 36%; height: 46px; background: radial-gradient(ellipse at 50% 80%, #fff700 0%, #ff6a00 50%, #b0300060 100%); animation-duration: 0.48s; animation-delay: 0.08s; }
+    .btn-fire .flame:nth-child(6)  { left: 44%; height: 60px; background: radial-gradient(ellipse at 50% 80%, #ffffff 0%, #ffe000 15%, #ff5500 50%, #80000060 100%); animation-duration: 0.33s; width: 22px; }
+    .btn-fire .flame:nth-child(7)  { left: 53%; height: 52px; background: radial-gradient(ellipse at 50% 80%, #fff700 0%, #ff4500 48%, #99000060 100%); animation-duration: 0.40s; animation-delay: 0.07s; }
+    .btn-fire .flame:nth-child(8)  { left: 61%; height: 44px; background: radial-gradient(ellipse at 50% 80%, #fffa00 0%, #ff6000 50%, #a0200060 100%); animation-duration: 0.46s; animation-delay: 0.12s; }
+    .btn-fire .flame:nth-child(9)  { left: 69%; height: 54px; background: radial-gradient(ellipse at 50% 80%, #ffffff 0%, #ffee00 20%, #ff4500 55%, #88000060 100%); animation-duration: 0.37s; animation-delay: 0.03s; }
+    .btn-fire .flame:nth-child(10) { left: 77%; height: 40px; background: radial-gradient(ellipse at 50% 80%, #fff700 0%, #ff6a00 50%, #c0390060 100%); animation-duration: 0.43s; animation-delay: 0.09s; }
+    .btn-fire .flame:nth-child(11) { left: 85%; height: 50px; background: radial-gradient(ellipse at 50% 80%, #fffa00 0%, #ff5000 47%, #92000060 100%); animation-duration: 0.36s; animation-delay: 0.04s; }
+    .btn-fire .flame:nth-child(12) { left: 91%; height: 36px; background: radial-gradient(ellipse at 50% 80%, #fff700 0%, #ff6a00 50%, #c0390060 100%); animation-duration: 0.45s; animation-delay: 0.11s; }
+
+    @keyframes flicker {
+      0%   { transform: scaleX(1)    scaleY(1)    skewX(0deg)  translateY(0px); }
+      25%  { transform: scaleX(0.9)  scaleY(1.08) skewX(-3deg) translateY(-2px); }
+      50%  { transform: scaleX(1.1)  scaleY(0.95) skewX(2deg)  translateY(1px); }
+      75%  { transform: scaleX(0.95) scaleY(1.05) skewX(-1deg) translateY(-1px); }
+      100% { transform: scaleX(1.05) scaleY(1.1)  skewX(3deg)  translateY(-3px); }
+    }
+
+    /* Ember particles */
+    .btn-fire .ember {
+      position: absolute;
+      bottom: -4px;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .btn-fire:hover .ember { animation: rise 1.2s ease-in infinite; }
+
+    .btn-fire .ember:nth-child(13) { left: 10%; background: #ffdd00; animation-delay: 0.0s;  --drift: -10px; }
+    .btn-fire .ember:nth-child(14) { left: 30%; background: #ff8800; animation-delay: 0.3s;  --drift:   6px; width: 3px; height: 3px; }
+    .btn-fire .ember:nth-child(15) { left: 55%; background: #ffcc00; animation-delay: 0.6s;  --drift:  -6px; }
+    .btn-fire .ember:nth-child(16) { left: 75%; background: #ff6600; animation-delay: 0.9s;  --drift:  12px; width: 3px; height: 3px; }
+    .btn-fire .ember:nth-child(17) { left: 90%; background: #ffee00; animation-delay: 0.15s; --drift:  -8px; }
+
+    @keyframes rise {
+      0%   { opacity: 0; transform: translateY(0)    translateX(0); }
+      10%  { opacity: 1; }
+      80%  { opacity: 0.6; }
+      100% { opacity: 0; transform: translateY(-55px) translateX(var(--drift, 8px)); }
     }
 
     .btn-fire:hover {
-      color: #fff;
-      border-color: rgba(200, 60, 0, 0.7);
-    }
-
-    .btn-fire:hover .btn-fire-label {
-      text-shadow: 0 0 10px rgba(255, 200, 100, 1);
+      box-shadow: 0 0 18px 4px rgba(255,100,0,0.55), 0 0 6px 2px rgba(255,200,0,0.3);
     }
     /* ── END FIRE BUTTON ── */
 
@@ -424,9 +481,27 @@
           <a class="btn primary" href="#leaderboard">View Leaderboard</a>
 
           <!-- FIRE BUTTON -->
-          <a class="btn-fire" href="/games/index.html" id="fire-btn">
-            <canvas id="fire-canvas"></canvas>
-            <span class="btn-fire-label">🎮 Play Games</span>
+          <a class="btn-fire" href="/games/index.html">
+            <span class="flames">
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="flame"></span>
+              <span class="ember"></span>
+              <span class="ember"></span>
+              <span class="ember"></span>
+              <span class="ember"></span>
+              <span class="ember"></span>
+            </span>
+            🎮 Play Games
           </a>
         </div>
       </header>
@@ -790,166 +865,8 @@
     init();
   </script>
 
-  <script>
-  (function() {
-    const btn    = document.getElementById('fire-btn');
-    const canvas = document.getElementById('fire-canvas');
-    if (!btn || !canvas) return;
-    const ctx = canvas.getContext('2d');
 
-    // ── Palette ──
-    // Smolder: very subtle dark reds, near-transparent so background shows through
-    // Flame: deep red → vivid red → orange-yellow → pale yellow tips, round/soft
-    const PAL = new Uint32Array(256);
-    (function() {
-      function pack(r,g,b,a){ return ((a&255)<<24)|((b&255)<<16)|((g&255)<<8)|(r&255); }
-      function lerp(a,b,t){ return Math.round(a+(b-a)*Math.max(0,Math.min(1,t))); }
-      for (let i=0;i<256;i++){
-        let r,g,b,a;
-        if (i<10) {
-          r=g=b=a=0; // fully invisible
-        } else if (i<50) {
-          // SMOLDER: very faint dark red glow, mostly transparent
-          const t=(i-10)/39;
-          r=lerp(10,80,t); g=0; b=0; a=lerp(0,55,t); // max alpha ~55 = very subtle
-        } else if (i<90) {
-          // smolder brightening edge
-          const t=(i-50)/39;
-          r=lerp(80,130,t); g=lerp(0,5,t); b=0; a=lerp(55,90,t);
-        } else if (i<130) {
-          // FLAME BASE: deep crimson red — hot but dark
-          const t=(i-90)/39;
-          r=lerp(130,200,t); g=lerp(5,15,t); b=0; a=lerp(90,220,t);
-        } else if (i<180) {
-          // flame body: vivid red → orange-red
-          const t=(i-130)/49;
-          r=lerp(200,240,t); g=lerp(15,60,t); b=0; a=255;
-        } else if (i<220) {
-          // orange → golden yellow
-          const t=(i-180)/39;
-          r=255; g=lerp(60,170,t); b=lerp(0,10,t); a=255;
-        } else {
-          // pale yellow tips
-          const t=(i-220)/35;
-          r=255; g=lerp(170,230,t); b=lerp(10,80,t); a=255;
-        }
-        PAL[i]=pack(r,g,b,a);
-      }
-    })();
-
-    // ── Grid — 4px cells for chunkier, rounder blobs ──
-    const SCALE = 4;
-    let W, H, cols, rows, buf, nxt;
-    let hovering = false;
-    let smolderPhase = 0;
-    // Throttle: only simulate every N ms for slower, lazier motion
-    let lastSim = 0;
-    const SIM_INTERVAL_SMOLDER = 80;  // ms between steps at rest (slow breathing)
-    const SIM_INTERVAL_FLAME   = 50;  // ms between steps on hover (still relaxed)
-
-    function resize() {
-      const r = btn.getBoundingClientRect();
-      W = Math.max(Math.round(r.width),  20);
-      H = Math.max(Math.round(r.height), 20);
-      canvas.width  = W;
-      canvas.height = H;
-      cols = Math.ceil(W / SCALE);
-      rows = Math.ceil(H / SCALE) + 2;
-      buf = new Uint8Array(cols * rows);
-      nxt = new Uint8Array(cols * rows);
-    }
-
-    function seedBottom() {
-      smolderPhase += hovering ? 0.06 : 0.018; // breathing pace
-      const src = rows - 1;
-      for (let x=0; x<cols; x++) {
-        let heat;
-        if (hovering) {
-          // Wide full-bottom flame source with round cluster variation
-          // Use two overlapping slow sine waves to create rounded lumpy hot spots
-          const lump1 = Math.sin(smolderPhase * 1.1 + x * 0.4) * 0.5 + 0.5;
-          const lump2 = Math.sin(smolderPhase * 0.7 + x * 0.7 + 1.2) * 0.4 + 0.5;
-          const base  = (lump1 * 0.6 + lump2 * 0.4);
-          heat = 140 + base * 90 + Math.random() * 25;
-          // occasional hot jets for depth — but not too frequent
-          if (Math.random() < 0.15) heat = Math.min(255, heat + 40);
-        } else {
-          // SMOLDER: very gentle sine across the button, low amplitude
-          // Two waves create slow oval blobs rather than vertical stripes
-          const w1 = Math.sin(smolderPhase       + x * 0.35) * 0.5 + 0.5;
-          const w2 = Math.sin(smolderPhase * 0.6 + x * 0.6 + 2.0) * 0.3 + 0.5;
-          heat = 12 + w1 * 22 + w2 * 12 + Math.random() * 4; // max ~50 — very subtle
-        }
-        buf[src * cols + x] = Math.min(255, Math.max(0, heat));
-      }
-    }
-
-    function step() {
-      // Spread with strong horizontal diffusion → round/cloud blobs instead of spikes
-      // Decay controls how high flames/smolder reach
-      const decay = hovering ? 2 : 4;
-      for (let y=0; y<rows-1; y++) {
-        for (let x=0; x<cols; x++) {
-          const b   = buf[(y+1)*cols + x];
-          const bl  = buf[(y+1)*cols + Math.max(x-1,0)];
-          const br  = buf[(y+1)*cols + Math.min(x+1,cols-1)];
-          const l   = buf[y*cols + Math.max(x-1,0)];
-          const r2  = buf[y*cols + Math.min(x+1,cols-1)];
-          const b2  = y+2<rows ? buf[(y+2)*cols+x] : b;
-          // More horizontal weight (l, r2) vs previous → rounder, cloudier spread
-          const avg = (b*2.5 + bl*0.8 + br*0.8 + l*0.6 + r2*0.6 + b2*0.7) / 6.0;
-          const d   = Math.random() * decay * 1.8;
-          nxt[y*cols+x] = Math.max(0, avg - d);
-        }
-      }
-      for (let x=0;x<cols;x++){
-        nxt[(rows-1)*cols+x]=buf[(rows-1)*cols+x];
-        nxt[(rows-2)*cols+x]=buf[(rows-2)*cols+x];
-      }
-      const tmp=buf; buf=nxt; nxt=tmp;
-    }
-
-    function draw() {
-      const img  = ctx.createImageData(W, H);
-      const data = new Uint32Array(img.data.buffer);
-      for (let py=0;py<H;py++){
-        const gy = Math.min((py/SCALE)|0, rows-3);
-        for (let px=0;px<W;px++){
-          const gx = Math.min((px/SCALE)|0, cols-1);
-          data[py*W+px] = PAL[buf[gy*cols+gx]];
-        }
-      }
-      ctx.putImageData(img,0,0);
-    }
-
-    function loop(ts) {
-      const interval = hovering ? SIM_INTERVAL_FLAME : SIM_INTERVAL_SMOLDER;
-      if (ts - lastSim >= interval) {
-        seedBottom();
-        step();
-        if (hovering) step(); // second step only when flaming for extra height
-        draw();
-        lastSim = ts;
-      }
-      requestAnimationFrame(loop);
-    }
-
-    function start() {
-      resize();
-      // Pre-warm smolder so button isn't blank on load
-      for (let i=0;i<40;i++){ seedBottom(); step(); }
-      draw();
-      requestAnimationFrame(loop);
-    }
-
-    btn.addEventListener('mouseenter', () => { hovering=true;  });
-    btn.addEventListener('mouseleave', () => { hovering=false; });
-    btn.addEventListener('touchstart', () => { hovering=true;  }, {passive:true});
-    btn.addEventListener('touchend',   () => { setTimeout(()=>{ hovering=false; },900); });
-    window.addEventListener('resize',  resize);
-
-    requestAnimationFrame(start);
-  })();
-  </script>
+</body>
+</html>
 </body>
 </html>
