@@ -465,6 +465,190 @@
     </style>
 </head>
 <body>
+
+    <!-- ===== GAME MODEL BANNER ===== -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q5R5LECE2Y"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-Q5R5LECE2Y');
+    </script>
+    <style>
+      .model-banner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        box-sizing: border-box;
+        z-index: 9999;
+        background: rgba(8, 12, 22, 0.92);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .banner-inner {
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .banner-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+      .banner-game-name {
+        font-weight: 700;
+        font-size: 15px;
+        color: #f0f2ff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        letter-spacing: -0.01em;
+      }
+      .banner-model-slug {
+        font-size: 11px;
+        color: rgba(224,228,255,0.45);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+      }
+      .banner-name-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 0;
+      }
+      .banner-stars {
+        font-size: 13px;
+        letter-spacing: 2px;
+        color: #ffd700;
+        flex-shrink: 0;
+      }
+      .banner-watch {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(224,228,255,0.7);
+        text-decoration: none;
+        transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+        white-space: nowrap;
+      }
+      .banner-watch:hover {
+        background: #FF0000;
+        border-color: #FF0000;
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(255,0,0,0.3);
+      }
+      .banner-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 6px 14px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(224,228,255,0.7);
+        text-decoration: none;
+        transition: background 0.2s, border-color 0.2s, color 0.2s;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .banner-back:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.18);
+        color: #f0f2ff;
+      }
+      .banner-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      @media (max-width: 480px) {
+        .banner-model-slug { display: none; }
+        .banner-watch span { display: none; }
+      }
+    </style>
+    
+    <div class="model-banner">
+      <div class="banner-inner">
+        <div class="banner-left">
+          <div class="banner-name-group">
+            <div class="banner-game-name" id="banner-game-name">Loading...</div>
+            <div class="banner-model-slug" id="banner-model-slug"></div>
+          </div>
+          <div class="banner-stars" id="banner-stars"></div>
+        </div>
+        <div class="banner-right">
+          <a id="banner-watch" class="banner-watch" href="#" target="_blank" rel="noopener" style="display:none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+            </svg>
+            <span>Watch</span>
+          </a>
+          <a href="/games/index.html" class="banner-back">← All Games</a>
+        </div>
+      </div>
+    </div>
+    <div style="height: 48px; flex-shrink: 0;"></div>
+    
+    <script>
+      const MODEL_SLUG = "minimax-m2-7"; // 🔧 match the `path` column in games.csv
+    
+      (async function loadGameBanner() {
+        try {
+          const res = await fetch('../games.csv', { cache: 'no-store' });
+          const text = await res.text();
+          const rows = text.trim().split('\n').map(r => r.split(','));
+          const headers = rows.shift();
+          const data = rows.map(row => {
+            const obj = {};
+            headers.forEach((h, i) => obj[h.trim()] = (row[i] || '').trim());
+            return obj;
+          });
+    
+          const match = data.find(row => row.path === MODEL_SLUG);
+    
+          if (!match) {
+            document.getElementById('banner-game-name').textContent = MODEL_SLUG;
+            document.getElementById('banner-stars').textContent = '☆☆☆☆☆';
+            return;
+          }
+    
+          document.getElementById('banner-game-name').textContent = match.game_name || MODEL_SLUG;
+          document.getElementById('banner-model-slug').textContent = match.path;
+    
+          const starCount = parseInt(match.stars, 10) || 0;
+          document.getElementById('banner-stars').textContent =
+            '★'.repeat(starCount) + '☆'.repeat(Math.max(0, 5 - starCount));
+    
+          if (match.youtube_link) {
+            const watchEl = document.getElementById('banner-watch');
+            watchEl.href = match.youtube_link;
+            watchEl.style.display = 'inline-flex';
+          }
+    
+        } catch (err) {
+          console.error('Banner error:', err);
+          document.getElementById('banner-game-name').textContent = MODEL_SLUG;
+        }
+      })();
+    </script>
+    <!-- ===== END GAME MODEL BANNER ===== -->
+    
     <div class="pizza-loader" id="loader">
         <div class="loader-pizza"></div>
     </div>
