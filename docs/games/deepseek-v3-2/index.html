@@ -243,7 +243,7 @@
       <div class="banner-stars" id="banner-stars"></div>
     </div>
     <div class="banner-pills" id="banner-pills"></div>
-    <a href="/docs/games/index.html" class="banner-link">← All Games</a>
+    <a href="/games/index.html" class="banner-link">← All Games</a>
   </div>
 </div>
 
@@ -254,7 +254,7 @@
 
   (async function loadGameBanner() {
     try {
-      const res = await fetch('../../games.csv', { cache: 'no-store' });
+      const res = await fetch('../games.csv', { cache: 'no-store' });
       const text = await res.text();
       const rows = text.trim().split('\n').map(r => r.split(','));
       const headers = rows.shift();
