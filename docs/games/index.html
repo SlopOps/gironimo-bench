@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Games</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: radial-gradient(circle at top, #ffe6f0, #d4ffe9);
+    color: #111;
+  }
+
+  canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    padding: 24px;
+    max-width: 700px;
+    margin: auto;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+  }
+
+  .game {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s ease;
+  }
+
+  .game:hover {
+    transform: translateY(-4px) scale(1.02);
+  }
+
+  .game a {
+    text-decoration: none;
+    color: #111;
+    font-weight: bold;
+  }
+
+  .watch {
+    font-size: 0.9rem;
+    color: #ff0080;
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 2rem; }
+    .game { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div class="content">
+  <h1>🎮 Games</h1>
+  <div id="games"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+// THREE.JS BACKGROUND
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const geometry = new THREE.SphereGeometry(0.5, 32, 32);
+const material = new THREE.MeshStandardMaterial({ color: 0xff66cc, metalness: 0.6, roughness: 0.2 });
+
+const balls = [];
+for (let i = 0; i < 40; i++) {
+  const mesh = new THREE.Mesh(geometry, material.clone());
+  mesh.position.set(
+    (Math.random() - 0.5) * 10,
+    (Math.random() - 0.5) * 10,
+    (Math.random() - 0.5) * 10
+  );
+  mesh.material.color.setHSL(Math.random(), 0.7, 0.7);
+  scene.add(mesh);
+  balls.push(mesh);
+}
+
+const light = new THREE.PointLight(0xffffff, 2);
+light.position.set(5,5,5);
+scene.add(light);
+
+camera.position.z = 5;
+
+function animate() {
+  requestAnimationFrame(animate);
+  balls.forEach(b => {
+    b.rotation.x += 0.01;
+    b.rotation.y += 0.01;
+  });
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+});
+
+// LOAD CSV
+fetch('/docs/games/games.csv')
+  .then(res => res.text())
+  .then(text => {
+    const rows = text.trim().split('\n').slice(1);
+    const container = document.getElementById('games');
+
+    rows.forEach(row => {
+      const [path, name, live, youtube] = row.split(',');
+      if (!name) return;
+
+      const div = document.createElement('div');
+      div.className = 'game';
+
+      const gameLink = document.createElement('a');
+      gameLink.href = `/docs/games/${path}/index.html`;
+      gameLink.textContent = name;
+
+      div.appendChild(gameLink);
+
+      if (live === 'true') {
+        const watch = document.createElement('a');
+        watch.href = youtube;
+        watch.target = '_blank';
+        watch.className = 'watch';
+        watch.textContent = 'Watch';
+        div.appendChild(watch);
+      }
+
+      container.appendChild(div);
+    });
+  });
+</script>
+</body>
+</html>
