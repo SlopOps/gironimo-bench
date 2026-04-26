@@ -11,7 +11,7 @@
   </script>
 
   <link rel="canonical" href="https://gironimo.ai/games/" />
-  
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -19,9 +19,13 @@
   <meta name="description" content="Play AI-generated games from AI BATTLE Shorts on Youtube. Each game is built by a different AI model." />
   <link rel="icon" href="/slopops.png" type="image/png">
 
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  <!-- Preconnect for Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
 
+  <style>
     :root {
       --bg: #080c16;
       --card: rgba(255,255,255,0.04);
@@ -30,23 +34,24 @@
       --muted: rgba(224,228,255,0.55);
       --accent-pink: #ff3cac;
       --accent-purple: #a855f7;
-      --accent-blue: #3b82f6;
       --accent-cyan: #22d3ee;
       --yt-red: #FF0000;
       --border: rgba(255,255,255,0.08);
       --border-hover: rgba(255,255,255,0.18);
-      --glow-pink: rgba(255, 60, 172, 0.15);
-      --glow-cyan: rgba(34, 211, 238, 0.12);
+      --glow-pink: rgba(255,60,172,0.15);
+      --glow-cyan: rgba(34,211,238,0.12);
+      --star-color: #ffd700;
+      --star-empty: rgba(255,215,0,0.25);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
-      min-height: 100vh;
+      min-height: 100svh;
       overflow-x: hidden;
     }
 
@@ -59,13 +64,14 @@
       z-index: 0;
       pointer-events: none;
       overflow: hidden;
+      will-change: transform;
     }
 
     .blob {
       position: absolute;
       border-radius: 50%;
       filter: blur(100px);
-      opacity: 0.5;
+      opacity: 0.45;
       animation: blobFloat 20s ease-in-out infinite alternate;
     }
 
@@ -99,7 +105,6 @@
       100% { transform: translate(30px, -10px) scale(1.02); }
     }
 
-    /* Dot grid overlay */
     .dot-grid {
       position: fixed;
       inset: 0;
@@ -155,7 +160,7 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--muted);
-      transition: all 0.25s ease;
+      transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
     }
 
     .back-btn:hover {
@@ -169,9 +174,7 @@
       transition: transform 0.2s ease;
     }
 
-    .back-btn:hover svg {
-      transform: translateX(-2px);
-    }
+    .back-btn:hover svg { transform: translateX(-2px); }
 
     /* ── Header ── */
     header {
@@ -245,10 +248,7 @@
       font-family: inherit;
     }
 
-    .sort-pill:hover {
-      color: var(--text);
-      background: rgba(255,255,255,0.06);
-    }
+    .sort-pill:hover { color: var(--text); background: rgba(255,255,255,0.06); }
 
     .sort-pill.active {
       color: #fff;
@@ -281,7 +281,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
       backdrop-filter: blur(12px);
       overflow: hidden;
     }
@@ -293,9 +293,7 @@
     .game-card::before {
       content: '';
       position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
+      left: 0; top: 0; bottom: 0;
       width: 3px;
       background: linear-gradient(180deg, var(--accent-pink), var(--accent-purple), var(--accent-cyan));
       opacity: 0;
@@ -318,18 +316,11 @@
       background: var(--card-hover);
       border-color: var(--border-hover);
       transform: translateY(-2px);
-      box-shadow:
-        0 8px 32px rgba(168,85,247,0.08),
-        0 2px 8px rgba(0,0,0,0.3);
+      box-shadow: 0 8px 32px rgba(168,85,247,0.08), 0 2px 8px rgba(0,0,0,0.3);
     }
 
-    .game-card:hover::before {
-      opacity: 1;
-    }
-
-    .game-card:hover::after {
-      opacity: 0.5;
-    }
+    .game-card:hover::before { opacity: 1; }
+    .game-card:hover::after  { opacity: 0.5; }
 
     .game-info {
       flex: 1;
@@ -342,7 +333,7 @@
       font-size: 18px;
       font-weight: 700;
       color: var(--text);
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       letter-spacing: -0.01em;
       white-space: nowrap;
       overflow: hidden;
@@ -354,8 +345,25 @@
       color: var(--muted);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       letter-spacing: 0.02em;
+      margin-bottom: 4px;
     }
 
+    /* ── Stars ── */
+    .game-stars {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+    }
+
+    .star {
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .star-filled { color: var(--star-color); }
+    .star-empty  { color: var(--star-empty); }
+
+    /* ── Actions ── */
     .game-actions {
       display: flex;
       gap: 8px;
@@ -373,15 +381,18 @@
       border: 1px solid transparent;
       font-weight: 600;
       font-size: 13px;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+      transition: box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
       white-space: nowrap;
       cursor: pointer;
+      text-decoration: none;
     }
 
     .btn svg {
       width: 14px;
       height: 14px;
       fill: currentColor;
+      flex-shrink: 0;
     }
 
     .btn-play {
@@ -410,7 +421,7 @@
       background: var(--yt-red);
       border-color: var(--yt-red);
       color: #fff;
-      box-shadow: 0 4px 20px rgba(255, 0, 0, 0.3);
+      box-shadow: 0 4px 20px rgba(255,0,0,0.3);
     }
 
     .btn-watch:active {
@@ -461,33 +472,18 @@
 
     /* ── Animations ── */
     @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(16px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     /* ── Mobile ── */
     @media (max-width: 640px) {
       .container { padding: 0 16px; }
-
       header { padding: 40px 0 28px; }
-
       .subtitle { font-size: 14px; }
 
-      .sort-bar {
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .game-count {
-        order: -1;
-        width: 100%;
-      }
+      .sort-bar { flex-wrap: wrap; gap: 8px; }
+      .game-count { order: -1; width: 100%; }
 
       .game-card {
         flex-direction: column;
@@ -496,14 +492,8 @@
         gap: 14px;
       }
 
-      .game-name {
-        white-space: normal;
-        font-size: 16px;
-      }
-
-      .game-actions {
-        width: 100%;
-      }
+      .game-name { white-space: normal; font-size: 16px; }
+      .game-actions { width: 100%; }
 
       .btn {
         flex: 1;
@@ -518,9 +508,7 @@
     }
 
     @media (max-width: 380px) {
-      .game-actions {
-        flex-direction: column;
-      }
+      .game-actions { flex-direction: column; }
       .sort-pills { width: 100%; }
       .sort-pill { flex: 1; text-align: center; }
     }
@@ -528,11 +516,11 @@
     /* ── Reduced Motion ── */
     @media (prefers-reduced-motion: reduce) {
       .blob { animation: none; }
-      .game-card { animation: none; }
-      .game-card.animate-in { animation: none; }
-      header { animation: none; }
+      .game-card,
+      .game-card.animate-in,
+      header,
       .sort-bar { animation: none; }
-      .game-card:hover { transform: none; }
+      .game-card:hover,
       .btn-play:hover { transform: none; }
     }
 
@@ -555,13 +543,13 @@
   <div class="dot-grid" aria-hidden="true"></div>
 
   <div class="container">
-    <nav>
+    <nav aria-label="Site navigation">
       <div class="logo">
-        <div class="logo-icon">🎮</div>
+        <div class="logo-icon" aria-hidden="true">🎮</div>
         <span>Games</span>
       </div>
-      <a href="/" class="back-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <a href="/" class="back-btn" aria-label="Back to main site">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
         Back to Bench
@@ -573,22 +561,25 @@
       <p class="subtitle">Each game was built by a different AI model. Play, compare, and see who's got game.</p>
     </header>
 
-    <div class="sort-bar" id="sort-bar" style="display: none;">
-      <span class="sort-label">Sort by</span>
-      <div class="sort-pills">
-        <button class="sort-pill active" data-sort="name" onclick="setSort('name')">Game Name</button>
-        <button class="sort-pill" data-sort="model" onclick="setSort('model')">Model</button>
+    <div class="sort-bar" id="sort-bar" style="display:none;" role="toolbar" aria-label="Sort options">
+      <span class="sort-label" id="sort-label">Sort by</span>
+      <div class="sort-pills" role="group" aria-labelledby="sort-label">
+        <button class="sort-pill active" data-sort="name" onclick="setSort('name')" aria-pressed="true">Game Name</button>
+        <button class="sort-pill" data-sort="stars" onclick="setSort('stars')" aria-pressed="false">Top Rated</button>
+        <button class="sort-pill" data-sort="model" onclick="setSort('model')" aria-pressed="false">Model</button>
       </div>
-      <span class="game-count" id="game-count"></span>
+      <span class="game-count" id="game-count" aria-live="polite"></span>
     </div>
 
-    <div class="games-grid" id="games-grid">
-      <!-- Games loaded dynamically -->
-    </div>
+    <main>
+      <div class="games-grid" id="games-grid" aria-label="Games list">
+        <!-- Games loaded dynamically -->
+      </div>
+    </main>
 
     <footer>
       Built by <strong>SlopOps</strong> ·
-      <a href="https://youtube.com/@SlopOps" target="_blank" rel="noopener">YouTube</a>
+      <a href="https://youtube.com/@SlopOps" target="_blank" rel="noopener noreferrer">YouTube</a>
     </footer>
   </div>
 
@@ -598,14 +589,13 @@
 
     async function loadGames() {
       const container = document.getElementById('games-grid');
-
       try {
         const response = await fetch('games.csv');
         if (!response.ok) throw new Error('Failed to load');
 
         const csvText = await response.text();
         const games = parseCSV(csvText);
-        allLiveGames = games.filter(g => g.live === true);
+        allLiveGames = games.filter(g => g.live);
 
         if (allLiveGames.length === 0) {
           container.innerHTML = renderEmpty('No games available yet. Check back soon!');
@@ -623,51 +613,65 @@
 
     function setSort(sortKey) {
       currentSort = sortKey;
-
       document.querySelectorAll('.sort-pill').forEach(pill => {
-        pill.classList.toggle('active', pill.dataset.sort === sortKey);
+        const isActive = pill.dataset.sort === sortKey;
+        pill.classList.toggle('active', isActive);
+        pill.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
-
       renderGames();
+    }
+
+    function renderStars(count) {
+      const filled = Math.min(Math.max(parseInt(count, 10) || 0, 0), 5);
+      const empty  = 5 - filled;
+      const label  = `${filled} out of 5 stars`;
+      let html = `<div class="game-stars" role="img" aria-label="${label}">`;
+      for (let i = 0; i < filled; i++) html += `<span class="star star-filled" aria-hidden="true">★</span>`;
+      for (let i = 0; i < empty;  i++) html += `<span class="star star-empty"  aria-hidden="true">☆</span>`;
+      html += '</div>';
+      return html;
     }
 
     function renderGames() {
       const container = document.getElementById('games-grid');
+
       const sorted = [...allLiveGames].sort((a, b) => {
-        if (currentSort === 'model') {
-          return a.path.localeCompare(b.path);
-        }
+        if (currentSort === 'stars') return b.stars - a.stars;
+        if (currentSort === 'model') return a.path.localeCompare(b.path);
         return (a.game_name || a.path).localeCompare(b.game_name || b.path);
       });
 
-      document.getElementById('game-count').textContent = sorted.length + ' game' + (sorted.length !== 1 ? 's' : '');
+      const count = sorted.length;
+      document.getElementById('game-count').textContent = count + ' game' + (count !== 1 ? 's' : '');
 
       container.innerHTML = sorted.map((game, i) => `
-        <div class="game-card animate-in" style="animation-delay: ${i * 0.06}s">
+        <article class="game-card animate-in" style="animation-delay:${i * 0.06}s">
           <div class="game-info">
             <div class="game-name">${escapeHtml(game.game_name || game.path)}</div>
             <div class="game-model">${escapeHtml(game.path)}</div>
+            ${renderStars(game.stars)}
           </div>
           <div class="game-actions">
-            <a href="./${game.path}/index.html" class="btn btn-play">
-              <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+            <a href="./${escapeHtml(game.path)}/index.html" class="btn btn-play" aria-label="Play ${escapeHtml(game.game_name || game.path)}">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6,3 20,12 6,21"/></svg>
               Play
             </a>
-            <a href="${escapeHtml(game.youtube_link)}" target="_blank" rel="noopener" class="btn btn-watch">
-              <svg viewBox="0 0 24 24" fill="currentColor">
+            ${game.youtube_link ? `
+            <a href="${escapeHtml(game.youtube_link)}" target="_blank" rel="noopener noreferrer" class="btn btn-watch" aria-label="Watch ${escapeHtml(game.game_name || game.path)} on YouTube">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
               </svg>
               Watch
-            </a>
+            </a>` : ''}
           </div>
-        </div>
+        </article>
       `).join('');
     }
 
     function renderEmpty(msg) {
       return `
-        <div class="empty-state">
-          <div class="empty-icon">
+        <div class="empty-state" role="status">
+          <div class="empty-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <path d="M8 15s1.5-2 4-2 4 2 4 2"/>
@@ -675,35 +679,41 @@
               <line x1="15" y1="9" x2="15.01" y2="9"/>
             </svg>
           </div>
-          <p>${msg}</p>
-        </div>
-      `;
+          <p>${escapeHtml(msg)}</p>
+        </div>`;
     }
 
     function parseCSV(text) {
       const lines = text.trim().split(/\r?\n/);
       if (lines.length < 2) return [];
 
-      const headers = lines[0].split(',').map(h => h.trim());
-      const pathIdx = headers.indexOf('path');
-      const nameIdx = headers.indexOf('game_name');
-      const liveIdx = headers.indexOf('live');
-      const youtubeIdx = headers.indexOf('youtube_link');
+      const headers  = lines[0].split(',').map(h => h.trim());
+      const pathIdx  = headers.indexOf('path');
+      const nameIdx  = headers.indexOf('game_name');
+      const liveIdx  = headers.indexOf('live');
+      const ytIdx    = headers.indexOf('youtube_link');
+      const starsIdx = headers.indexOf('stars');
 
       return lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim());
+        const v = line.split(',').map(c => c.trim());
         return {
-          path: values[pathIdx] || '',
-          game_name: values[nameIdx] || '',
-          live: values[liveIdx]?.toLowerCase() === 'true',
-          youtube_link: values[youtubeIdx] || ''
+          path:         v[pathIdx]  || '',
+          game_name:    v[nameIdx]  || '',
+          live:         (v[liveIdx] || '').toLowerCase() === 'true',
+          youtube_link: v[ytIdx]    || '',
+          stars:        parseInt(v[starsIdx], 10) || 0,
         };
       }).filter(g => g.path);
     }
 
     function escapeHtml(str) {
       if (!str) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     loadGames();
