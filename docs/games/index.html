@@ -9,235 +9,464 @@
   <link rel="icon" href="/slopops.png" type="image/png">
 
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
     :root {
-      --bg: #0b0f19;
-      --card: rgba(255,255,255,0.06);
-      --text: #e8eefc;
-      --muted: rgba(232,238,252,0.7);
-      --accent: #7c5cff;
-      --accent2: #00d4ff;
-      --border: rgba(255,255,255,0.1);
+      --bg: #080c16;
+      --card: rgba(255,255,255,0.04);
+      --card-hover: rgba(255,255,255,0.08);
+      --text: #f0f2ff;
+      --muted: rgba(224,228,255,0.55);
+      --accent-pink: #ff3cac;
+      --accent-purple: #a855f7;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #22d3ee;
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.18);
+      --glow-pink: rgba(255, 60, 172, 0.15);
+      --glow-cyan: rgba(34, 211, 238, 0.12);
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: radial-gradient(1200px 800px at 20% 0%, #1a1440 0%, transparent 60%),
-                  radial-gradient(900px 600px at 90% 20%, #0b3b4a 0%, transparent 55%),
-                  var(--bg);
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
       color: var(--text);
       line-height: 1.6;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
     a { color: inherit; text-decoration: none; }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0 24px;
+    /* ── Animated Background ── */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
     }
 
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.5;
+      animation: blobFloat 20s ease-in-out infinite alternate;
+    }
+
+    .blob-1 {
+      width: 700px; height: 500px;
+      background: radial-gradient(circle, rgba(255,60,172,0.25), transparent 70%);
+      top: -15%; left: -10%;
+      animation-duration: 22s;
+    }
+
+    .blob-2 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(168,85,247,0.2), transparent 70%);
+      top: 10%; right: -10%;
+      animation-duration: 26s;
+      animation-delay: -5s;
+    }
+
+    .blob-3 {
+      width: 500px; height: 400px;
+      background: radial-gradient(circle, rgba(34,211,238,0.18), transparent 70%);
+      bottom: -10%; left: 30%;
+      animation-duration: 24s;
+      animation-delay: -10s;
+    }
+
+    @keyframes blobFloat {
+      0%   { transform: translate(0, 0) scale(1); }
+      33%  { transform: translate(40px, -30px) scale(1.05); }
+      66%  { transform: translate(-20px, 20px) scale(0.95); }
+      100% { transform: translate(30px, -10px) scale(1.02); }
+    }
+
+    /* Dot grid overlay */
+    .dot-grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    /* ── Layout ── */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ── Nav ── */
     nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 24px 0;
-      flex-wrap: wrap;
-      gap: 12px;
+      padding: 20px 0;
     }
 
     .logo {
-      font-weight: 700;
-      font-size: 18px;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -0.02em;
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    .logo-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple), var(--accent-cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 0 20px rgba(168,85,247,0.3);
     }
 
     .back-btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.06);
       border: 1px solid var(--border);
-      border-radius: 40px;
+      border-radius: 10px;
       padding: 8px 16px;
       font-size: 13px;
-      font-weight: 500;
-      transition: all 0.2s ease;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.25s ease;
     }
 
     .back-btn:hover {
-      background: rgba(255,255,255,0.15);
-      border-color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      border-color: var(--border-hover);
+      color: var(--text);
     }
 
+    .back-btn svg {
+      width: 14px; height: 14px;
+      transition: transform 0.2s ease;
+    }
+
+    .back-btn:hover svg {
+      transform: translateX(-2px);
+    }
+
+    /* ── Header ── */
     header {
       text-align: center;
-      padding: 60px 0 40px;
+      padding: 56px 0 40px;
+      animation: fadeUp 0.8s ease both;
     }
 
     h1 {
-      font-size: 42px;
-      line-height: 1.1;
-      margin: 0 0 16px;
+      font-size: clamp(36px, 7vw, 56px);
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
     }
 
-    .gradient {
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    .gradient-text {
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple) 50%, var(--accent-cyan));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    .muted { color: var(--muted); }
+    .subtitle {
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
 
+    /* ── Game Cards ── */
     .games-grid {
-      display: grid;
-      gap: 16px;
-      padding-bottom: 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 80px;
     }
 
     .game-card {
+      position: relative;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px;
+      border-radius: 16px;
+      padding: 22px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 20px;
-      transition: all 0.2s ease;
-      backdrop-filter: blur(10px);
+      gap: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .game-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent-pink), var(--accent-purple), var(--accent-cyan));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .game-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--glow-pink), transparent 40%, var(--glow-cyan));
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
     }
 
     .game-card:hover {
-      background: rgba(255,255,255,0.09);
-      border-color: rgba(255,255,255,0.2);
+      background: var(--card-hover);
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 32px rgba(168,85,247,0.08),
+        0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .game-card:hover::before {
+      opacity: 1;
+    }
+
+    .game-card:hover::after {
+      opacity: 0.5;
     }
 
     .game-info {
       flex: 1;
       min-width: 0;
+      position: relative;
+      z-index: 1;
     }
 
     .game-name {
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 18px;
+      font-weight: 700;
       color: var(--text);
       margin-bottom: 4px;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .game-model {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 0.02em;
     }
 
     .game-actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid transparent;
       font-weight: 600;
-      font-size: 14px;
-      transition: all 0.2s ease;
+      font-size: 13px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       white-space: nowrap;
-    }
-
-    .btn-play {
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border: none;
-      color: #000;
-    }
-
-    .btn-play:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .btn-watch {
-      background: rgba(255,255,255,0.08);
-    }
-
-    .btn-watch:hover {
-      background: rgba(255,255,255,0.15);
-      border-color: rgba(255,255,255,0.3);
+      cursor: pointer;
     }
 
     .btn svg {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       fill: currentColor;
     }
 
+    .btn-play {
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple) 60%, var(--accent-cyan));
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(168,85,247,0.25);
+    }
+
+    .btn-play:hover {
+      box-shadow: 0 4px 20px rgba(168,85,247,0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-play:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 6px rgba(168,85,247,0.3);
+    }
+
+    .btn-watch {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--border);
+      color: var(--muted);
+    }
+
+    .btn-watch:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: var(--border-hover);
+      color: var(--text);
+    }
+
+    /* ── Empty State ── */
     .empty-state {
       text-align: center;
       padding: 80px 20px;
       color: var(--muted);
+      animation: fadeUp 0.8s ease both;
     }
 
-    .empty-state svg {
-      width: 48px;
-      height: 48px;
-      margin-bottom: 16px;
-      opacity: 0.5;
+    .empty-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 20px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
     }
 
+    .empty-icon svg {
+      width: 24px; height: 24px;
+      opacity: 0.4;
+    }
+
+    /* ── Footer ── */
     footer {
-      padding: 40px 0;
+      padding: 32px 0;
       text-align: center;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       border-top: 1px solid var(--border);
     }
 
+    footer a {
+      color: var(--accent-purple);
+      transition: color 0.2s;
+    }
+
     footer a:hover {
+      color: var(--accent-cyan);
       text-decoration: underline;
     }
 
-    /* Mobile */
-    @media (max-width: 600px) {
-      header { padding: 40px 0 30px; }
-      h1 { font-size: 32px; }
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      .container { padding: 0 16px; }
+
+      header { padding: 40px 0 32px; }
+
+      .subtitle { font-size: 14px; }
 
       .game-card {
         flex-direction: column;
-        align-items: flex-start;
-        padding: 20px;
+        align-items: stretch;
+        padding: 18px;
+        gap: 14px;
+      }
+
+      .game-name {
+        white-space: normal;
+        font-size: 16px;
       }
 
       .game-actions {
         width: 100%;
-        flex-wrap: wrap;
       }
 
       .btn {
         flex: 1;
         justify-content: center;
-        min-width: 120px;
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+
+      .blob-1 { width: 400px; height: 300px; }
+      .blob-2 { width: 350px; height: 350px; }
+      .blob-3 { width: 300px; height: 250px; }
+    }
+
+    @media (max-width: 380px) {
+      .game-actions {
+        flex-direction: column;
       }
     }
+
+    /* ── Reduced Motion ── */
+    @media (prefers-reduced-motion: reduce) {
+      .blob { animation: none; }
+      .game-card { animation: none; }
+      header { animation: none; }
+      .game-card:hover { transform: none; }
+      .btn-play:hover { transform: none; }
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
   </style>
 </head>
 
 <body>
+
+  <!-- Animated Background -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="dot-grid" aria-hidden="true"></div>
+
   <div class="container">
     <nav>
-      <div class="logo">🎮 Games</div>
+      <div class="logo">
+        <div class="logo-icon">🎮</div>
+        <span>Games</span>
+      </div>
       <a href="/" class="back-btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
         Back to Bench
@@ -245,8 +474,8 @@
     </nav>
 
     <header>
-      <h1>AI BATTLE: <span class="gradient">Games</span></h1>
-      <p class="muted">Each game was built by a different AI model. Play, compare, and see who's got game.</p>
+      <h1>AI BATTLE: <span class="gradient-text">Games</span></h1>
+      <p class="subtitle">Each game was built by a different AI model. Play, compare, and see who's got game.</p>
     </header>
 
     <div class="games-grid" id="games-grid">
@@ -254,8 +483,8 @@
     </div>
 
     <footer>
-      Built by <strong>SlopOps</strong> •
-      <a href="https://youtube.com/@SlopOps" target="_blank">YouTube</a>
+      Built by <strong>SlopOps</strong> ·
+      <a href="https://youtube.com/@SlopOps" target="_blank" rel="noopener">YouTube</a>
     </footer>
   </div>
 
@@ -269,34 +498,22 @@
 
         const csvText = await response.text();
         const games = parseCSV(csvText);
-
-        // Only show live games
         const liveGames = games.filter(g => g.live === true);
 
         if (liveGames.length === 0) {
-          container.innerHTML = `
-            <div class="empty-state">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M8 15s1.5-2 4-2 4 2 4 2"/>
-                <line x1="9" y1="9" x2="9.01" y2="9"/>
-                <line x1="15" y1="9" x2="15.01" y2="9"/>
-              </svg>
-              <p>No games available yet. Check back soon!</p>
-            </div>
-          `;
+          container.innerHTML = renderEmpty('No games available yet. Check back soon!');
           return;
         }
 
-        container.innerHTML = liveGames.map(game => `
-          <div class="game-card">
+        container.innerHTML = liveGames.map((game, i) => `
+          <div class="game-card" style="animation-delay: ${i * 0.08}s">
             <div class="game-info">
               <div class="game-name">${escapeHtml(game.game_name || game.path)}</div>
               <div class="game-model">${escapeHtml(game.path)}</div>
             </div>
             <div class="game-actions">
               <a href="./${game.path}/index.html" class="btn btn-play">
-                <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+                <svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
                 Play
               </a>
               <a href="${escapeHtml(game.youtube_link)}" target="_blank" rel="noopener" class="btn btn-watch">
@@ -311,17 +528,24 @@
 
       } catch (err) {
         console.error('Error loading games:', err);
-        container.innerHTML = `
-          <div class="empty-state">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <p>Could not load games. Please try again later.</p>
-          </div>
-        `;
+        container.innerHTML = renderEmpty('Could not load games. Please try again later.');
       }
+    }
+
+    function renderEmpty(msg) {
+      return `
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M8 15s1.5-2 4-2 4 2 4 2"/>
+              <line x1="9" y1="9" x2="9.01" y2="9"/>
+              <line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+          </div>
+          <p>${msg}</p>
+        </div>
+      `;
     }
 
     function parseCSV(text) {
