@@ -121,7 +121,7 @@ canvas {
 <style>
   .model-banner {
     position: fixed;
-    bottom: 0;
+    top: 0;
     left: 0;
     right: 0;
     width: 100%;
@@ -129,7 +129,7 @@ canvas {
     z-index: 9999;
     background: rgba(8, 12, 22, 0.92);
     backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
     font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   }
   .banner-inner {
@@ -247,9 +247,10 @@ canvas {
     </div>
   </div>
 </div>
+<div style="height: 48px; flex-shrink: 0;"></div>
 
 <script>
-  const MODEL_SLUG = "chatgpt-v5-3"; // 🔧 change this per game
+  const MODEL_SLUG = "chatgpt-v5-3"; // 🔧 match the `path` column in games.csv
 
   (async function loadGameBanner() {
     try {
