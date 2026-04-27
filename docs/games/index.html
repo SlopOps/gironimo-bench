@@ -206,14 +206,22 @@
       line-height: 1.6;
     }
 
-    /* ── Sort Controls ── */
-    .sort-bar {
+    /* ── Sort Controls & Refresh Row ── */
+    .controls-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 16px;
       animation: fadeUp 0.6s ease 0.2s both;
+      flex-wrap: wrap;
+    }
+
+    .sort-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .sort-label {
@@ -260,7 +268,46 @@
       font-size: 12px;
       color: var(--muted);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      flex-shrink: 0;
+    }
+
+    .refresh-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: inherit;
+    }
+
+    .refresh-btn:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: var(--accent-purple);
+      color: var(--text);
+      transform: scale(0.98);
+    }
+
+    .refresh-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .refresh-spin {
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
     /* ── Game Cards ── */
@@ -482,8 +529,9 @@
       header { padding: 40px 0 28px; }
       .subtitle { font-size: 14px; }
 
-      .sort-bar { flex-wrap: wrap; gap: 8px; }
-      .game-count { order: -1; width: 100%; }
+      .controls-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+      .sort-section { justify-content: space-between; }
+      .game-count { order: initial; }
 
       .game-card {
         flex-direction: column;
@@ -519,7 +567,7 @@
       .game-card,
       .game-card.animate-in,
       header,
-      .sort-bar { animation: none; }
+      .controls-bar { animation: none; }
       .game-card:hover,
       .btn-play:hover { transform: none; }
     }
@@ -558,14 +606,25 @@
       <p class="subtitle">Each game was built by a different AI model. Play, compare, and see who's got game.</p>
     </header>
 
-    <div class="sort-bar" id="sort-bar" style="display:none;" role="toolbar" aria-label="Sort options">
-      <span class="sort-label" id="sort-label">Sort by</span>
-      <div class="sort-pills" role="group" aria-labelledby="sort-label">
-        <button class="sort-pill" data-sort="name" onclick="setSort('name')" aria-pressed="false">Game Name</button>
-        <button class="sort-pill active" data-sort="stars" onclick="setSort('stars')" aria-pressed="true">Top Rated</button>
-        <button class="sort-pill" data-sort="model" onclick="setSort('model')" aria-pressed="false">Model</button>
+    <div class="controls-bar" id="controls-bar" style="display:none;">
+      <div class="sort-section">
+        <span class="sort-label" id="sort-label">Sort by</span>
+        <div class="sort-pills" role="group" aria-labelledby="sort-label">
+          <button class="sort-pill" data-sort="name" onclick="setSort('name')" aria-pressed="false">Game Name</button>
+          <button class="sort-pill active" data-sort="stars" onclick="setSort('stars')" aria-pressed="true">Top Rated</button>
+          <button class="sort-pill" data-sort="model" onclick="setSort('model')" aria-pressed="false">Model</button>
+        </div>
       </div>
-      <span class="game-count" id="game-count" aria-live="polite"></span>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span class="game-count" id="game-count" aria-live="polite"></span>
+        <button class="refresh-btn" id="manual-refresh-btn" aria-label="Refresh games list">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+            <path d="M23 4v6h-6M1 20v-6h6" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+          Refresh
+        </button>
+      </div>
     </div>
 
     <main>
@@ -583,39 +642,58 @@
   <script>
     let allLiveGames = [];
     let currentSort = 'stars';
+    let isLoading = false;
 
-    async function loadGames() {
-      const container = document.getElementById('games-grid');
-      try {
-        const response = await fetch('games.csv');
-        if (!response.ok) throw new Error('Failed to load');
+    // Helper: parse CSV robustly
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length < 2) return [];
 
-        const csvText = await response.text();
-        const games = parseCSV(csvText);
-        allLiveGames = games.filter(g => g.live);
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const pathIdx  = headers.indexOf('path');
+      const nameIdx  = headers.indexOf('game_name');
+      const liveIdx  = headers.indexOf('live');
+      const ytIdx    = headers.indexOf('youtube_link');
+      const starsIdx = headers.indexOf('stars');
 
-        if (allLiveGames.length === 0) {
-          container.innerHTML = renderEmpty('No games available yet. Check back soon!');
-          return;
+      if (pathIdx === -1) return [];
+
+      return lines.slice(1).map(line => {
+        // Split CSV respecting quoted values (simple)
+        const row = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            inQuotes = !inQuotes;
+          } else if (ch === ',' && !inQuotes) {
+            row.push(current.trim());
+            current = '';
+          } else {
+            current += ch;
+          }
         }
+        row.push(current.trim());
 
-        document.getElementById('sort-bar').style.display = '';
-        renderGames();
-
-      } catch (err) {
-        console.error('Error loading games:', err);
-        container.innerHTML = renderEmpty('Could not load games. Please try again later.');
-      }
+        return {
+          path:         row[pathIdx] || '',
+          game_name:    (nameIdx !== -1 ? row[nameIdx] : '') || '',
+          live:         (liveIdx !== -1 ? (row[liveIdx] || '').toLowerCase() === 'true' : false),
+          youtube_link: (ytIdx !== -1 ? row[ytIdx] : '') || '',
+          stars:        (starsIdx !== -1 ? parseInt(row[starsIdx], 10) : 0) || 0,
+        };
+      }).filter(g => g.path && g.path !== '');
     }
 
-    function setSort(sortKey) {
-      currentSort = sortKey;
-      document.querySelectorAll('.sort-pill').forEach(pill => {
-        const isActive = pill.dataset.sort === sortKey;
-        pill.classList.toggle('active', isActive);
-        pill.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      });
-      renderGames();
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     function renderStars(count) {
@@ -629,8 +707,31 @@
       return html;
     }
 
+    function renderEmpty(msg) {
+      return `
+        <div class="empty-state" role="status">
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M8 15s1.5-2 4-2 4 2 4 2"/>
+              <line x1="9" y1="9" x2="9.01" y2="9"/>
+              <line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+          </div>
+          <p>${escapeHtml(msg)}</p>
+        </div>`;
+    }
+
     function renderGames() {
       const container = document.getElementById('games-grid');
+      if (!container) return;
+
+      if (!allLiveGames.length) {
+        container.innerHTML = renderEmpty('No live games available. Check back soon!');
+        const countSpan = document.getElementById('game-count');
+        if (countSpan) countSpan.textContent = '0 games';
+        return;
+      }
 
       const sorted = [...allLiveGames].sort((a, b) => {
         if (currentSort === 'stars') return b.stars - a.stars;
@@ -639,10 +740,11 @@
       });
 
       const count = sorted.length;
-      document.getElementById('game-count').textContent = count + ' game' + (count !== 1 ? 's' : '');
+      const countSpan = document.getElementById('game-count');
+      if (countSpan) countSpan.textContent = count + ' game' + (count !== 1 ? 's' : '');
 
       container.innerHTML = sorted.map((game, i) => `
-        <article class="game-card animate-in" style="animation-delay:${i * 0.06}s">
+        <article class="game-card animate-in" style="animation-delay:${Math.min(i * 0.04, 0.6)}s">
           <div class="game-info">
             <div class="game-name">${escapeHtml(game.game_name || game.path)}</div>
             <div class="game-model">${escapeHtml(game.path)}</div>
@@ -665,55 +767,139 @@
       `).join('');
     }
 
-    function renderEmpty(msg) {
-      return `
-        <div class="empty-state" role="status">
-          <div class="empty-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M8 15s1.5-2 4-2 4 2 4 2"/>
-              <line x1="9" y1="9" x2="9.01" y2="9"/>
-              <line x1="15" y1="9" x2="15.01" y2="9"/>
-            </svg>
-          </div>
-          <p>${escapeHtml(msg)}</p>
-        </div>`;
+    // Core function: load fresh data with cache busting
+    async function loadGames(showRefreshAnimation = false) {
+      const container = document.getElementById('games-grid');
+      const refreshBtn = document.getElementById('manual-refresh-btn');
+      let refreshIcon = null;
+      
+      if (showRefreshAnimation && refreshBtn) {
+        const svg = refreshBtn.querySelector('svg');
+        if (svg && !svg.classList.contains('refresh-spin')) {
+          svg.classList.add('refresh-spin');
+          refreshIcon = svg;
+        }
+      }
+
+      try {
+        // CRITICAL FIX: force no-cache with timestamp to always get latest CSV
+        const timestamp = Date.now();
+        const response = await fetch(`games.csv?nocache=${timestamp}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const csvText = await response.text();
+        const allGames = parseCSV(csvText);
+        
+        // Filter only live games (live === true)
+        const newlyLiveGames = allGames.filter(g => g.live === true);
+        
+        // Update global array
+        allLiveGames = newlyLiveGames;
+        
+        // Show/hide sort bar based on available games
+        const controlsBar = document.getElementById('controls-bar');
+        if (controlsBar) {
+          controlsBar.style.display = allLiveGames.length > 0 ? 'flex' : 'none';
+        }
+        
+        if (allLiveGames.length === 0) {
+          if (container) container.innerHTML = renderEmpty('No live games available. Check back soon!');
+          const countSpan = document.getElementById('game-count');
+          if (countSpan) countSpan.textContent = '0 games';
+          return;
+        }
+        
+        // Re-render with current sort preference
+        renderGames();
+        
+      } catch (err) {
+        console.error('Error loading games:', err);
+        if (container) {
+          container.innerHTML = renderEmpty('Could not load games. Please try again later.');
+        }
+      } finally {
+        if (refreshIcon) {
+          refreshIcon.classList.remove('refresh-spin');
+        }
+      }
     }
 
-    function parseCSV(text) {
-      const lines = text.trim().split(/\r?\n/);
-      if (lines.length < 2) return [];
-
-      const headers  = lines[0].split(',').map(h => h.trim());
-      const pathIdx  = headers.indexOf('path');
-      const nameIdx  = headers.indexOf('game_name');
-      const liveIdx  = headers.indexOf('live');
-      const ytIdx    = headers.indexOf('youtube_link');
-      const starsIdx = headers.indexOf('stars');
-
-      return lines.slice(1).map(line => {
-        const v = line.split(',').map(c => c.trim());
-        return {
-          path:         v[pathIdx]  || '',
-          game_name:    v[nameIdx]  || '',
-          live:         (v[liveIdx] || '').toLowerCase() === 'true',
-          youtube_link: v[ytIdx]    || '',
-          stars:        parseInt(v[starsIdx], 10) || 0,
-        };
-      }).filter(g => g.path);
+    function setSort(sortKey) {
+      currentSort = sortKey;
+      // Update active pill UI
+      document.querySelectorAll('.sort-pill').forEach(pill => {
+        const isActive = pill.dataset.sort === sortKey;
+        pill.classList.toggle('active', isActive);
+        pill.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      // Re-render using same data and new sort
+      if (allLiveGames.length > 0) {
+        renderGames();
+      }
     }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    // Manual refresh with visual feedback
+    async function manualRefresh() {
+      if (isLoading) return;
+      isLoading = true;
+      const refreshBtn = document.getElementById('manual-refresh-btn');
+      if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.style.opacity = '0.6';
+      }
+      await loadGames(true);
+      if (refreshBtn) {
+        refreshBtn.disabled = false;
+        refreshBtn.style.opacity = '1';
+      }
+      isLoading = false;
     }
 
-    loadGames();
+    // Auto-refresh every 30 seconds to keep list updated without page reload
+    let autoRefreshInterval = null;
+    function startAutoRefresh() {
+      if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+      autoRefreshInterval = setInterval(() => {
+        // Silent background refresh (no spinning icon)
+        loadGames(false);
+      }, 30000); // 30 seconds
+    }
+
+    // Expose functions to global scope for inline onclick handlers
+    window.setSort = setSort;
+    window.manualRefresh = manualRefresh;
+
+    // Initialize page
+    (async function init() {
+      // Initial load with fresh data
+      await loadGames(false);
+      startAutoRefresh();
+      
+      // Attach manual refresh button event
+      const refreshBtn = document.getElementById('manual-refresh-btn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          manualRefresh();
+        });
+      }
+      
+      // Also watch for page visibility: refresh when tab becomes active again
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          // User came back to tab, fetch latest data immediately
+          loadGames(false);
+        }
+      });
+    })();
   </script>
 </body>
 </html>
