@@ -110,7 +110,7 @@ canvas {
 
 <body>
 
-<!-- ===== GAME MODEL BANNER ===== -->
+<!-- ===== SELF-CONTAINED GAME MODEL BANNER (CARD STYLE, NO OVERLAP) ===== -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q5R5LECE2Y"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -119,18 +119,22 @@ canvas {
   gtag('config', 'G-Q5R5LECE2Y');
 </script>
 <style>
-  .model-banner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+  /* RESET for banner spacing - ensures no global side effects */
+  .game-banner-container {
+    display: block;
     width: 100%;
-    box-sizing: border-box;
-    z-index: 9999;
-    background: rgba(8, 12, 22, 0.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    z-index: 10000;
     font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  /* The actual card-style banner */
+  .model-banner-card {
+    width: 100%;
+    background: rgba(8, 12, 22, 0.92);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.02);
+    box-sizing: border-box;
   }
   .banner-inner {
     padding: 10px 20px;
@@ -138,11 +142,18 @@ canvas {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    flex-wrap: wrap;
   }
   .banner-left {
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
+  }
+  .banner-name-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     min-width: 0;
   }
   .banner-game-name {
@@ -156,16 +167,10 @@ canvas {
   }
   .banner-model-slug {
     font-size: 11px;
-    color: rgba(224,228,255,0.45);
+    color: rgba(224,228,255,0.5);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     letter-spacing: 0.02em;
     white-space: nowrap;
-  }
-  .banner-name-group {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
   }
   .banner-stars {
     font-size: 13px;
@@ -173,7 +178,7 @@ canvas {
     color: #ffd700;
     flex-shrink: 0;
   }
-  .banner-watch {
+  .banner-watch, .banner-back {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -187,28 +192,13 @@ canvas {
     text-decoration: none;
     transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
     white-space: nowrap;
+    cursor: pointer;
   }
   .banner-watch:hover {
     background: #FF0000;
     border-color: #FF0000;
     color: #fff;
-    box-shadow: 0 4px 16px rgba(255,0,0,0.3);
-  }
-  .banner-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.08);
-    padding: 6px 14px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 600;
-    color: rgba(224,228,255,0.7);
-    text-decoration: none;
-    transition: background 0.2s, border-color 0.2s, color 0.2s;
-    white-space: nowrap;
-    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(255,0,0,0.3);
   }
   .banner-back:hover {
     background: rgba(255,255,255,0.1);
@@ -221,77 +211,90 @@ canvas {
     gap: 8px;
     flex-shrink: 0;
   }
+  /* Spacer that pushes existing body content down (so banner doesn't cover game) */
+  .game-banner-spacer {
+    display: block;
+    width: 100%;
+    height: 0px;
+    margin: 0;
+    padding: 0;
+  }
   @media (max-width: 480px) {
     .banner-model-slug { display: none; }
     .banner-watch span { display: none; }
   }
 </style>
 
-<div class="model-banner">
-  <div class="banner-inner">
-    <div class="banner-left">
-      <div class="banner-name-group">
-        <div class="banner-game-name" id="banner-game-name">Loading...</div>
-        <div class="banner-model-slug" id="banner-model-slug"></div>
+<div class="game-banner-container">
+  <div class="model-banner-card">
+    <div class="banner-inner">
+      <div class="banner-left">
+        <div class="banner-name-group">
+          <div class="banner-game-name" id="banner-game-name">Loading...</div>
+          <div class="banner-model-slug" id="banner-model-slug"></div>
+        </div>
+        <div class="banner-stars" id="banner-stars"></div>
       </div>
-      <div class="banner-stars" id="banner-stars"></div>
-    </div>
-    <div class="banner-right">
-      <a id="banner-watch" class="banner-watch" href="#" target="_blank" rel="noopener" style="display:none;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-        </svg>
-        <span>Watch</span>
-      </a>
-      <a href="/games/index.html" class="banner-back">← All Games</a>
+      <div class="banner-right">
+        <a id="banner-watch" class="banner-watch" href="#" target="_blank" rel="noopener" style="display:none;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+          </svg>
+          <span>Watch</span>
+        </a>
+        <a href="/games/index.html" class="banner-back">← All Games</a>
+      </div>
     </div>
   </div>
+  <div class="game-banner-spacer"></div>
 </div>
-<div style="height: 48px; flex-shrink: 0;"></div>
 
 <script>
-  const MODEL_SLUG = "chatgpt-v5-3"; // 🔧 match the `path` column in games.csv
+  (function() {
+    const MODEL_SLUG = "chatgpt-v5-3"; // 🔧 match the `path` column in games.csv
 
-  (async function loadGameBanner() {
-    try {
-      const res = await fetch('../games.csv', { cache: 'no-store' });
-      const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
-      const headers = rows.shift();
-      const data = rows.map(row => {
-        const obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = (row[i] || '').trim());
-        return obj;
-      });
+    async function loadGameBanner() {
+      try {
+        const res = await fetch('../games.csv', { cache: 'no-store' });
+        const text = await res.text();
+        const rows = text.trim().split('\n').map(r => r.split(','));
+        const headers = rows.shift();
+        const data = rows.map(row => {
+          const obj = {};
+          headers.forEach((h, i) => obj[h.trim()] = (row[i] || '').trim());
+          return obj;
+        });
 
-      const match = data.find(row => row.path === MODEL_SLUG);
+        const match = data.find(row => row.path === MODEL_SLUG);
 
-      if (!match) {
+        if (!match) {
+          document.getElementById('banner-game-name').textContent = MODEL_SLUG;
+          document.getElementById('banner-stars').textContent = '☆☆☆☆☆';
+          return;
+        }
+
+        document.getElementById('banner-game-name').textContent = match.game_name || MODEL_SLUG;
+        document.getElementById('banner-model-slug').textContent = match.path;
+
+        const starCount = parseInt(match.stars, 10) || 0;
+        document.getElementById('banner-stars').textContent =
+          '★'.repeat(starCount) + '☆'.repeat(Math.max(0, 5 - starCount));
+
+        if (match.youtube_link) {
+          const watchEl = document.getElementById('banner-watch');
+          watchEl.href = match.youtube_link;
+          watchEl.style.display = 'inline-flex';
+        }
+
+      } catch (err) {
+        console.error('Banner error:', err);
         document.getElementById('banner-game-name').textContent = MODEL_SLUG;
-        document.getElementById('banner-stars').textContent = '☆☆☆☆☆';
-        return;
       }
-
-      document.getElementById('banner-game-name').textContent = match.game_name || MODEL_SLUG;
-      document.getElementById('banner-model-slug').textContent = match.path;
-
-      const starCount = parseInt(match.stars, 10) || 0;
-      document.getElementById('banner-stars').textContent =
-        '★'.repeat(starCount) + '☆'.repeat(Math.max(0, 5 - starCount));
-
-      if (match.youtube_link) {
-        const watchEl = document.getElementById('banner-watch');
-        watchEl.href = match.youtube_link;
-        watchEl.style.display = 'inline-flex';
-      }
-
-    } catch (err) {
-      console.error('Banner error:', err);
-      document.getElementById('banner-game-name').textContent = MODEL_SLUG;
     }
+    loadGameBanner();
   })();
 </script>
-<!-- ===== END GAME MODEL BANNER ===== -->
+<!-- ===== END SELF-CONTAINED BANNER ===== -->
 
 <canvas id="c"></canvas>
 
