@@ -839,23 +839,6 @@
       }
     }
 
-    // Manual refresh with visual feedback
-    async function manualRefresh() {
-      if (isLoading) return;
-      isLoading = true;
-      const refreshBtn = document.getElementById('manual-refresh-btn');
-      if (refreshBtn) {
-        refreshBtn.disabled = true;
-        refreshBtn.style.opacity = '0.6';
-      }
-      await loadGames(true);
-      if (refreshBtn) {
-        refreshBtn.disabled = false;
-        refreshBtn.style.opacity = '1';
-      }
-      isLoading = false;
-    }
-
     // Auto-refresh every 30 seconds to keep list updated without page reload
     let autoRefreshInterval = null;
     function startAutoRefresh() {
@@ -868,22 +851,12 @@
 
     // Expose functions to global scope for inline onclick handlers
     window.setSort = setSort;
-    window.manualRefresh = manualRefresh;
 
     // Initialize page
     (async function init() {
       // Initial load with fresh data
       await loadGames(false);
       startAutoRefresh();
-      
-      // Attach manual refresh button event
-      const refreshBtn = document.getElementById('manual-refresh-btn');
-      if (refreshBtn) {
-        refreshBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          manualRefresh();
-        });
-      }
       
       // Also watch for page visibility: refresh when tab becomes active again
       document.addEventListener('visibilitychange', () => {
