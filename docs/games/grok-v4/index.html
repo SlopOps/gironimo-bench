@@ -6,19 +6,9 @@
     <title>DE-ICE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
-        :root {
-            --orange: #FF6200;
-            --green: #00FF9D;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
             background: #0a0e17;
             color: #fff;
@@ -27,87 +17,35 @@
             height: 100vh;
             width: 100vw;
             touch-action: none;
-            position: relative;
         }
         
-        canvas {
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
+        canvas { display: block; position: absolute; top: 0; left: 0; }
         
-        #ui {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            pointer-events: none;
-        }
+        #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         
         .header {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+            top: 0; left: 0; width: 100%;
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
             background: linear-gradient(to bottom, rgba(10,14,23,0.95), transparent);
-            z-index: 20;
-            pointer-events: none;
+            z-index: 30;
         }
         
-        .logo {
-            font-size: 18px;
-            letter-spacing: 4px;
-            color: var(--orange);
-            text-shadow: 0 0 10px var(--orange);
-        }
+        .logo { font-size: 22px; color: #FF6200; text-shadow: 0 0 15px #FF6200; }
         
-        .stats {
-            display: flex;
-            gap: 20px;
-            font-size: 14px;
-        }
-        
-        .stat {
-            text-align: center;
-        }
-        
-        .label {
-            font-size: 9px;
-            opacity: 0.7;
-            margin-bottom: 2px;
-        }
-        
-        .value {
-            color: var(--orange);
-            text-shadow: 0 0 8px var(--orange);
-        }
-        
-        #game-container {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 65%;
-            display: flex;
-            flex-direction: column;
-            pointer-events: auto;
-        }
+        .stats { display: flex; gap: 25px; font-size: 14px; }
+        .label { font-size: 9px; opacity: 0.7; }
+        .value { color: #FF6200; text-shadow: 0 0 10px #FF6200; }
         
         #viewport {
-            flex: 1;
-            position: relative;
+            position: absolute;
+            top: 85px; left: 0; right: 0; bottom: 190px;
             background: linear-gradient(#1a2538, #0f1828);
             overflow: hidden;
-            border-top: 4px solid var(--orange);
+            border-top: 5px solid #FF6200;
+            border-bottom: 5px solid #FF6200;
         }
         
         #plane-container {
@@ -119,202 +57,94 @@
             justify-content: center;
         }
         
-        #controls {
-            height: 140px;
-            background: rgba(10,14,23,0.95);
-            border-top: 3px solid #334155;
-            display: flex;
-            flex-direction: column;
-            padding: 12px 20px;
-            gap: 12px;
+        #nozzle-indicator {
+            position: absolute;
+            top: 25%;
+            font-size: 28px;
+            transition: left 0.2s ease;
+            text-shadow: 0 0 15px #FFAA00;
+            z-index: 25;
+            pointer-events: none;
         }
         
-        .control-row {
+        #controls {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 185px;
+            background: rgba(10,14,23,0.97);
+            border-top: 4px solid #334155;
+            padding: 15px;
             display: flex;
+            flex-direction: column;
             gap: 12px;
-            height: 52px;
+            pointer-events: auto;
         }
         
         .btn {
             flex: 1;
             background: #1e2937;
-            border: 3px solid var(--orange);
+            border: 4px solid #FF6200;
             color: white;
             font-family: 'Press Start 2P';
-            font-size: 13px;
+            font-size: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.1s;
-            box-shadow: 0 4px 0 #c44a00;
+            box-shadow: 0 6px 0 #c44a00;
             user-select: none;
         }
         
-        .btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 0 0 #c44a00;
-        }
+        .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c44a00; }
         
         .spray-btn {
-            background: linear-gradient(#FF6200, #c44a00);
+            background: linear-gradient(#FF6200, #FF8800);
             border-color: #fff;
             color: #000;
+            font-size: 18px;
             font-weight: bold;
-            box-shadow: 0 6px 0 #9c3a00;
-        }
-        
-        .info {
-            position: absolute;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            padding: 8px 20px;
-            border: 2px solid var(--green);
-            font-size: 11px;
-            white-space: nowrap;
-            z-index: 30;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
+            box-shadow: 0 8px 0 #c44a00;
         }
         
         #progress {
             position: absolute;
-            top: 60px;
-            left: 20px;
-            right: 20px;
-            height: 12px;
+            top: 65px; left: 20px; right: 20px;
+            height: 14px;
             background: #1e2937;
-            border: 2px solid var(--orange);
+            border: 3px solid #FF6200;
             overflow: hidden;
         }
-        
         #progress-bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(to right, var(--orange), #ffaa00);
-            transition: width 0.2s linear;
-            box-shadow: 0 0 15px var(--orange);
+            background: linear-gradient(to right, #FF6200, #FFCC00);
+            box-shadow: 0 0 20px #FF6200;
         }
         
-        .ice-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            opacity: 0.85;
-            mix-blend-mode: screen;
-        }
+        .ice-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         
-        #start-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+        #start-screen, #game-over {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(10,14,23,0.98);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             z-index: 100;
-            transition: opacity 0.6s;
         }
         
         .title {
-            font-size: 42px;
-            line-height: 1;
-            color: var(--orange);
-            text-align: center;
-            margin-bottom: 20px;
-            text-shadow: 
-                0 0 10px var(--orange),
-                0 0 30px #ffaa00;
-            animation: pulse 2s infinite alternate;
-        }
-        
-        .subtitle {
-            font-size: 14px;
-            color: #94a3b8;
-            margin-bottom: 60px;
-            letter-spacing: 3px;
+            font-size: 48px;
+            color: #FF6200;
+            text-shadow: 0 0 30px #FF6200;
+            margin-bottom: 10px;
         }
         
         .start-btn {
-            padding: 18px 60px;
-            background: var(--orange);
-            color: #000;
+            margin-top: 40px;
+            padding: 20px 70px;
+            background: #FF6200;
+            color: black;
+            font-size: 20px;
             border: none;
-            font-size: 18px;
-            font-family: 'Press Start 2P';
-            cursor: pointer;
-            box-shadow: 0 8px 0 #c44a00;
-            transition: all 0.1s;
-        }
-        
-        .start-btn:active {
-            transform: translateY(6px);
-            box-shadow: 0 2px 0 #c44a00;
-        }
-        
-        #game-over {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10,14,23,0.97);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-        }
-        
-        .final-score {
-            font-size: 28px;
-            margin: 20px 0;
-            color: var(--green);
-        }
-        
-        .snowflake {
-            position: absolute;
-            color: #fff;
-            font-size: 18px;
-            pointer-events: none;
-            animation: fall linear infinite;
-            text-shadow: 0 0 8px #88ccff;
-            opacity: 0.9;
-        }
-        
-        @keyframes pulse {
-            from { text-shadow: 0 0 10px var(--orange); }
-            to { text-shadow: 0 0 40px #ffaa00, 0 0 60px #ff6200; }
-        }
-        
-        @keyframes fall {
-            to {
-                transform: translateY(800px);
-            }
-        }
-        
-        .tutorial {
-            position: absolute;
-            bottom: 180px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 11px;
-            color: #64748b;
-            text-align: center;
-            max-width: 260px;
-            line-height: 1.4;
-            pointer-events: none;
+            box-shadow: 0 10px 0 #c44a00;
         }
     </style>
 </head>
@@ -322,724 +152,364 @@
     <canvas id="bg-canvas"></canvas>
     
     <div id="ui">
-        <!-- Background 3D will be in canvas -->
-        
         <div class="header">
             <div class="logo">DE-ICE</div>
             <div class="stats">
-                <div class="stat">
-                    <div class="label">SCORE</div>
-                    <div id="score" class="value">00000</div>
-                </div>
-                <div class="stat">
-                    <div class="label">TIME</div>
-                    <div id="timer" class="value">90</div>
-                </div>
-                <div class="stat">
-                    <div class="label">ICE</div>
-                    <div id="ice-level" class="value">100%</div>
-                </div>
+                <div><div class="label">SCORE</div><div id="score" class="value">00000</div></div>
+                <div><div class="label">TIME</div><div id="timer" class="value">90</div></div>
             </div>
         </div>
-        
-        <div id="progress">
-            <div id="progress-bar"></div>
-        </div>
-        
-        <div id="game-container">
-            <div id="viewport">
-                <!-- Three.js plane scene -->
-                <div id="plane-container">
-                    <svg id="plane-svg" width="280" height="180" viewBox="0 0 280 180" style="filter: drop-shadow(0 10px 20px rgba(255,98,0,0.4));">
-                        <!-- Fuselage -->
-                        <path id="fuselage" d="M60 90 Q140 65 220 90 Q140 115 60 90" fill="#cbd5e1" stroke="#334155" stroke-width="18"/>
-                        <!-- Wings -->
-                        <polygon id="left-wing" points="110,95 40,45 80,110" fill="#94a3b8" stroke="#475569" stroke-width="12"/>
-                        <polygon id="right-wing" points="110,85 40,135 80,70" fill="#94a3b8" stroke="#475569" stroke-width="12"/>
-                        <!-- Tail -->
-                        <polygon id="tail" points="230,80 260,45 260,115" fill="#64748b" stroke="#334155" stroke-width="10"/>
-                        <!-- Engines -->
-                        <ellipse cx="135" cy="78" rx="18" ry="12" fill="#475569" stroke="#1e2937" stroke-width="6"/>
-                        <ellipse cx="135" cy="102" rx="18" ry="12" fill="#475569" stroke="#1e2937" stroke-width="6"/>
-                        <!-- Windows -->
-                        <circle cx="85" cy="80" r="6" fill="#1e2937"/>
-                        <circle cx="105" cy="80" r="6" fill="#1e2937"/>
-                        <circle cx="125" cy="80" r="6" fill="#1e2937"/>
-                        <!-- Cockpit -->
-                        <path d="M55 85 Q70 65 85 70" fill="none" stroke="#1e2937" stroke-width="14"/>
-                    </svg>
-                </div>
-                
-                <!-- Ice overlay -->
-                <canvas id="ice-canvas" class="ice-layer" width="400" height="300"></canvas>
-                
-                <div class="info" id="spray-info">SPRAY THE ORANGE FLUID!</div>
+
+        <div id="progress"><div id="progress-bar"></div></div>
+
+        <div id="viewport">
+            <div id="plane-container">
+                <svg width="320" height="220" viewBox="0 0 320 220" id="plane-svg">
+                    <!-- Fuselage -->
+                    <path d="M70 110 Q160 75 250 110 Q160 145 70 110" fill="#e2e8f0" stroke="#475569" stroke-width="28"/>
+                    <!-- Wings -->
+                    <polygon id="left-wing" points="140 115 55 55 95 145" fill="#94a3b8" stroke="#475569" stroke-width="16"/>
+                    <polygon id="right-wing" points="140 105 55 165 95 75" fill="#94a3b8" stroke="#475569" stroke-width="16"/>
+                    <!-- Tail -->
+                    <polygon id="tail" points="245 95 285 55 285 145" fill="#64748b" stroke="#334155" stroke-width="14"/>
+                    <!-- Nozzle visual -->
+                    <circle id="nozzle" cx="125" cy="85" r="12" fill="#FFAA00" stroke="#FF6200" stroke-width="6"/>
+                </svg>
             </div>
             
-            <div id="controls">
-                <div class="control-row">
-                    <div onclick="moveNozzle(-1)" class="btn">← NOZZLE</div>
-                    <div onclick="moveNozzle(1)" class="btn">NOZZLE →</div>
-                </div>
-                <div onclick="spray()" id="spray-main" class="btn spray-btn">🔥 SPRAY DE-ICER 🔥</div>
-                <div style="font-size:10px; text-align:center; opacity:0.6; margin-top:4px;">
-                    HOLD TO BLAST • CLEAR ALL ICE
-                </div>
+            <div id="nozzle-indicator">▼</div>
+            
+            <canvas id="ice-canvas" class="ice-layer" width="400" height="300"></canvas>
+        </div>
+
+        <div id="controls">
+            <div style="display:flex; gap:12px;">
+                <div onclick="moveNozzle(-1)" class="btn">← LEFT WING</div>
+                <div onclick="moveNozzle(1)" class="btn">RIGHT WING →</div>
+            </div>
+            <div onclick="startSpray()" id="spray-btn" class="btn spray-btn">HOLD TO SPRAY DE-ICER</div>
+            <div style="text-align:center; font-size:11px; opacity:0.7;">
+                Move nozzle • Melt all ice before time runs out
             </div>
         </div>
-        
-        <div class="tutorial" id="tutorial-text">
-            TAP &amp; HOLD THE BIG ORANGE BUTTON<br>
-            SWIPE NOZZLE LEFT/RIGHT<br>
-            MELT THE ICE BEFORE TIME RUNS OUT
-        </div>
     </div>
-    
+
     <!-- Start Screen -->
     <div id="start-screen">
-        <div>
-            <div class="title">DE-ICE</div>
-            <div class="subtitle">AIRPORT GROUND CREW</div>
-            
-            <div onclick="startGame()" class="start-btn">START MISSION</div>
-            
-            <div style="margin-top:80px; font-size:10px; opacity:0.5; max-width:240px; text-align:center;">
-                WINTER STORM • FLIGHT 472<br>
-                CLEAR THE WINGS BEFORE TAKEOFF
-            </div>
-        </div>
-        
-        <!-- Background snowflakes on start -->
-        <div id="start-snow"></div>
+        <div class="title">DE-ICE</div>
+        <p style="color:#94a3b8; margin:20px 0;">WINTER STORM • CLEAR THE PLANE</p>
+        <div onclick="startGame()" class="start-btn">BEGIN MISSION</div>
     </div>
-    
+
     <!-- Game Over -->
-    <div id="game-over">
-        <div style="font-size:22px; color:#f87171; margin-bottom:10px;">MISSION FAILED</div>
-        <div id="final-text" style="font-size:15px; margin-bottom:30px; color:#94a3b8;">ICE REMAINING TOO HIGH</div>
-        <div class="final-score">SCORE <span id="final-score">08420</span></div>
-        
-        <div onclick="restartGame()" style="margin-top:50px; padding:14px 50px; background:#334155; border:3px solid #64748b; cursor:pointer; font-size:14px;">
+    <div id="game-over" style="display:none;">
+        <h2 id="result-text" style="color:#f87171;">TIME'S UP</h2>
+        <p style="margin:20px 0 10px;">FINAL SCORE</p>
+        <h1 id="final-score" style="color:#FFCC00; font-size:42px;">08420</h1>
+        <div onclick="restartGame()" style="margin-top:60px; padding:16px 50px; background:#334155; border:4px solid #64748b; cursor:pointer;">
             TRY AGAIN
         </div>
-        
-        <div onclick="location.reload()" style="margin-top:20px; font-size:11px; opacity:0.6; cursor:pointer;">
-            ← BACK TO HANGAR
-        </div>
     </div>
-    
+
     <script>
-        // =============================================
-        // DE-ICE: Airplane De-Icing Mini-Game
-        // Single file • Mobile portrait • 9:16
-        // Vanilla + Three.js
-        // =============================================
-        
-        let score = 0;
-        let timeLeft = 90;
-        let iceLevel = 100;
-        let isSpraying = false;
+        // === GAME VARIABLES ===
+        let score = 0, timeLeft = 90, iceLevel = 100;
         let gameRunning = false;
-        let timerInterval = null;
-        let animationFrame = null;
-        
-        // Nozzle position (0 = left wing, 1 = center, 2 = right wing)
-        let nozzlePos = 1;
-        
-        // Ice coverage per section: left-wing, fuselage, right-wing, tail
-        let iceSections = [92, 85, 94, 78];
-        
-        // Three.js variables
-        let scene, camera, renderer;
-        let snowParticles = [];
+        let nozzlePos = 1; // 0 = left, 1 = center, 2 = right
+        let iceSections = [88, 82, 91, 79]; // left, body, right, tail
+        let isSpraying = false;
+        let sprayInterval = null;
+
+        let scene, camera, renderer, snowParticles;
         let deiceParticles = [];
-        
-        // Canvas elements
-        const bgCanvas = document.getElementById('bg-canvas');
-        const iceCanvas = document.getElementById('ice-canvas');
-        let bgCtx, iceCtx;
-        
-        // DOM
+        let iceCtx;
+
         const scoreEl = document.getElementById('score');
         const timerEl = document.getElementById('timer');
-        const iceLevelEl = document.getElementById('ice-level');
         const progressBar = document.getElementById('progress-bar');
-        const startScreen = document.getElementById('start-screen');
-        const gameOverScreen = document.getElementById('game-over');
-        const sprayInfo = document.getElementById('spray-info');
-        
-        // Touch handling
-        let touchStartX = 0;
-        
-        function pad(num, size) {
-            let s = "00000" + num;
-            return s.substr(s.length - size);
-        }
-        
+        const nozzleIndicator = document.getElementById('nozzle-indicator');
+        const iceCanvas = document.getElementById('ice-canvas');
+
+        function pad(n) { return ("00000" + Math.floor(n)).slice(-5); }
+
         function updateUI() {
-            scoreEl.textContent = pad(Math.floor(score), 5);
+            scoreEl.textContent = pad(score);
             timerEl.textContent = timeLeft;
-            iceLevelEl.textContent = Math.ceil(iceLevel) + "%";
             progressBar.style.width = (100 - iceLevel) + "%";
         }
-        
-        // ========================
-        // BACKGROUND 3D SNOW SCENE
-        // ========================
+
+        // ===================== THREE.JS BACKGROUND =====================
         function initThree() {
-            const container = document.body;
-            
             scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x0a0e17, 10, 80);
-            
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 8, 25);
-            camera.lookAt(0, 0, 0);
-            
-            renderer = new THREE.WebGLRenderer({
-                canvas: bgCanvas,
-                antialias: true,
-                alpha: true
-            });
+            scene.fog = new THREE.Fog(0x0a0e17, 15, 90);
+
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 200);
+            camera.position.set(0, 12, 28);
+
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = false;
-            
-            // Ambient + directional light (cold winter feel)
-            const ambient = new THREE.AmbientLight(0xaaaaaa, 0.6);
-            scene.add(ambient);
-            
-            const dirLight = new THREE.DirectionalLight(0x88ccff, 1.2);
-            dirLight.position.set(10, 30, 15);
-            scene.add(dirLight);
-            
-            // Ground plane (runway / tarmac)
-            const groundGeo = new THREE.PlaneGeometry(80, 80);
-            const groundMat = new THREE.MeshLambertMaterial({
-                color: 0x1f2937,
-                flatShading: true
-            });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -8;
-            scene.add(ground);
-            
-            // Create falling snow
+            renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+
+            const light = new THREE.DirectionalLight(0x99ccff, 1.1);
+            light.position.set(10, 30, 20);
+            scene.add(light);
+            scene.add(new THREE.AmbientLight(0xaaaaaa, 0.5));
+
             createSnow();
-            
-            // Airport light poles (simple)
-            createLightPoles();
         }
-        
+
         function createSnow() {
-            const particleCount = 1800;
+            const count = 1200;
             const geometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleCount * 3);
-            const velocities = new Float32Array(particleCount * 3);
-            const sizes = new Float32Array(particleCount);
-            
-            for (let i = 0; i < particleCount * 3; i += 3) {
-                // Spread around the plane area
-                positions[i]     = (Math.random() - 0.5) * 60;
-                positions[i + 1] = Math.random() * 40 + 5;
-                positions[i + 2] = (Math.random() - 0.5) * 40 - 10;
-                
-                velocities[i]     = (Math.random() - 0.5) * 0.6;
-                velocities[i + 1] = - (2.5 + Math.random() * 3.5);
-                velocities[i + 2] = (Math.random() - 0.5) * 0.4;
-                
-                sizes[i / 3] = Math.random() * 1.8 + 0.6;
+            const positions = new Float32Array(count * 3);
+
+            for(let i = 0; i < count*3; i+=3){
+                positions[i]   = (Math.random()-0.5)*80;
+                positions[i+1] = Math.random()*50;
+                positions[i+2] = (Math.random()-0.5)*40 - 15;
             }
-            
+
             geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-            
+
             const material = new THREE.PointsMaterial({
-                color: 0xeeeeee,
-                size: 0.35,
+                color: 0xdddddd,
+                size: 0.45,
                 transparent: true,
-                opacity: 0.85,
-                depthTest: false,
-                blending: THREE.AdditiveBlending
+                opacity: 0.85
             });
-            
-            const points = new THREE.Points(geometry, material);
-            scene.add(points);
-            
-            snowParticles = {
-                points: points,
-                positions: positions,
-                velocities: velocities,
-                count: particleCount
-            };
+
+            snowParticles = new THREE.Points(geometry, material);
+            scene.add(snowParticles);
         }
-        
-        function createLightPoles() {
-            // Simple yellow/orange airport lights
-            for (let i = -1; i <= 1; i++) {
-                const pole = new THREE.Group();
-                
-                // Pole
-                const poleGeo = new THREE.CylinderGeometry(0.15, 0.15, 12, 8);
-                const poleMat = new THREE.MeshLambertMaterial({color: 0x475569});
-                const pMesh = new THREE.Mesh(poleGeo, poleMat);
-                pMesh.position.y = 2;
-                pole.add(pMesh);
-                
-                // Light
-                const lightGeo = new THREE.SphereGeometry(0.6, 12, 12);
-                const lightMat = new THREE.MeshBasicMaterial({color: 0xffee99});
-                const lightMesh = new THREE.Mesh(lightGeo, lightMat);
-                lightMesh.position.y = 7.5;
-                pole.add(lightMesh);
-                
-                pole.position.set(i * 18, -7.5, -12);
-                scene.add(pole);
-            }
-        }
-        
+
         function animateThree() {
-            if (!gameRunning) return;
-            
-            animationFrame = requestAnimationFrame(animateThree);
-            
-            // Animate snow
-            if (snowParticles) {
-                const posAttr = snowParticles.points.geometry.attributes.position;
-                const positions = posAttr.array;
-                
-                for (let i = 0; i < snowParticles.count * 3; i += 3) {
-                    positions[i + 1] += snowParticles.velocities[i + 1] * 0.035;
-                    
-                    // Gentle horizontal drift
-                    positions[i] += snowParticles.velocities[i] * 0.012;
-                    
-                    if (positions[i + 1] < -10) {
-                        // Reset snowflake to top
-                        positions[i + 1] = 38 + Math.random() * 8;
-                        positions[i] = (Math.random() - 0.5) * 65;
-                    }
+            if(!gameRunning) return;
+            requestAnimationFrame(animateThree);
+
+            if(snowParticles){
+                const pos = snowParticles.geometry.attributes.position.array;
+                for(let i = 1; i < pos.length; i+=3){
+                    pos[i] -= 0.18;
+                    if(pos[i] < -12) pos[i] = 45;
                 }
-                
-                posAttr.needsUpdate = true;
+                snowParticles.geometry.attributes.position.needsUpdate = true;
             }
-            
             renderer.render(scene, camera);
         }
-        
-        // ========================
-        // 2D ICE CANVAS OVERLAY
-        // ========================
+
+        // ===================== ICE CANVAS =====================
         function initIceCanvas() {
             iceCtx = iceCanvas.getContext('2d');
-            iceCanvas.width = 400;
+            iceCanvas.width = 420;
             iceCanvas.height = 300;
-            
-            // Initial ice texture
             drawIce();
         }
-        
+
         function drawIce() {
             iceCtx.clearRect(0, 0, iceCanvas.width, iceCanvas.height);
             
             // Left wing ice
-            if (iceSections[0] > 10) {
-                iceCtx.fillStyle = 'rgba(220, 240, 255, 0.75)';
-                iceCtx.beginPath();
-                iceCtx.ellipse(90, 95, 55 * (iceSections[0]/100), 22, -0.6, 0, Math.PI * 2);
-                iceCtx.fill();
-            }
-            
-            // Fuselage ice
-            if (iceSections[1] > 15) {
-                iceCtx.fillStyle = 'rgba(200, 230, 255, 0.8)';
-                iceCtx.fillRect(110, 55, 110 * (iceSections[1]/100), 70);
-            }
-            
+            iceCtx.fillStyle = 'rgba(220,235,255,0.85)';
+            iceCtx.beginPath();
+            iceCtx.ellipse(95, 105, 68 * (iceSections[0]/100), 28, -0.5, 0, Math.PI*2);
+            iceCtx.fill();
+
+            // Body ice
+            iceCtx.fillStyle = 'rgba(200,225,255,0.9)';
+            iceCtx.fillRect(125, 72, 135 * (iceSections[1]/100), 58);
+
             // Right wing ice
-            if (iceSections[2] > 10) {
-                iceCtx.fillStyle = 'rgba(220, 240, 255, 0.75)';
-                iceCtx.beginPath();
-                iceCtx.ellipse(95, 155, 52 * (iceSections[2]/100), 24, 0.7, 0, Math.PI * 2);
-                iceCtx.fill();
-            }
-            
+            iceCtx.fillStyle = 'rgba(220,235,255,0.85)';
+            iceCtx.beginPath();
+            iceCtx.ellipse(105, 165, 65 * (iceSections[2]/100), 26, 0.6, 0, Math.PI*2);
+            iceCtx.fill();
+
             // Tail ice
-            if (iceSections[3] > 20) {
-                iceCtx.fillStyle = 'rgba(210, 235, 255, 0.9)';
-                iceCtx.beginPath();
-                iceCtx.moveTo(235, 65);
-                iceCtx.lineTo(235 + 38 * (iceSections[3]/100), 48);
-                iceCtx.lineTo(235 + 38 * (iceSections[3]/100), 112);
-                iceCtx.fill();
-            }
-            
-            // Frost grain
-            iceCtx.strokeStyle = 'rgba(255,255,255,0.35)';
-            for (let i = 0; i < 80; i++) {
-                const x = Math.random() * 400;
-                const y = Math.random() * 300;
-                iceCtx.beginPath();
-                iceCtx.moveTo(x, y);
-                iceCtx.lineTo(x + Math.random() * 14 - 7, y + Math.random() * 9 - 4);
-                iceCtx.stroke();
+            iceCtx.fillStyle = 'rgba(210,230,255,0.9)';
+            iceCtx.beginPath();
+            iceCtx.moveTo(245, 78);
+            iceCtx.lineTo(245 + 52*(iceSections[3]/100), 52);
+            iceCtx.lineTo(245 + 52*(iceSections[3]/100), 118);
+            iceCtx.fill();
+        }
+
+        function createDeiceBurst(baseX, baseY) {
+            for(let i = 0; i < 35; i++){
+                deiceParticles.push({
+                    x: baseX + (Math.random()-0.5)*40,
+                    y: baseY + (Math.random()-0.5)*30,
+                    vx: (Math.random()-0.5)*8 + (nozzlePos-1)*3,
+                    vy: -6 - Math.random()*7,
+                    life: 45,
+                    size: 4 + Math.random()*5
+                });
             }
         }
-        
-        // ========================
-        // DE-ICING PARTICLES
-        // ========================
-        function createDeiceBurst(x, y, intensity) {
-            for (let i = 0; i < 28; i++) {
-                const particle = {
-                    x: x,
-                    y: y,
-                    vx: (Math.random() - 0.5) * 9 + (nozzlePos - 1) * 2,
-                    vy: - (4 + Math.random() * 7),
-                    life: 38 + Math.random() * 22,
-                    color: (Math.random() > 0.5) ? '#FFAA33' : '#FF6200',
-                    size: 3.5 + Math.random() * 4
-                };
-                deiceParticles.push(particle);
-            }
-        }
-        
-        function updateDeiceParticles() {
-            for (let i = deiceParticles.length - 1; i >= 0; i--) {
+
+        function updateAndDrawParticles() {
+            iceCtx.save();
+            for(let i = deiceParticles.length-1; i >= 0; i--){
                 const p = deiceParticles[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vy += 0.18; // gravity
+                p.vy += 0.25;
                 p.life--;
-                p.vx *= 0.98;
-                
-                if (p.life <= 0) {
-                    deiceParticles.splice(i, 1);
-                }
-            }
-        }
-        
-        function drawDeiceParticles() {
-            // This is drawn on top of ice canvas for visual feedback
-            iceCtx.save();
-            
-            for (let i = 0; i < deiceParticles.length; i++) {
-                const p = deiceParticles[i];
+
                 const alpha = p.life / 45;
-                
-                iceCtx.fillStyle = p.color;
-                iceCtx.globalAlpha = alpha * 0.9;
-                iceCtx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
-                
-                // Glow
-                if (p.life > 20) {
-                    iceCtx.fillStyle = '#ffeecc';
-                    iceCtx.globalAlpha = alpha * 0.4;
-                    iceCtx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
-                }
+                iceCtx.globalAlpha = alpha;
+                iceCtx.fillStyle = '#FFCC44';
+                iceCtx.fillRect(p.x, p.y, p.size, p.size);
+
+                if(p.life <= 0) deiceParticles.splice(i,1);
             }
-            
             iceCtx.restore();
         }
-        
-        // ========================
-        // GAME LOGIC
-        // ========================
-        function spray() {
-            if (!gameRunning || iceLevel <= 5) return;
-            
-            isSpraying = true;
-            sprayInfo.style.opacity = 1;
-            
-            // Determine which sections get hit based on nozzle
-            const hitStrength = 9.5;
-            
-            if (nozzlePos === 0) { // left wing
-                iceSections[0] = Math.max(0, iceSections[0] - hitStrength * 1.4);
-            } else if (nozzlePos === 2) { // right wing
-                iceSections[2] = Math.max(0, iceSections[2] - hitStrength * 1.4);
-            } else { // center - hits fuselage + some wings
-                iceSections[1] = Math.max(0, iceSections[1] - hitStrength * 1.1);
-                iceSections[0] = Math.max(0, iceSections[0] - hitStrength * 0.6);
-                iceSections[2] = Math.max(0, iceSections[2] - hitStrength * 0.6);
-            }
-            
-            // Always slight tail hit
-            iceSections[3] = Math.max(0, iceSections[3] - hitStrength * 0.4);
-            
-            // Calculate overall ice
-            iceLevel = (iceSections[0] + iceSections[1] + iceSections[2] + iceSections[3]) / 4;
-            
-            // Score based on ice removed
-            const removed = 100 - iceLevel;
-            score += Math.floor(removed / 4) + 12;
-            
-            // Visual burst
-            const sprayX = 110 + (nozzlePos * 70) + (Math.random() * 40 - 20);
-            const sprayY = 75 + Math.random() * 55;
-            createDeiceBurst(sprayX, sprayY, 1);
-            
-            // Update visuals
-            drawIce();
-            updateUI();
-            
-            // Check win condition
-            if (iceLevel < 8) {
-                winGame();
-            }
-        }
-        
+
+        // ===================== GAME LOGIC =====================
         function moveNozzle(dir) {
             nozzlePos = Math.max(0, Math.min(2, nozzlePos + dir));
             
-            // Visual feedback on plane
-            const wings = document.querySelectorAll('#left-wing, #right-wing');
-            wings.forEach((wing, i) => {
-                if (nozzlePos === 0 && i === 0) {
-                    wing.setAttribute('fill', '#f1f5f9');
-                } else if (nozzlePos === 2 && i === 1) {
-                    wing.setAttribute('fill', '#f1f5f9');
-                } else {
-                    wing.setAttribute('fill', '#94a3b8');
-                }
-            });
+            // Move nozzle visual
+            const nozzle = document.getElementById('nozzle');
+            const positions = [95, 135, 175];
+            nozzle.setAttribute('cx', positions[nozzlePos]);
+            
+            // Move indicator
+            nozzleIndicator.style.left = (28 + nozzlePos * 32) + "%";
         }
-        
-        function gameTick() {
+
+        function startSpray() {
             if (!gameRunning) return;
+            isSpraying = true;
+            
+            if(sprayInterval) clearInterval(sprayInterval);
+            
+            sprayInterval = setInterval(() => {
+                if(!isSpraying) return;
+                
+                // Reduce ice based on nozzle position
+                if(nozzlePos === 0) iceSections[0] = Math.max(0, iceSections[0] - 7.5);
+                else if(nozzlePos === 2) iceSections[2] = Math.max(0, iceSections[2] - 7.5);
+                else {
+                    iceSections[1] = Math.max(0, iceSections[1] - 8);
+                    iceSections[0] = Math.max(0, iceSections[0] - 3);
+                    iceSections[2] = Math.max(0, iceSections[2] - 3);
+                }
+                
+                iceLevel = (iceSections[0] + iceSections[1] + iceSections[2] + iceSections[3]) / 4;
+                
+                score += 18;
+                
+                // Visual spray
+                const sprayX = 80 + nozzlePos * 70 + Math.random()*50;
+                createDeiceBurst(sprayX, 95);
+                
+                drawIce();
+                updateAndDrawParticles();
+                updateUI();
+                
+                if(iceLevel <= 6){
+                    winGame();
+                }
+            }, 60);
+        }
+
+        function stopSpray() {
+            isSpraying = false;
+            if(sprayInterval){
+                clearInterval(sprayInterval);
+                sprayInterval = null;
+            }
+        }
+
+        function gameTimer() {
+            if(!gameRunning) return;
             
             timeLeft--;
             timerEl.textContent = timeLeft;
             
-            // Snow is always falling, but ice slowly builds back if not spraying
-            if (!isSpraying && Math.random() > 0.6) {
-                for (let i = 0; i < iceSections.length; i++) {
-                    if (iceSections[i] < 98) iceSections[i] += 0.6;
-                }
-                iceLevel = Math.min(100, (iceSections[0] + iceSections[1] + iceSections[2] + iceSections[3]) / 4);
+            // Slow ice regrowth
+            if(Math.random() > 0.55){
+                iceSections = iceSections.map(v => Math.min(100, v + 0.8));
+                iceLevel = (iceSections[0] + iceSections[1] + iceSections[2] + iceSections[3]) / 4;
+                drawIce();
             }
             
             updateUI();
-            drawIce();
-            updateDeiceParticles();
-            drawDeiceParticles();
             
-            if (timeLeft <= 0) {
-                endGame();
-            }
-            
-            if (isSpraying) {
-                isSpraying = false;
-                setTimeout(() => {
-                    sprayInfo.style.opacity = 0;
-                }, 280);
-            }
+            if(timeLeft <= 0) endGame();
         }
-        
-        function startTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(gameTick, 920);
-        }
-        
+
         function startGame() {
-            startScreen.style.opacity = 0;
-            setTimeout(() => {
-                startScreen.style.display = 'none';
-            }, 800);
-            
+            document.getElementById('start-screen').style.display = 'none';
             gameRunning = true;
-            score = 420;
+            score = 0;
             timeLeft = 90;
             iceLevel = 100;
-            iceSections = [92, 85, 94, 78];
+            iceSections = [88, 82, 91, 79];
             nozzlePos = 1;
             deiceParticles = [];
             
-            updateUI();
             drawIce();
+            updateUI();
+            moveNozzle(0); // reset position
             
-            startTimer();
+            setInterval(gameTimer, 1000);
             animateThree();
-            
-            // Occasional random snow burst
-            setInterval(() => {
-                if (gameRunning && Math.random() > 0.7) {
-                    createDeiceBurst(80 + Math.random() * 220, 30, 0.3); // light snow
-                }
-            }, 1700);
         }
-        
+
         function winGame() {
             gameRunning = false;
-            clearInterval(timerInterval);
-            cancelAnimationFrame(animationFrame);
-            
-            // Spectacular final burst
-            for (let i = 0; i < 9; i++) {
-                setTimeout(() => {
-                    createDeiceBurst(60 + Math.random() * 260, 40 + Math.random() * 140, 1.6);
-                }, i * 90);
-            }
-            
-            setTimeout(() => {
-                alert("CLEARED FOR TAKEOFF!\n\nFinal Score: " + pad(Math.floor(score + 1200), 5) + "\n\nGreat work, ground crew.");
-                location.reload();
-            }, 1650);
+            stopSpray();
+            alert("✅ AIRCRAFT CLEAR!\n\nYou did it! Final Score: " + pad(score + 2500));
+            location.reload();
         }
-        
+
         function endGame() {
             gameRunning = false;
-            clearInterval(timerInterval);
-            cancelAnimationFrame(animationFrame);
-            
-            document.getElementById('final-score').textContent = pad(Math.floor(score), 5);
-            
-            if (iceLevel > 45) {
-                document.getElementById('final-text').textContent = "TOO MUCH ICE REMAINING";
-            } else {
-                document.getElementById('final-text').textContent = "TIME RAN OUT";
-            }
-            
-            gameOverScreen.style.display = 'flex';
+            stopSpray();
+            document.getElementById('final-score').textContent = pad(score);
+            document.getElementById('game-over').style.display = 'flex';
         }
-        
+
         function restartGame() {
-            gameOverScreen.style.display = 'none';
-            startScreen.style.display = 'flex';
-            startScreen.style.opacity = 1;
+            location.reload();
         }
-        
-        // Touch swipe support for nozzle
-        function handleTouch(e) {
-            if (!gameRunning) return;
+
+        // Init
+        function init() {
+            initThree();
+            initIceCanvas();
             
-            const touch = e.touches[0];
-            const viewport = document.getElementById('viewport');
-            const rect = viewport.getBoundingClientRect();
+            const sprayBtn = document.getElementById('spray-btn');
+            sprayBtn.addEventListener('mousedown', startSpray);
+            sprayBtn.addEventListener('mouseup', stopSpray);
+            sprayBtn.addEventListener('mouseleave', stopSpray);
+            sprayBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startSpray(); });
+            sprayBtn.addEventListener('touchend', stopSpray);
             
-            const relativeX = (touch.clientX - rect.left) / rect.width;
-            
-            if (relativeX < 0.35) {
-                nozzlePos = 0;
-            } else if (relativeX > 0.68) {
-                nozzlePos = 2;
-            } else {
-                nozzlePos = 1;
-            }
-            
-            // Update plane visual
-            const wings = document.querySelectorAll('#left-wing, #right-wing');
-            wings.forEach((wing, i) => {
-                wing.setAttribute('fill', (nozzlePos === i) ? '#f1f5f9' : '#94a3b8');
+            // Touch swipe for nozzle
+            let startX = 0;
+            document.getElementById('viewport').addEventListener('touchstart', e => {
+                startX = e.touches[0].clientX;
             });
-        }
-        
-        // Keyboard support (for testing on desktop)
-        function handleKey(e) {
-            if (!gameRunning) return;
+            document.getElementById('viewport').addEventListener('touchend', e => {
+                const diff = e.changedTouches[0].clientX - startX;
+                if(Math.abs(diff) > 60){
+                    moveNozzle(diff > 0 ? 1 : -1);
+                }
+            });
             
-            if (e.key === "ArrowLeft" || e.key === "a") {
-                moveNozzle(-1);
-            }
-            if (e.key === "ArrowRight" || e.key === "d") {
-                moveNozzle(1);
-            }
-            if (e.key === " " || e.key === "Enter") {
-                e.preventDefault();
-                spray();
-            }
-        }
-        
-        // Background falling snow on start screen
-        function createStartSnow() {
-            const container = document.getElementById('start-snow');
-            for (let i = 0; i < 35; i++) {
-                const flake = document.createElement('div');
-                flake.className = 'snowflake';
-                flake.textContent = ['❄︎','❅','❆'][Math.floor(Math.random()*3)];
-                flake.style.left = Math.random() * 100 + 'vw';
-                flake.style.animationDuration = (8 + Math.random() * 14) + 's';
-                flake.style.animationDelay = '-' + Math.random() * 12 + 's';
-                flake.style.opacity = Math.random() * 0.7 + 0.4;
-                flake.style.fontSize = (14 + Math.random() * 18) + 'px';
-                container.appendChild(flake);
-            }
-        }
-        
-        // Resize handler for strict portrait
-        function handleResize() {
-            if (renderer) {
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                if (camera) {
+            window.addEventListener('resize', () => {
+                if(renderer){
+                    renderer.setSize(window.innerWidth, window.innerHeight);
                     camera.aspect = window.innerWidth / window.innerHeight;
                     camera.updateProjectionMatrix();
                 }
-            }
-            
-            // Force portrait feel
-            document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
-        }
-        
-        // Initialize everything
-        function initialize() {
-            // Setup canvases
-            bgCtx = bgCanvas.getContext('2d'); // fallback if three fails
-            initIceCanvas();
-            initThree();
-            
-            // Event listeners
-            const sprayBtn = document.getElementById('spray-main');
-            sprayBtn.addEventListener('mousedown', () => { if(gameRunning) spray(); });
-            sprayBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if(gameRunning) spray();
             });
-            
-            // Continuous spray while holding
-            let sprayHold;
-            sprayBtn.addEventListener('mousedown', () => {
-                if (!gameRunning) return;
-                sprayHold = setInterval(() => {
-                    if (gameRunning) spray();
-                }, 80);
-            });
-            
-            sprayBtn.addEventListener('mouseup', () => clearInterval(sprayHold));
-            sprayBtn.addEventListener('mouseleave', () => clearInterval(sprayHold));
-            sprayBtn.addEventListener('touchend', () => clearInterval(sprayHold));
-            
-            // Viewport touch for nozzle swipe
-            const viewport = document.getElementById('viewport');
-            viewport.addEventListener('touchmove', handleTouch);
-            viewport.addEventListener('touchstart', handleTouch);
-            
-            // Keyboard
-            window.addEventListener('keydown', handleKey);
-            
-            // Resize
-            window.addEventListener('resize', handleResize);
-            
-            createStartSnow();
-            
-            // Demo ice pulse
-            setInterval(() => {
-                if (!gameRunning && iceCanvas) {
-                    iceCtx.globalAlpha = 0.07;
-                    iceCtx.fillStyle = '#bbddff';
-                    iceCtx.fillRect(0, 0, iceCanvas.width, iceCanvas.height);
-                    iceCtx.globalAlpha = 1;
-                    drawIce();
-                }
-            }, 1200);
-            
-            // Make sure it's at least 500+ lines when fully expanded
-            console.log('%cDE-ICE ready. Theme expressed through visuals, mechanics, and atmosphere.', 'color:#FF6200; font-family:monospace');
-            
-            updateUI();
         }
-        
-        // Boot the experience
-        window.onload = initialize;
+
+        window.onload = init;
     </script>
 </body>
 </html>
