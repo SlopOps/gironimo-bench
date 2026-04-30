@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TERMINAL 09</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&amp;display=swap');
+        
+        :root {
+            --airport-blue: #00e6ff;
+            --runway-yellow: #ffd700;
+            --warning-red: #ff2a2a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0e17;
+            color: var(--airport-blue);
+            font-family: 'VT323', monospace;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            touch-action: none;
+            position: relative;
+        }
+        
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        canvas#bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        #header {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(10,14,23,0.95), transparent);
+            border-bottom: 2px solid var(--airport-blue);
+            z-index: 20;
+        }
+        
+        .logo {
+            font-size: 28px;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--airport-blue);
+            animation: flicker 1.5s infinite alternate;
+        }
+        
+        .status {
+            font-size: 18px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .gate {
+            color: var(--runway-yellow);
+        }
+        
+        #game-area {
+            flex: 1;
+            position: relative;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        
+        #runway {
+            position: relative;
+            width: 100%;
+            max-width: 380px;
+            height: 520px;
+            background: linear-gradient(#1a252f, #0f1a24);
+            border: 4px solid #334455;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0, 230, 255, 0.4);
+            pointer-events: all;
+        }
+        
+        .runway-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 40px,
+                #ffd700 40px,
+                #ffd700 44px
+            );
+            animation: runwayMove 0.8s linear infinite;
+        }
+        
+        @keyframes runwayMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100px; }
+        }
+        
+        #aircraft {
+            position: absolute;
+            left: 50%;
+            bottom: 80px;
+            width: 48px;
+            height: 68px;
+            background: linear-gradient(#ccc, #eee);
+            border-radius: 4px;
+            transform: translateX(-50%);
+            box-shadow: 0 0 15px var(--airport-blue);
+            transition: transform 0.05s linear;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #111;
+        }
+        
+        #aircraft::before {
+            content: '✈️';
+            position: absolute;
+            top: -8px;
+            font-size: 42px;
+            filter: drop-shadow(0 0 8px #fff);
+        }
+        
+        .obstacle {
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            background: #ff2a2a;
+            border: 3px solid #fff;
+            box-shadow: 0 0 12px #ff2a2a;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            animation: warningPulse 0.6s infinite alternate;
+        }
+        
+        @keyframes warningPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.12); }
+        }
+        
+        #score-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 42px;
+            font-weight: bold;
+            text-shadow: 0 0 15px var(--runway-yellow);
+            z-index: 50;
+            background: rgba(10,14,23,0.7);
+            padding: 4px 18px;
+            border: 2px solid var(--runway-yellow);
+        }
+        
+        #timer {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 28px;
+            color: #ffdd88;
+            z-index: 50;
+            text-shadow: 0 0 10px #ff2a2a;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10,14,23,0.85);
+            color: var(--airport-blue);
+            padding: 12px 28px;
+            border: 2px dashed var(--airport-blue);
+            font-size: 22px;
+            white-space: nowrap;
+            z-index: 60;
+            box-shadow: 0 0 20px rgba(0,230,255,0.5);
+            animation: pulseInstr 2s infinite;
+        }
+        
+        @keyframes pulseInstr {
+            0%, 100% { opacity: 0.85; }
+            50% { opacity: 1; }
+        }
+        
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 5, 5, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: #ff4444;
+        }
+        
+        #final-score {
+            font-size: 52px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #ff4444;
+        }
+        
+        button {
+            font-family: 'VT323', monospace;
+            font-size: 28px;
+            padding: 14px 40px;
+            background: #111;
+            color: var(--airport-blue);
+            border: 3px solid var(--airport-blue);
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.2s;
+        }
+        
+        button:active {
+            background: var(--airport-blue);
+            color: #000;
+            transform: scale(0.95);
+        }
+        
+        .cloud {
+            position: absolute;
+            font-size: 60px;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 2;
+            animation: cloudDrift linear infinite;
+        }
+        
+        .tower {
+            position: absolute;
+            bottom: 0;
+            width: 60px;
+            height: 180px;
+            background: #223344;
+            border-top: 30px solid #445566;
+            z-index: 4;
+        }
+        
+        .lights {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 30%, rgba(255,215,0,0.6) 0%, transparent 70%);
+            pointer-events: none;
+            animation: lightSweep 4s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg"></canvas>
+    
+    <div id="container">
+        <div id="hud">
+            <!-- Header -->
+            <div id="header">
+                <div class="logo">TERMINAL<span style="color:#ffd700;">09</span></div>
+                <div class="status">
+                    <span>GATE A12</span>
+                    <span class="gate">RWY 27R</span>
+                </div>
+            </div>
+            
+            <!-- Game Area -->
+            <div id="game-area">
+                <div id="runway">
+                    <div class="runway-lines"></div>
+                    <div class="lights"></div>
+                    
+                    <!-- Control Tower -->
+                    <div class="tower" style="left: 40px; height: 160px;"></div>
+                    <div class="tower" style="right: 40px; height: 210px;"></div>
+                    
+                    <!-- Player Aircraft -->
+                    <div id="aircraft">✈️</div>
+                    
+                    <!-- Score -->
+                    <div id="score-display">00000</div>
+                    
+                    <!-- Timer -->
+                    <div id="timer">00:00</div>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div id="instructions">
+                ← DRAG LEFT / RIGHT TO STEER →
+            </div>
+        </div>
+    </div>
+    
+    <!-- Game Over Screen -->
+    <div id="game-over">
+        <div style="font-size: 38px; margin-bottom: 10px;">MISSION ABORTED</div>
+        <div id="final-score">SCORE: 12480</div>
+        <div style="color: #aaa; font-size: 24px; margin: 20px 0;">AIRCRAFT LOST ON RWY 27R</div>
+        <button onclick="restartGame()">REATTEMPT LANDING</button>
+    </div>
+    
+    <script>
+        // =============== THREE.JS BACKGROUND ===============
+        let scene, camera, renderer;
+        let particles = [];
+        
+        function initThree() {
+            const canvas = document.getElementById('bg');
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas, 
+                antialias: true,
+                alpha: true 
+            });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 30;
+            
+            // Ambient airport night lighting
+            const ambient = new THREE.AmbientLight(0x112244, 0.6);
+            scene.add(ambient);
+            
+            const pointLight = new THREE.PointLight(0x00eeff, 1.2, 100);
+            pointLight.position.set(10, 20, 30);
+            scene.add(pointLight);
+            
+            // Runway lights (particles)
+            const geometry = new THREE.SphereGeometry(0.15, 8, 8);
+            const material = new THREE.MeshBasicMaterial({ 
+                color: 0xffdd44 
+            });
+            
+            for (let i = 0; i < 180; i++) {
+                const light = new THREE.Mesh(geometry, material);
+                light.position.x = (Math.random() - 0.5) * 45;
+                light.position.y = (Math.random() - 0.5) * 60 - 20;
+                light.position.z = Math.random() * -40;
+                scene.add(light);
+                particles.push(light);
+            }
+            
+            // Fog for airport atmosphere
+            scene.fog = new THREE.Fog(0x0a0e17, 10, 80);
+            
+            animateThree();
+        }
+        
+        function animateThree() {
+            requestAnimationFrame(animateThree);
+            
+            // Slow moving clouds / particles
+            particles.forEach((p, i) => {
+                p.position.y -= 0.08;
+                if (p.position.y < -40) {
+                    p.position.y = 45;
+                    p.position.x = (Math.random() - 0.5) * 45;
+                }
+                p.rotation.y += 0.01;
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        // =============== GAME LOGIC ===============
+        let score = 0;
+        let timeLeft = 45;
+        let gameRunning = true;
+        let planeX = 0;
+        let velocity = 0;
+        let obstacles = [];
+        let lastSpawn = 0;
+        let touchStartX = 0;
+        let isDragging = false;
+        
+        const runway = document.getElementById('runway');
+        const aircraft = document.getElementById('aircraft');
+        const scoreEl = document.getElementById('score-display');
+        const timerEl = document.getElementById('timer');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreEl = document.getElementById('final-score');
+        
+        function formatScore(s) {
+            return String(Math.floor(s)).padStart(5, '0');
+        }
+        
+        function updateScore() {
+            score += 12;
+            scoreEl.textContent = formatScore(score);
+        }
+        
+        function updateTimer() {
+            if (!gameRunning) return;
+            
+            timeLeft -= 0.1;
+            const seconds = Math.max(0, Math.ceil(timeLeft));
+            timerEl.textContent = `00:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 10) {
+                timerEl.style.color = '#ff2a2a';
+            }
+            
+            if (timeLeft <= 0) {
+                endGame(true);
+            }
+        }
+        
+        function createObstacle() {
+            if (!gameRunning) return;
+            
+            const obstacle = document.createElement('div');
+            obstacle.className = 'obstacle';
+            obstacle.textContent = Math.random() > 0.5 ? '🛫' : '🛬';
+            
+            // Random horizontal position within runway bounds
+            const posX = Math.random() * 68 + 16; // percent
+            obstacle.style.left = `${posX}%`;
+            obstacle.style.top = '-60px';
+            
+            runway.appendChild(obstacle);
+            obstacles.push(obstacle);
+            
+            // Random speed for variety
+            const speed = 2.8 + Math.random() * 1.6;
+            obstacle.dataset.speed = speed;
+        }
+        
+        function moveObstacles() {
+            if (!gameRunning) return;
+            
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i];
+                let top = parseFloat(obs.style.top);
+                const speed = parseFloat(obs.dataset.speed);
+                
+                top += speed;
+                obs.style.top = `${top}px`;
+                
+                // Check collision
+                if (checkCollision(obs)) {
+                    endGame(false);
+                    return;
+                }
+                
+                // Remove when off screen
+                if (top > 580) {
+                    obs.remove();
+                    obstacles.splice(i, 1);
+                    // Small score bonus for successful dodge
+                    score += 35;
+                }
+            }
+        }
+        
+        function checkCollision(obstacle) {
+            const planeRect = aircraft.getBoundingClientRect();
+            const obsRect = obstacle.getBoundingClientRect();
+            const runwayRect = runway.getBoundingClientRect();
+            
+            const planeCenterX = planeRect.left + planeRect.width / 2;
+            const obsCenterX = obsRect.left + obsRect.width / 2;
+            
+            return (
+                Math.abs(planeCenterX - obsCenterX) < 38 &&
+                obsRect.bottom > planeRect.top + 10 &&
+                obsRect.top < planeRect.bottom - 10
+            );
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            moveObstacles();
+            updateScore();
+            
+            // Gentle auto forward movement simulation
+            velocity *= 0.92;
+            planeX += velocity * 0.8;
+            
+            // Clamp plane position
+            planeX = Math.max(-135, Math.min(135, planeX));
+            aircraft.style.transform = `translateX(${planeX}px)`;
+            
+            // Spawn new obstacles
+            if (Date.now() - lastSpawn > 680) {
+                createObstacle();
+                lastSpawn = Date.now();
+                
+                // Occasionally spawn two at once after 15 seconds
+                if (score > 8000 && Math.random() > 0.7) {
+                    setTimeout(() => {
+                        if (gameRunning) createObstacle();
+                    }, 220);
+                }
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function startTimer() {
+            setInterval(updateTimer, 100);
+        }
+        
+        function endGame(success) {
+            gameRunning = false;
+            
+            if (success) {
+                finalScoreEl.innerHTML = `FINAL SCORE<br><span style="color:#ffd700;font-size:68px;">${formatScore(score)}</span>`;
+            } else {
+                finalScoreEl.textContent = `CRASHED • ${formatScore(score)}`;
+            }
+            
+            gameOverScreen.style.display = 'flex';
+            
+            // Explosion effect on crash
+            if (!success) {
+                createExplosion();
+            }
+        }
+        
+        function createExplosion() {
+            for (let i = 0; i < 28; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'absolute';
+                particle.style.left = aircraft.style.left || '50%';
+                particle.style.top = '420px';
+                particle.style.width = '12px';
+                particle.style.height = '12px';
+                particle.style.background = i % 3 === 0 ? '#ff8800' : '#ffdd00';
+                particle.style.borderRadius = '50%';
+                particle.style.zIndex = '999';
+                particle.style.opacity = '0.9';
+                runway.appendChild(particle);
+                
+                const angle = Math.random() * Math.PI * 2;
+                const vel = 4 + Math.random() * 7;
+                
+                let px = 0;
+                let py = 0;
+                
+                const anim = setInterval(() => {
+                    px += Math.cos(angle) * vel;
+                    py += Math.sin(angle) * vel - 1.2; // gravity
+                    
+                    particle.style.transform = `translate(${px}px, ${py}px)`;
+                    particle.style.opacity = parseFloat(particle.style.opacity) - 0.035;
+                    
+                    if (parseFloat(particle.style.opacity) <= 0.05) {
+                        clearInterval(anim);
+                        particle.remove();
+                    }
+                }, 16);
+            }
+        }
+        
+        function restartGame() {
+            // Reset everything
+            score = 0;
+            timeLeft = 45;
+            planeX = 0;
+            velocity = 0;
+            obstacles.forEach(o => o.remove());
+            obstacles = [];
+            
+            scoreEl.textContent = '00000';
+            timerEl.textContent = '00:45';
+            timerEl.style.color = '#ffdd88';
+            
+            aircraft.style.transform = 'translateX(0px)';
+            
+            gameOverScreen.style.display = 'none';
+            gameRunning = true;
+            lastSpawn = Date.now();
+            
+            gameLoop();
+        }
+        
+        // =============== INPUT HANDLING ===============
+        function handleStart(e) {
+            if (!gameRunning) return;
+            isDragging = true;
+            touchStartX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        }
+        
+        function handleMove(e) {
+            if (!isDragging || !gameRunning) return;
+            
+            const currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const delta = (currentX - touchStartX) * 1.8;
+            
+            velocity = delta / 12;
+            touchStartX = currentX;
+        }
+        
+        function handleEnd() {
+            isDragging = false;
+        }
+        
+        // =============== INITIALIZATION ===============
+        function initGame() {
+            // Three.js background
+            initThree();
+            
+            // Touch / mouse controls
+            runway.addEventListener('mousedown', handleStart);
+            runway.addEventListener('mousemove', handleMove);
+            runway.addEventListener('mouseup', handleEnd);
+            runway.addEventListener('mouseleave', handleEnd);
+            
+            runway.addEventListener('touchstart', handleStart, { passive: false });
+            runway.addEventListener('touchmove', handleMove, { passive: false });
+            runway.addEventListener('touchend', handleEnd);
+            
+            // Keyboard support (for desktop testing)
+            document.addEventListener('keydown', (e) => {
+                if (!gameRunning) return;
+                if (e.key === 'ArrowLeft') planeX -= 28;
+                if (e.key === 'ArrowRight') planeX += 28;
+                planeX = Math.max(-135, Math.min(135, planeX));
+                aircraft.style.transform = `translateX(${planeX}px)`;
+            });
+            
+            // Start game systems
+            lastSpawn = Date.now();
+            gameLoop();
+            startTimer();
+            
+            // Spawn first obstacles
+            setTimeout(() => createObstacle(), 400);
+            setTimeout(() => createObstacle(), 1200);
+            
+            // Occasional cloud particles in background (CSS)
+            for (let i = 0; i < 6; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+                cloud.textContent = '☁︎';
+                cloud.style.left = Math.random() * 100 + '%';
+                cloud.style.top = Math.random() * 40 + '%';
+                cloud.style.animationDuration = (18 + Math.random() * 22) + 's';
+                cloud.style.animationDelay = '-' + Math.random() * 30 + 's';
+                document.body.appendChild(cloud);
+            }
+            
+            // Resize handler
+            window.addEventListener('resize', () => {
+                if (renderer) {
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                }
+            });
+        }
+        
+        // Launch the experience
+        window.onload = initGame;
+    </script>
+</body>
+</html>
