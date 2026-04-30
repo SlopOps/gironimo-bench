@@ -3,550 +3,1064 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BAGGAGE CLAIM</title>
+    <title>BOARDING</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;display=swap');
         
-        * { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --primary: #00ffcc;
+            --accent: #ff3366;
+            --dark: #0a1f2e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         body {
-            background: #0a1f2e;
+            background: #000;
+            color: var(--primary);
             font-family: 'Press Start 2P', system-ui;
             overflow: hidden;
             height: 100vh;
             width: 100vw;
-            touch-action: manipulation;
-        }
-        
-        #game-container {
+            touch-action: none;
             position: relative;
-            width: 100%;
-            max-width: 420px;
-            margin: 0 auto;
-            height: 100vh;
-            background: #0a1f2e;
-            overflow: hidden;
-            border: 6px solid #223344;
-            box-shadow: 0 0 40px rgba(0, 255, 204, 0.4);
         }
         
-        canvas {
+        #container {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
         
-        #three-canvas { z-index: 1; }
-        #game-canvas { z-index: 2; pointer-events: auto; }
+        #three-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(to bottom, #0a1f2e 0%, #1a3a4d 100%);
+        }
+        
+        canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
         
         #ui {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 10;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
+            z-index: 10;
         }
         
         .header {
-            position: absolute;
-            top: 0; left: 0; right: 0;
             padding: 15px 20px;
-            background: rgba(10, 31, 46, 0.9);
-            border-bottom: 5px solid #00ffcc;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 31, 46, 0.85);
+            backdrop-filter: blur(8px);
+            pointer-events: auto;
+        }
+        
+        .logo {
             font-size: 18px;
-            z-index: 20;
-            pointer-events: none;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--primary);
         }
         
-        .title {
-            position: absolute;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 32px;
-            color: #00ffcc;
-            text-shadow: 0 0 20px #00ffcc, 4px 4px 0 #ff00aa;
-            z-index: 15;
-            pointer-events: none;
-            animation: pulse 2s infinite alternate;
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
         }
         
-        @keyframes pulse {
-            from { transform: translateX(-50%) scale(0.95); }
-            to { transform: translateX(-50%) scale(1.05); }
+        .stat {
+            text-align: right;
+        }
+        
+        .label {
+            font-size: 10px;
+            opacity: 0.7;
+        }
+        
+        .value {
+            font-size: 18px;
+            color: var(--accent);
+            text-shadow: 0 0 8px var(--accent);
         }
         
         #instructions {
             position: absolute;
-            bottom: 160px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(10,31,46,0.95);
-            padding: 10px 20px;
-            border: 3px solid #00ffcc;
+            background: rgba(10, 31, 46, 0.9);
+            padding: 12px 24px;
+            border: 3px solid var(--primary);
+            text-align: center;
             font-size: 13px;
-            text-align: center;
-            line-height: 1.4;
-            z-index: 30;
-            pointer-events: none;
+            max-width: 85%;
+            pointer-events: auto;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+            animation: pulse 2s infinite;
         }
         
-        #start-screen, #game-over {
+        #game-over {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(10, 31, 46, 0.97);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        
-        .btn {
-            margin-top: 30px;
-            padding: 18px 60px;
-            font-family: 'Press Start 2P';
-            font-size: 20px;
-            background: #ff00aa;
-            color: white;
-            border: none;
-            box-shadow: 0 0 30px #ff00aa;
-            cursor: pointer;
-        }
-        
-        .belt {
-            position: absolute;
-            bottom: 110px;
-            left: 0;
-            width: 100%;
-            height: 110px;
-            background: repeating-linear-gradient(90deg, #334455, #334455 50px, #223344 50px, #223344 100px);
-            border-top: 10px solid #556677;
-            border-bottom: 10px solid #556677;
-            z-index: 5;
-        }
-        
-        .claim-zone {
-            position: absolute;
-            bottom: 30px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 80px;
-            border: 6px dashed #00ffcc;
-            border-radius: 15px;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 31, 46, 0.95);
+            padding: 30px 40px;
+            border: 4px solid var(--accent);
+            text-align: center;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            pointer-events: auto;
+            box-shadow: 0 0 40px rgba(255, 51, 102, 0.6);
+        }
+        
+        #final-score {
+            font-size: 28px;
+            color: var(--primary);
+        }
+        
+        button {
+            font-family: 'Press Start 2P', system-ui;
+            padding: 14px 32px;
+            background: transparent;
+            border: 3px solid var(--primary);
+            color: var(--primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        button:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary);
+        }
+        
+        .passenger {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            background: #ffcc33;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #00ffcc;
-            font-size: 14px;
-            text-align: center;
-            animation: claimPulse 1.5s infinite;
-            z-index: 8;
-            pointer-events: none;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(255, 204, 51, 0.6);
+            transition: transform 0.1s;
+            user-select: none;
+            pointer-events: auto;
+            border: 3px solid #fff;
         }
         
-        @keyframes claimPulse {
-            0%,100% { opacity: 0.6; }
+        .seat {
+            position: absolute;
+            width: 50px;
+            height: 65px;
+            background: #1a3a4d;
+            border: 3px solid #334455;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+        
+        .aisle {
+            position: absolute;
+            background: repeating-linear-gradient(
+                90deg,
+                #223344 0,
+                #223344 20px,
+                transparent 20px,
+                transparent 40px
+            );
+            opacity: 0.4;
+        }
+        
+        .jetway {
+            position: absolute;
+            background: linear-gradient(#555, #777);
+            box-shadow: 0 0 30px rgba(255,255,255,0.3);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.9; }
             50% { opacity: 1; }
         }
         
-        #combo {
+        .scanline {
             position: absolute;
-            top: 130px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 26px;
-            color: #ffff00;
-            text-shadow: 0 0 20px #ffff00;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 25;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(0, 255, 204, 0.08) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            animation: scan 4s linear infinite;
+            z-index: 5;
+            opacity: 0.6;
+        }
+        
+        @keyframes scan {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 400px; }
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="three-canvas"></canvas>
-        <canvas id="game-canvas"></canvas>
+    <div id="container">
+        <div id="three-container"></div>
+    </div>
+    
+    <div id="ui">
+        <!-- 3D overlay elements will be added via JS -->
         
-        <div id="ui">
-            <div class="header">
-                <div>SCORE <span id="score">00000</span></div>
-                <div>TIME <span id="time">60</span></div>
-            </div>
-            
-            <div class="title">BAGGAGE CLAIM</div>
-            
-            <div id="instructions">
-                TAP BAGS<br>
-                <span style="font-size:12px;">GREEN = GOOD • RED = BAD</span>
-            </div>
-            
-            <div class="belt"></div>
-            <div class="claim-zone">CLAIM HERE</div>
-            <div id="combo">COMBO ×2</div>
-            
-            <!-- Start Screen -->
-            <div id="start-screen">
-                <h1 style="font-size:42px; color:#ff00aa; text-shadow:0 0 30px #ff00aa; margin-bottom:20px;">BAGGAGE</h1>
-                <h1 style="font-size:42px; color:#00ffcc; text-shadow:0 0 30px #00ffcc; margin-bottom:30px;">CLAIM</h1>
-                <p style="text-align:center; max-width:280px; line-height:1.5; margin-bottom:40px;">
-                    Flight DLX-472<br>
-                    has landed!<br><br>
-                    Grab your bags!
-                </p>
-                <button onclick="startGame()" class="btn">START CLAIMING</button>
-            </div>
-            
-            <!-- Game Over -->
-            <div id="game-over" style="display:none;">
-                <h1 style="color:#ff3366; font-size:38px;">TIME'S UP</h1>
-                <p style="margin:20px 0 10px;">FINAL SCORE</p>
-                <div id="final-score" style="font-size:42px; color:#00ffcc; margin-bottom:30px;">00000</div>
-                <button onclick="restartGame()" class="btn">PLAY AGAIN</button>
+        <div class="header">
+            <div class="logo">GATE•A17</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="label">PASSENGERS</div>
+                    <div id="score" class="value">00</div>
+                </div>
+                <div class="stat">
+                    <div class="label">TIME</div>
+                    <div id="timer" class="value">90</div>
+                </div>
             </div>
         </div>
+        
+        <div id="instructions">
+            TAP &amp; DRAG passengers into seats<br>
+            <span style="font-size:11px;opacity:0.7;">Avoid collisions • Fill the plane before departure</span>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="game-over">
+            <div style="font-size:22px;color:var(--accent);margin-bottom:10px;">BOARDING COMPLETE</div>
+            <div id="final-score">SCORE: 1240</div>
+            <div id="final-message" style="font-size:13px;margin:10px 0 20px;max-width:240px;opacity:0.8;"></div>
+            <button onclick="restartGame()">BOARD NEXT FLIGHT</button>
+        </div>
+        
+        <!-- Scanline effect -->
+        <div class="scanline"></div>
     </div>
 
     <script>
-        // =============== CORE VARIABLES ===============
+        // =============================================
+        // AIRPLANE BOARDING - Single File Experience
+        // Theme: Airplane Boarding
+        // Primary Mechanic: Drag & Drop passengers into seats
+        // Extra: Three.js 3D airplane cabin + particle system
+        // Strict portrait 9:16 mobile-first
+        // =============================================
+        
+        let scene, camera, renderer;
+        let airplane;
+        let passengers = [];
+        let seats = [];
         let score = 0;
-        let timeLeft = 60;
-        let gameRunning = false;
-        let combo = 1;
-        let comboTimer = 0;
+        let timeLeft = 90;
+        let gameRunning = true;
+        let draggedPassenger = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
         
-        let bags = [];
+        // Canvas for 2D UI passengers
+        let canvas2d, ctx2d;
+        
+        // Particle system
         let particles = [];
-        let lastSpawn = 0;
         
-        let canvas, ctx;
-        let threeScene, threeCamera, threeRenderer;
+        // Audio context for simple beeps
+        let audioCtx;
         
-        let highScore = localStorage.getItem("baggageHS") || 9800;
+        const WIDTH = 360;   // Base portrait width (9:16 ratio simulation)
+        const HEIGHT = 640;  // Base portrait height
         
-        // =============== BAG CLASS ===============
-        class Bag {
-            constructor(x, y, type) {
-                this.x = x;
-                this.y = y;
-                this.w = 62;
-                this.h = 48;
-                this.type = type; // red, green, blue
-                this.speed = 2.2 + Math.random() * 0.8;
-                this.angle = (Math.random() - 0.5) * 15;
-                this.claimed = false;
+        function initThree() {
+            const container = document.getElementById('three-container');
+            
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x0a1f2e, 800, 2000);
+            
+            camera = new THREE.PerspectiveCamera(60, WIDTH / HEIGHT, 10, 3000);
+            camera.position.set(0, 180, 420);
+            camera.lookAt(0, 80, 0);
+            
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true 
+            });
+            renderer.setSize(WIDTH, HEIGHT);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+            
+            // Ambient + directional lighting (cabin feel)
+            const ambient = new THREE.AmbientLight(0x6688aa, 0.6);
+            scene.add(ambient);
+            
+            const dirLight = new THREE.DirectionalLight(0xffeecc, 1.1);
+            dirLight.position.set(100, 300, 200);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+            
+            // Cabin floor
+            const floorGeo = new THREE.PlaneGeometry(280, 900);
+            const floorMat = new THREE.MeshPhongMaterial({ 
+                color: 0x112233, 
+                shininess: 5 
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.y = 20;
+            scene.add(floor);
+            
+            // Airplane fuselage / cabin walls (simplified)
+            createAirplaneBody();
+            
+            // Overhead bins (simple boxes)
+            for (let i = -1; i <= 1; i += 2) {
+                const bin = new THREE.Mesh(
+                    new THREE.BoxGeometry(240, 40, 60),
+                    new THREE.MeshPhongMaterial({ color: 0x334455 })
+                );
+                bin.position.set(i * 90, 220, -80);
+                scene.add(bin);
             }
             
-            update() {
-                if (this.claimed) return false;
-                this.y += this.speed;
-                this.angle += 0.3;
-                return this.y > 800;
+            // Windows
+            createWindows();
+            
+            // Seat rows (will be populated with 2D overlays too)
+            createSeatRows();
+            
+            // Initial passengers in 3D (very low poly)
+            createInitialPassengers3D();
+        }
+        
+        function createAirplaneBody() {
+            // Main cabin body - long box with rounded feel via multiple segments
+            const bodyGeo = new THREE.CylinderGeometry(140, 140, 820, 32, 1, true);
+            const bodyMat = new THREE.MeshPhongMaterial({ 
+                color: 0x223344,
+                side: THREE.DoubleSide,
+                shininess: 12
+            });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.rotation.x = Math.PI / 2;
+            body.position.set(0, 120, -80);
+            scene.add(body);
+            
+            // Nose cone
+            const nose = new THREE.Mesh(
+                new THREE.ConeGeometry(138, 180, 32),
+                new THREE.MeshPhongMaterial({ color: 0x112233 })
+            );
+            nose.rotation.x = Math.PI / 2;
+            nose.position.set(0, 120, 330);
+            scene.add(nose);
+        }
+        
+        function createWindows() {
+            const windowMat = new THREE.MeshPhongMaterial({ 
+                color: 0x112233, 
+                emissive: 0x88ccff,
+                emissiveIntensity: 0.3 
+            });
+            
+            for (let i = 0; i < 12; i++) {
+                const win = new THREE.Mesh(
+                    new THREE.PlaneGeometry(38, 48),
+                    windowMat
+                );
+                win.position.set(-105, 130, -280 + i * 65);
+                win.rotation.y = Math.PI / 2;
+                scene.add(win);
+                
+                const win2 = win.clone();
+                win2.position.x = 105;
+                scene.add(win2);
+            }
+        }
+        
+        function createSeatRows() {
+            const seatMat = new THREE.MeshPhongMaterial({ color: 0x1a2a3a });
+            
+            for (let row = 0; row < 9; row++) {
+                const zPos = -260 + row * 72;
+                
+                // Left seats (window)
+                const seatL1 = new THREE.Mesh(new THREE.BoxGeometry(42, 52, 48), seatMat);
+                seatL1.position.set(-72, 52, zPos);
+                scene.add(seatL1);
+                
+                const seatL2 = seatL1.clone();
+                seatL2.position.x = -115;
+                scene.add(seatL2);
+                
+                // Right seats
+                const seatR1 = seatL1.clone();
+                seatR1.position.x = 72;
+                scene.add(seatR1);
+                
+                const seatR2 = seatL1.clone();
+                seatR2.position.x = 115;
+                scene.add(seatR2);
+                
+                // Store seat positions for 2D mapping
+                seats.push({
+                    id: `L1-${row}`,
+                    x3d: -115,
+                    y3d: 52,
+                    z3d: zPos,
+                    occupied: false,
+                    side: 'left'
+                });
+                
+                seats.push({
+                    id: `L2-${row}`,
+                    x3d: -72,
+                    y3d: 52,
+                    z3d: zPos,
+                    occupied: false,
+                    side: 'left'
+                });
+                
+                seats.push({
+                    id: `R1-${row}`,
+                    x3d: 72,
+                    y3d: 52,
+                    z3d: zPos,
+                    occupied: false,
+                    side: 'right'
+                });
+                
+                seats.push({
+                    id: `R2-${row}`,
+                    x3d: 115,
+                    y3d: 52,
+                    z3d: zPos,
+                    occupied: false,
+                    side: 'right'
+                });
+            }
+        }
+        
+        function createInitialPassengers3D() {
+            // Simple passenger representation using cylinders + spheres
+            for (let i = 0; i < 8; i++) {
+                const group = new THREE.Group();
+                
+                // Body
+                const body = new THREE.Mesh(
+                    new THREE.CylinderGeometry(18, 22, 48, 8),
+                    new THREE.MeshPhongMaterial({ color: 0x336699 })
+                );
+                body.position.y = 45;
+                group.add(body);
+                
+                // Head
+                const head = new THREE.Mesh(
+                    new THREE.SphereGeometry(16, 12, 12),
+                    new THREE.MeshPhongMaterial({ color: 0xffddaa })
+                );
+                head.position.y = 82;
+                group.add(head);
+                
+                // Backpack or carry-on
+                const bag = new THREE.Mesh(
+                    new THREE.BoxGeometry(26, 18, 22),
+                    new THREE.MeshPhongMaterial({ color: 0x884422 })
+                );
+                bag.position.set(0, 38, -12);
+                group.add(bag);
+                
+                group.position.set(
+                    (Math.random() - 0.5) * 160,
+                    30,
+                    -420 + Math.random() * 180
+                );
+                
+                group.userData = {
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.6,
+                        0,
+                        1.8 + Math.random() * 0.6
+                    ),
+                    isSeated: false
+                };
+                
+                scene.add(group);
+                passengers.push(group);
+            }
+        }
+        
+        function create2DCanvas() {
+            canvas2d = document.createElement('canvas');
+            canvas2d.width = WIDTH;
+            canvas2d.height = HEIGHT;
+            ctx2d = canvas2d.getContext('2d');
+            canvas2d.style.position = 'absolute';
+            canvas2d.style.top = '0';
+            canvas2d.style.left = '0';
+            canvas2d.style.width = '100%';
+            canvas2d.style.height = '100%';
+            canvas2d.style.pointerEvents = 'none';
+            document.getElementById('three-container').appendChild(canvas2d);
+            
+            // Make it tappable
+            canvas2d.style.pointerEvents = 'auto';
+            
+            canvas2d.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas2d.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas2d.addEventListener('touchend', handleTouchEnd, { passive: false });
+            
+            // Mouse fallback for testing
+            canvas2d.addEventListener('mousedown', handleMouseDown);
+            canvas2d.addEventListener('mousemove', handleMouseMove);
+            canvas2d.addEventListener('mouseup', handleMouseUp);
+        }
+        
+        // Simple 2D passenger representations on canvas (overlaid on 3D)
+        let activePassengers2D = [];
+        
+        function spawn2DPassenger() {
+            if (!gameRunning || activePassengers2D.length > 12) return;
+            
+            const passenger = {
+                id: Date.now(),
+                x: 60 + Math.random() * (WIDTH - 120),
+                y: HEIGHT - 140 + Math.random() * 40,
+                size: 46,
+                emoji: ['🧳','👟','🧥','🎒'][Math.floor(Math.random()*4)],
+                vx: (Math.random() - 0.5) * 1.2,
+                vy: -1.8 - Math.random() * 0.8,
+                seated: false,
+                targetSeat: null
+            };
+            
+            activePassengers2D.push(passenger);
+        }
+        
+        function draw2DUI() {
+            ctx2d.clearRect(0, 0, WIDTH, HEIGHT);
+            
+            // Aisle lines
+            ctx2d.strokeStyle = 'rgba(255,255,255,0.12)';
+            ctx2d.lineWidth = 6;
+            for (let i = 0; i < 9; i++) {
+                const y = 140 + i * 54;
+                ctx2d.beginPath();
+                ctx2d.moveTo(WIDTH/2 - 28, y);
+                ctx2d.lineTo(WIDTH/2 + 28, y);
+                ctx2d.stroke();
             }
             
-            draw() {
-                ctx.save();
-                ctx.translate(this.x + this.w/2, this.y + this.h/2);
-                ctx.rotate(this.angle * Math.PI / 180);
+            // Seat outlines (visual only)
+            ctx2d.strokeStyle = '#445566';
+            ctx2d.lineWidth = 3;
+            for (let row = 0; row < 9; row++) {
+                const y = 128 + row * 54;
+                
+                // Left seats
+                ctx2d.strokeRect(48, y, 38, 42);
+                ctx2d.strokeRect(98, y, 38, 42);
+                
+                // Right seats
+                ctx2d.strokeRect(WIDTH - 136, y, 38, 42);
+                ctx2d.strokeRect(WIDTH - 86, y, 38, 42);
+            }
+            
+            // Draw passengers
+            activePassengers2D.forEach((p, index) => {
+                if (p.seated) return;
+                
+                ctx2d.save();
+                ctx2d.translate(p.x, p.y);
                 
                 // Shadow
-                ctx.fillStyle = "rgba(0,0,0,0.6)";
-                ctx.fillRect(-this.w/2 + 8, this.h/2 + 6, this.w, 12);
+                ctx2d.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx2d.beginPath();
+                ctx2d.ellipse(6, 12, p.size/2.2, p.size/5, 0, 0, Math.PI*2);
+                ctx2d.fill();
                 
-                let color, border;
-                if (this.type === "green") {
-                    color = "#4caf50"; border = "#2e7d32";
-                } else if (this.type === "blue") {
-                    color = "#2196f3"; border = "#1565c0";
-                } else {
-                    color = "#f44336"; border = "#c62828";
+                // Body
+                ctx2d.fillStyle = '#4488cc';
+                ctx2d.fillRect(-p.size/2 + 4, -p.size/2 + 8, p.size - 8, p.size - 12);
+                
+                // Head
+                ctx2d.fillStyle = '#ffddbb';
+                ctx2d.beginPath();
+                ctx2d.arc(0, -p.size/2 + 12, p.size/3.2, 0, Math.PI*2);
+                ctx2d.fill();
+                
+                // Carry-on icon
+                ctx2d.font = '22px system-ui';
+                ctx2d.textAlign = 'center';
+                ctx2d.textBaseline = 'middle';
+                ctx2d.fillText(p.emoji, 0, 8);
+                
+                // Highlight when being dragged
+                if (draggedPassenger && draggedPassenger.id === p.id) {
+                    ctx2d.strokeStyle = '#00ffcc';
+                    ctx2d.lineWidth = 5;
+                    ctx2d.beginPath();
+                    ctx2d.arc(0, 0, p.size/1.6, 0, Math.PI*2);
+                    ctx2d.stroke();
                 }
                 
-                ctx.fillStyle = color;
-                ctx.strokeStyle = border;
-                ctx.lineWidth = 6;
-                ctx.fillRect(-this.w/2, -this.h/2, this.w, this.h);
-                ctx.strokeRect(-this.w/2, -this.h/2, this.w, this.h);
-                
-                // Handle
-                ctx.fillStyle = "#111";
-                ctx.fillRect(-18, -this.h/2 - 10, 36, 12);
-                
-                ctx.fillStyle = "#fff";
-                ctx.font = "bold 12px monospace";
-                ctx.textAlign = "center";
-                ctx.fillText("DLX", 0, 8);
-                
-                ctx.restore();
-            }
-            
-            contains(tx, ty) {
-                return tx > this.x && tx < this.x + this.w &&
-                       ty > this.y && ty < this.y + this.h;
-            }
-        }
-        
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x; this.y = y;
-                this.vx = (Math.random()-0.5)*12;
-                this.vy = (Math.random()-0.5)*12 - 4;
-                this.life = 35;
-                this.color = color;
-                this.size = 7;
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.vy += 0.35;
-                this.life--;
-                this.size *= 0.95;
-            }
-            draw() {
-                ctx.globalAlpha = this.life / 35;
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, this.size, this.size);
-            }
-        }
-        
-        // =============== THREE.JS BACKGROUND ===============
-        function initThree() {
-            threeRenderer = new THREE.WebGLRenderer({
-                canvas: document.getElementById('three-canvas'),
-                antialias: true,
-                alpha: true
+                ctx2d.restore();
             });
-            threeRenderer.setSize(420, 740);
-            threeRenderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
-            
-            threeScene = new THREE.Scene();
-            threeCamera = new THREE.PerspectiveCamera(55, 420/740, 1, 1000);
-            threeCamera.position.set(0, 10, 22);
-            
-            const light = new THREE.DirectionalLight(0xffffff, 1.1);
-            light.position.set(10, 30, 20);
-            threeScene.add(light);
-            threeScene.add(new THREE.AmbientLight(0x6688aa, 0.7));
-            
-            // Simple conveyor in background
-            const belt = new THREE.Mesh(
-                new THREE.BoxGeometry(30, 1, 8),
-                new THREE.MeshPhongMaterial({color: 0x445566})
-            );
-            belt.position.set(0, -3, 0);
-            threeScene.add(belt);
         }
         
-        // =============== INIT CANVAS ===============
-        function initCanvas() {
-            canvas = document.getElementById('game-canvas');
-            ctx = canvas.getContext('2d', { alpha: true });
-            canvas.width = 420;
-            canvas.height = 740;
-        }
-        
-        // =============== TAP HANDLER (FIXED) ===============
-        function handleTap(e) {
-            if (!gameRunning) return;
-            
-            const rect = canvas.getBoundingClientRect();
-            let tx = e.touches ? e.touches[0].clientX : e.clientX;
-            let ty = e.touches ? e.touches[0].clientY : e.clientY;
-            
-            tx = ((tx - rect.left) / rect.width) * 420;
-            ty = ((ty - rect.top) / rect.height) * 740;
-            
-            for (let i = bags.length - 1; i >= 0; i--) {
-                if (bags[i].contains(tx, ty) && !bags[i].claimed) {
-                    claimBag(bags[i]);
-                    return;
+        function update2DPassengers() {
+            for (let i = activePassengers2D.length - 1; i >= 0; i--) {
+                const p = activePassengers2D[i];
+                if (p.seated) continue;
+                
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                // Gentle wander in aisle
+                p.vx *= 0.96;
+                p.vy *= 0.985;
+                
+                if (Math.random() < 0.03) {
+                    p.vx += (Math.random() - 0.5) * 3.5;
+                }
+                
+                // Keep in aisle bounds
+                if (p.x < 140) p.x = 140;
+                if (p.x > WIDTH - 140) p.x = WIDTH - 140;
+                
+                // If they reach the front too far, remove
+                if (p.y < 60) {
+                    activePassengers2D.splice(i, 1);
                 }
             }
         }
         
-        function claimBag(bag) {
-            bag.claimed = true;
+        function checkSeatDrop(px, py) {
+            // Map 2D touch to nearest seat
+            const closestSeat = seats.reduce((best, seat, idx) => {
+                // Project 3D seat to approximate 2D screen position
+                const screenX = WIDTH / 2 + (seat.x3d / 2.8);
+                const screenY = 120 + ((seat.z3d + 280) / 3.8);
+                
+                const dist = Math.hypot(screenX - px, screenY - py);
+                
+                if (dist < best.dist && !seat.occupied) {
+                    return { seat, dist, index: idx };
+                }
+                return best;
+            }, { dist: Infinity });
             
-            let points = 0;
-            let color = "#ffffff";
-            
-            if (bag.type === "green") {
-                points = 140;
-                color = "#aaff88";
-                combo = Math.min(combo + 1, 6);
-                comboTimer = 50;
-                document.getElementById('combo').style.opacity = 1;
-                document.getElementById('combo').textContent = `×${combo} COMBO!`;
-            } else if (bag.type === "blue") {
-                points = 70;
-                color = "#88ddff";
-            } else {
-                points = -80;
-                color = "#ff6688";
-            }
-            
-            score += points * combo;
-            if (score < 0) score = 0;
-            
-            document.getElementById('score').textContent = String(Math.floor(score)).padStart(5, '0');
-            
-            // Explosion
-            for (let i = 0; i < 28; i++) {
-                particles.push(new Particle(bag.x + 31, bag.y + 24, color));
-            }
-            
-            // Remove bag shortly after
-            setTimeout(() => {
-                const idx = bags.indexOf(bag);
-                if (idx > -1) bags.splice(idx, 1);
-            }, 80);
-        }
-        
-        function spawnBag() {
-            if (!gameRunning) return;
-            const types = ["red", "green", "blue"];
-            const type = types[Math.floor(Math.random() * types.length)];
-            const x = 60 + Math.random() * 300;
-            bags.push(new Bag(x, -80, type));
-        }
-        
-        function update() {
-            if (!gameRunning) return;
-            
-            // Update bags
-            for (let i = bags.length - 1; i >= 0; i--) {
-                if (bags[i].update()) {
-                    bags.splice(i, 1);
+            if (closestSeat.dist < 68 && closestSeat.seat) {
+                // Snap passenger into seat
+                const pIndex = activePassengers2D.findIndex(p => p === draggedPassenger);
+                if (pIndex > -1) {
+                    const passenger = activePassengers2D[pIndex];
+                    passenger.seated = true;
+                    passenger.x = WIDTH / 2 + (closestSeat.seat.x3d / 2.8);
+                    passenger.y = 120 + ((closestSeat.seat.z3d + 280) / 3.8);
+                    
+                    closestSeat.seat.occupied = true;
+                    
+                    // Score
+                    score += 140 + Math.floor(Math.random() * 60);
+                    document.getElementById('score').textContent = String(score).padStart(3, '0');
+                    
+                    // Success particles
+                    createBurstParticles(passenger.x, passenger.y - 20, 28);
+                    
+                    // Play seat belt sound simulation
+                    playBeep(620, 80);
+                    
+                    // Remove from active after short delay
+                    setTimeout(() => {
+                        const idx = activePassengers2D.indexOf(passenger);
+                        if (idx > -1) activePassengers2D.splice(idx, 1);
+                    }, 420);
+                    
+                    return true;
                 }
             }
-            
-            // Update particles
+            return false;
+        }
+        
+        function createBurstParticles(x, y, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 9,
+                    vy: (Math.random() - 0.5) * 9 - 2,
+                    life: 38 + Math.random() * 22,
+                    color: `hsl(${Math.random()*40 + 180}, 100%, 75%)`,
+                    size: 5 + Math.random() * 7
+                });
+            }
+        }
+        
+        function updateParticles() {
             for (let i = particles.length - 1; i >= 0; i--) {
-                particles[i].update();
-                if (particles[i].life <= 0) particles.splice(i, 1);
-            }
-            
-            // Combo fade
-            if (comboTimer > 0) {
-                comboTimer--;
-                if (comboTimer === 0) {
-                    combo = 1;
-                    document.getElementById('combo').style.opacity = 0;
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.28; // gravity
+                p.life--;
+                p.vx *= 0.978;
+                p.vy *= 0.978;
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
                 }
             }
         }
         
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw all bags
-            for (let bag of bags) {
-                bag.draw();
-            }
-            
-            // Draw particles
+        function drawParticles() {
+            ctx2d.save();
             for (let p of particles) {
-                p.draw();
+                const alpha = p.life / 50;
+                ctx2d.globalAlpha = alpha;
+                ctx2d.fillStyle = p.color;
+                ctx2d.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+            }
+            ctx2d.restore();
+        }
+        
+        function handleTouchStart(e) {
+            if (!gameRunning) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const rect = canvas2d.getBoundingClientRect();
+            const x = (touch.clientX - rect.left) * (WIDTH / rect.width);
+            const y = (touch.clientY - rect.top) * (HEIGHT / rect.height);
+            
+            // Find closest passenger
+            let closest = null;
+            let minDist = Infinity;
+            
+            for (let p of activePassengers2D) {
+                if (p.seated) continue;
+                const d = Math.hypot(p.x - x, p.y - y);
+                if (d < 60 && d < minDist) {
+                    minDist = d;
+                    closest = p;
+                }
             }
             
-            ctx.globalAlpha = 1;
+            if (closest) {
+                draggedPassenger = closest;
+                touchStartX = x;
+                touchStartY = y;
+                createBurstParticles(closest.x, closest.y, 8);
+            }
+        }
+        
+        function handleTouchMove(e) {
+            if (!draggedPassenger || !gameRunning) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const rect = canvas2d.getBoundingClientRect();
+            const x = (touch.clientX - rect.left) * (WIDTH / rect.width);
+            const y = (touch.clientY - rect.top) * (HEIGHT / rect.height);
+            
+            draggedPassenger.x = x;
+            draggedPassenger.y = y;
+        }
+        
+        function handleTouchEnd(e) {
+            if (!draggedPassenger) return;
+            
+            const touch = e.changedTouches[0];
+            const rect = canvas2d.getBoundingClientRect();
+            const x = (touch.clientX - rect.left) * (WIDTH / rect.width);
+            const y = (touch.clientY - rect.top) * (HEIGHT / rect.height);
+            
+            const seated = checkSeatDrop(x, y);
+            
+            if (!seated) {
+                // Bounce back a little
+                draggedPassenger.vx = (touchStartX - x) * 0.2;
+                draggedPassenger.vy = (touchStartY - y) * 0.2;
+            }
+            
+            draggedPassenger = null;
+        }
+        
+        // Mouse support for desktop testing
+        function handleMouseDown(e) {
+            const rect = canvas2d.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (WIDTH / rect.width);
+            const y = (e.clientY - rect.top) * (HEIGHT / rect.height);
+            
+            let closest = null;
+            let minDist = Infinity;
+            
+            for (let p of activePassengers2D) {
+                if (p.seated) continue;
+                const d = Math.hypot(p.x - x, p.y - y);
+                if (d < 60 && d < minDist) {
+                    minDist = d;
+                    closest = p;
+                }
+            }
+            
+            if (closest) {
+                draggedPassenger = closest;
+            }
+        }
+        
+        function handleMouseMove(e) {
+            if (!draggedPassenger) return;
+            const rect = canvas2d.getBoundingClientRect();
+            draggedPassenger.x = (e.clientX - rect.left) * (WIDTH / rect.width);
+            draggedPassenger.y = (e.clientY - rect.top) * (HEIGHT / rect.height);
+        }
+        
+        function handleMouseUp(e) {
+            if (!draggedPassenger) return;
+            const rect = canvas2d.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (WIDTH / rect.width);
+            const y = (e.clientY - rect.top) * (HEIGHT / rect.height);
+            
+            checkSeatDrop(x, y);
+            draggedPassenger = null;
+        }
+        
+        function playBeep(freq, duration) {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            const oscillator = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            oscillator.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            oscillator.frequency.value = freq;
+            oscillator.type = 'sawtooth';
+            
+            gain.gain.value = 0.18;
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration / 1000);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration / 1000);
         }
         
         function gameLoop() {
-            update();
-            draw();
+            if (!gameRunning) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+            
+            // Update 3D passengers movement
+            passengers.forEach((p, i) => {
+                if (p.userData.isSeated) return;
+                
+                p.position.z += p.userData.velocity.z;
+                p.position.x += p.userData.velocity.x * 0.6;
+                
+                // Random small turns
+                if (Math.random() < 0.014) {
+                    p.userData.velocity.x = (Math.random() - 0.5) * 1.6;
+                }
+                
+                // Keep within cabin
+                if (Math.abs(p.position.x) > 125) {
+                    p.userData.velocity.x *= -0.7;
+                }
+                
+                // If they reach the front, they "board" randomly
+                if (p.position.z > 220) {
+                    // Chance to sit
+                    if (Math.random() < 0.3) {
+                        const available = seats.filter(s => !s.occupied);
+                        if (available.length > 0) {
+                            const chosen = available[Math.floor(Math.random() * available.length)];
+                            chosen.occupied = true;
+                            p.position.set(chosen.x3d * 0.9, 48, chosen.z3d);
+                            p.userData.isSeated = true;
+                            score += 80;
+                            document.getElementById('score').textContent = String(score).padStart(3, '0');
+                        }
+                    }
+                    p.position.z = -460;
+                }
+            });
+            
+            // Spawn new 2D passengers
+            if (Math.random() < 0.065 && activePassengers2D.length < 11) {
+                spawn2DPassenger();
+            }
+            
+            update2DPassengers();
+            updateParticles();
+            draw2DUI();
+            drawParticles();
+            
+            // Timer
+            if (Math.random() < 0.018) { // roughly every second
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                
+                if (timeLeft <= 15) {
+                    document.getElementById('timer').style.color = '#ff3366';
+                }
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }
+            
+            // Victory condition - all seats filled
+            const filledSeats = seats.filter(s => s.occupied).length;
+            if (filledSeats >= seats.length - 3 && timeLeft > 10) {
+                // Bonus for fast boarding
+                score += 420;
+                document.getElementById('score').textContent = String(score).padStart(3, '0');
+                endGame(true);
+            }
+            
+            renderer.render(scene, camera);
             requestAnimationFrame(gameLoop);
         }
         
-        function timerLoop() {
-            if (!gameRunning) return;
-            timeLeft--;
-            document.getElementById('time').textContent = timeLeft;
-            
-            if (timeLeft <= 10) document.getElementById('time').style.color = "#ff3366";
-            
-            if (timeLeft <= 0) endGame();
-            else setTimeout(timerLoop, 1000);
-        }
-        
-        function startGame() {
-            document.getElementById('start-screen').style.display = 'none';
-            
-            score = 0;
-            timeLeft = 60;
-            combo = 1;
-            bags = [];
-            particles = [];
-            
-            document.getElementById('score').textContent = "00000";
-            document.getElementById('time').textContent = "60";
-            document.getElementById('time').style.color = "#ff00aa";
-            
-            gameRunning = true;
-            lastSpawn = Date.now();
-            
-            // Start spawning
-            setInterval(() => {
-                if (gameRunning) {
-                    spawnBag();
-                    if (Math.random() > 0.65) spawnBag();
-                }
-            }, 420);
-            
-            timerLoop();
-        }
-        
-        function endGame() {
+        function endGame(victory = false) {
             gameRunning = false;
-            if (score > highScore) {
-                highScore = Math.floor(score);
-                localStorage.setItem("baggageHS", highScore);
+            const goScreen = document.getElementById('game-over');
+            goScreen.style.display = 'flex';
+            
+            document.getElementById('final-score').textContent = `SCORE: ${score}`;
+            
+            const msgEl = document.getElementById('final-message');
+            if (victory) {
+                msgEl.innerHTML = `PERFECT BOARDING!<br>FLIGHT DEPARTS ON TIME`;
+                msgEl.style.color = '#00ffcc';
+                createBurstParticles(WIDTH/2, HEIGHT/2 - 80, 80);
+                playBeep(880, 120);
+                setTimeout(() => playBeep(1100, 280), 180);
+            } else {
+                msgEl.innerHTML = `GATE CLOSED<br>Better luck next flight`;
+                msgEl.style.color = '#ff6688';
             }
-            document.getElementById('final-score').textContent = String(Math.floor(score)).padStart(5, '0');
-            document.getElementById('game-over').style.display = 'flex';
         }
         
         function restartGame() {
+            // Reset everything
+            score = 0;
+            timeLeft = 90;
+            gameRunning = true;
+            activePassengers2D = [];
+            particles = [];
+            draggedPassenger = null;
+            
+            document.getElementById('score').textContent = '000';
+            document.getElementById('timer').textContent = '90';
+            document.getElementById('timer').style.color = '#ff3366';
             document.getElementById('game-over').style.display = 'none';
-            document.getElementById('start-screen').style.display = 'flex';
-        }
-        
-        // =============== INITIALIZE ===============
-        function init() {
-            initThree();
-            initCanvas();
             
-            const gameCanvas = document.getElementById('game-canvas');
+            // Reset seat occupancy
+            seats.forEach(s => s.occupied = false);
             
-            gameCanvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                handleTap(e);
+            // Re-spawn some 3D passengers
+            passengers.forEach(p => {
+                p.position.z = -420 + Math.random() * 140;
+                p.userData.isSeated = false;
             });
             
-            gameCanvas.addEventListener('click', handleTap);
-            
-            // Three.js animation loop
-            function animateThree() {
-                threeRenderer.render(threeScene, threeCamera);
-                requestAnimationFrame(animateThree);
-            }
-            animateThree();
-            
-            // Main 2D loop
             gameLoop();
-            
-            console.log("%cBAGGAGE CLAIM - Fixed version loaded", "color:#00ffcc; font-size:14px");
         }
         
+        function resizeHandler() {
+            const container = document.getElementById('three-container');
+            const aspect = container.clientWidth / container.clientHeight;
+            
+            // Force portrait feel even if device is rotated
+            if (renderer) {
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                camera.aspect = aspect;
+                camera.updateProjectionMatrix();
+            }
+        }
+        
+        // Initialize everything
+        function init() {
+            initThree();
+            create2DCanvas();
+            
+            // Spawn initial passengers
+            for (let i = 0; i < 7; i++) {
+                setTimeout(() => {
+                    if (gameRunning) spawn2DPassenger();
+                }, i * 240);
+            }
+            
+            // Start the main loop
+            gameLoop();
+            
+            // Keyboard support for testing (space to spawn)
+            window.addEventListener('keydown', (e) => {
+                if (e.key === " " && gameRunning) {
+                    e.preventDefault();
+                    spawn2DPassenger();
+                }
+                if (e.key === "r" || e.key === "R") {
+                    restartGame();
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', resizeHandler);
+            
+            // Touch visual feedback on header
+            document.querySelector('.header').addEventListener('touchstart', () => {
+                playBeep(420, 30);
+            });
+            
+            // Welcome burst
+            setTimeout(() => {
+                createBurstParticles(WIDTH * 0.3, 180, 22);
+                createBurstParticles(WIDTH * 0.7, 210, 18);
+            }, 680);
+            
+            // Instructions flash
+            setTimeout(() => {
+                const instr = document.getElementById('instructions');
+                instr.style.transition = 'opacity 1.8s';
+            }, 3400);
+        }
+        
+        // Boot the experience
         window.onload = init;
     </script>
 </body>
