@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TERMINAL 09</title>
+    <title>BAGGAGE CLAIM</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&amp;display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;display=swap');
         
         :root {
-            --airport-blue: #00e6ff;
-            --runway-yellow: #ffd700;
-            --warning-red: #ff2a2a;
+            --primary: #00ffcc;
+            --accent: #ff00aa;
+            --dark: #0a1f2e;
         }
         
         * {
@@ -21,204 +21,156 @@
         }
         
         body {
-            background: #0a0e17;
-            color: var(--airport-blue);
-            font-family: 'VT323', monospace;
+            background: #0a1f2e;
+            color: #fff;
+            font-family: 'Press Start 2P', system-ui;
             overflow: hidden;
             height: 100vh;
             width: 100vw;
-            touch-action: none;
-            position: relative;
-        }
-        
-        #container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            touch-action: manipulation;
             display: flex;
             flex-direction: column;
         }
         
-        canvas#bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            height: 100vh;
+            background: linear-gradient(#0a1f2e, #112233);
+            box-shadow: 0 0 40px rgba(0, 255, 204, 0.3);
+            overflow: hidden;
+            border: 8px solid #223344;
         }
         
-        #hud {
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #ui {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 10;
             pointer-events: none;
+            z-index: 10;
         }
         
-        #header {
-            padding: 12px 20px;
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(10, 31, 46, 0.85);
+            border-bottom: 4px solid var(--primary);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(to bottom, rgba(10,14,23,0.95), transparent);
-            border-bottom: 2px solid var(--airport-blue);
+            pointer-events: auto;
             z-index: 20;
         }
         
-        .logo {
-            font-size: 28px;
-            letter-spacing: 4px;
-            text-shadow: 0 0 10px var(--airport-blue);
-            animation: flicker 1.5s infinite alternate;
-        }
-        
-        .status {
+        .score {
             font-size: 18px;
-            display: flex;
-            gap: 15px;
+            text-shadow: 0 0 10px var(--primary);
         }
         
-        .gate {
-            color: var(--runway-yellow);
+        .timer {
+            font-size: 18px;
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent);
         }
         
-        #game-area {
-            flex: 1;
-            position: relative;
-            z-index: 5;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-        }
-        
-        #runway {
-            position: relative;
-            width: 100%;
-            max-width: 380px;
-            height: 520px;
-            background: linear-gradient(#1a252f, #0f1a24);
-            border: 4px solid #334455;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 40px rgba(0, 230, 255, 0.4);
-            pointer-events: all;
-        }
-        
-        .runway-lines {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                to bottom,
-                transparent 0px,
-                transparent 40px,
-                #ffd700 40px,
-                #ffd700 44px
-            );
-            animation: runwayMove 0.8s linear infinite;
-        }
-        
-        @keyframes runwayMove {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 100px; }
-        }
-        
-        #aircraft {
-            position: absolute;
-            left: 50%;
-            bottom: 80px;
-            width: 48px;
-            height: 68px;
-            background: linear-gradient(#ccc, #eee);
-            border-radius: 4px;
-            transform: translateX(-50%);
-            box-shadow: 0 0 15px var(--airport-blue);
-            transition: transform 0.05s linear;
-            z-index: 30;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            color: #111;
-        }
-        
-        #aircraft::before {
-            content: '✈️';
-            position: absolute;
-            top: -8px;
-            font-size: 42px;
-            filter: drop-shadow(0 0 8px #fff);
-        }
-        
-        .obstacle {
-            position: absolute;
-            width: 42px;
-            height: 42px;
-            background: #ff2a2a;
-            border: 3px solid #fff;
-            box-shadow: 0 0 12px #ff2a2a;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            color: white;
-            animation: warningPulse 0.6s infinite alternate;
-        }
-        
-        @keyframes warningPulse {
-            from { transform: scale(1); }
-            to { transform: scale(1.12); }
-        }
-        
-        #score-display {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 42px;
-            font-weight: bold;
-            text-shadow: 0 0 15px var(--runway-yellow);
-            z-index: 50;
-            background: rgba(10,14,23,0.7);
-            padding: 4px 18px;
-            border: 2px solid var(--runway-yellow);
-        }
-        
-        #timer {
+        .title {
             position: absolute;
             top: 80px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 28px;
-            color: #ffdd88;
-            z-index: 50;
-            text-shadow: 0 0 10px #ff2a2a;
+            letter-spacing: 4px;
+            color: var(--primary);
+            text-shadow: 
+                0 0 10px #00ffcc,
+                0 0 20px #00ffcc,
+                4px 4px 0 #ff00aa;
+            pointer-events: none;
+            z-index: 15;
+            animation: titlePulse 2s infinite alternate;
+        }
+        
+        @keyframes titlePulse {
+            from { opacity: 0.8; transform: translateX(-50%) scale(0.95); }
+            to { opacity: 1; transform: translateX(-50%) scale(1.05); }
         }
         
         #instructions {
             position: absolute;
-            bottom: 30px;
+            bottom: 180px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(10,14,23,0.85);
-            color: var(--airport-blue);
-            padding: 12px 28px;
-            border: 2px dashed var(--airport-blue);
-            font-size: 22px;
+            background: rgba(10, 31, 46, 0.9);
+            padding: 12px 24px;
+            border: 3px solid var(--primary);
+            font-size: 14px;
+            text-align: center;
             white-space: nowrap;
-            z-index: 60;
-            box-shadow: 0 0 20px rgba(0,230,255,0.5);
-            animation: pulseInstr 2s infinite;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.6);
+            pointer-events: none;
+            z-index: 30;
         }
         
-        @keyframes pulseInstr {
-            0%, 100% { opacity: 0.85; }
-            50% { opacity: 1; }
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 31, 46, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.6s ease;
+        }
+        
+        #start-screen h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            color: #ff00aa;
+            text-shadow: 0 0 30px #ff00aa;
+            animation: glow 1.5s infinite alternate;
+        }
+        
+        #start-screen p {
+            font-size: 16px;
+            margin: 10px 0 40px;
+            max-width: 280px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        .btn {
+            background: #ff00aa;
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-family: 'Press Start 2P';
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 0 30px #ff00aa;
+            transition: all 0.2s;
+            pointer-events: auto;
+        }
+        
+        .btn:active {
+            transform: scale(0.9);
+            box-shadow: 0 0 15px #ff00aa;
         }
         
         #game-over {
@@ -227,473 +179,715 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10, 5, 5, 0.95);
+            background: rgba(10, 31, 46, 0.97);
             display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            color: #ff4444;
+            z-index: 200;
         }
         
         #final-score {
-            font-size: 52px;
-            margin-bottom: 20px;
-            text-shadow: 0 0 20px #ff4444;
+            font-size: 32px;
+            margin: 20px 0;
+            color: var(--primary);
         }
         
-        button {
-            font-family: 'VT323', monospace;
-            font-size: 28px;
-            padding: 14px 40px;
-            background: #111;
-            color: var(--airport-blue);
-            border: 3px solid var(--airport-blue);
-            cursor: pointer;
-            margin-top: 30px;
-            transition: all 0.2s;
-        }
-        
-        button:active {
-            background: var(--airport-blue);
-            color: #000;
-            transform: scale(0.95);
-        }
-        
-        .cloud {
+        .belt {
             position: absolute;
-            font-size: 60px;
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: 2;
-            animation: cloudDrift linear infinite;
-        }
-        
-        .tower {
-            position: absolute;
-            bottom: 0;
-            width: 60px;
-            height: 180px;
-            background: #223344;
-            border-top: 30px solid #445566;
-            z-index: 4;
-        }
-        
-        .lights {
-            position: absolute;
+            bottom: 120px;
+            left: 0;
             width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 50% 30%, rgba(255,215,0,0.6) 0%, transparent 70%);
+            height: 90px;
+            background: repeating-linear-gradient(
+                90deg,
+                #334455 0px,
+                #334455 40px,
+                #223344 40px,
+                #223344 80px
+            );
+            border-top: 8px solid #556677;
+            border-bottom: 8px solid #556677;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            z-index: 5;
+        }
+        
+        .bag {
+            position: absolute;
+            width: 58px;
+            height: 42px;
+            background: #c44;
+            border: 4px solid #922;
+            border-radius: 4px;
+            box-shadow: 4px 6px 0 #300;
+            cursor: pointer;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #fff;
+            user-select: none;
+            transition: transform 0.1s;
+            z-index: 10;
+        }
+        
+        .bag.green {
+            background: #4a4;
+            border-color: #282;
+        }
+        
+        .bag.blue {
+            background: #44a;
+            border-color: #228;
+        }
+        
+        .bag.red {
+            background: #c44;
+            border-color: #922;
+        }
+        
+        .claim-zone {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 70px;
+            border: 6px dashed var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: var(--primary);
+            text-align: center;
+            line-height: 1.2;
             pointer-events: none;
-            animation: lightSweep 4s linear infinite;
+            z-index: 8;
+            animation: claimPulse 1.8s infinite;
+        }
+        
+        @keyframes claimPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 50;
+        }
+        
+        .scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(transparent, rgba(0,255,204,0.6), transparent);
+            animation: scan 4s linear infinite;
+            opacity: 0.4;
+            z-index: 6;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(900px); }
+        }
+        
+        #combo {
+            position: absolute;
+            top: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 22px;
+            color: #ff0;
+            text-shadow: 0 0 15px #ff0;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s;
+            z-index: 25;
         }
     </style>
 </head>
 <body>
-    <canvas id="bg"></canvas>
-    
-    <div id="container">
-        <div id="hud">
+    <div id="game-container">
+        <!-- Three.js background scene -->
+        <canvas id="three-canvas"></canvas>
+        
+        <!-- 2D Canvas overlay for game elements -->
+        <canvas id="game-canvas" width="420" height="740"></canvas>
+        
+        <div id="ui">
             <!-- Header -->
-            <div id="header">
-                <div class="logo">TERMINAL<span style="color:#ffd700;">09</span></div>
-                <div class="status">
-                    <span>GATE A12</span>
-                    <span class="gate">RWY 27R</span>
-                </div>
+            <div class="header">
+                <div class="score">SCORE <span id="score">00000</span></div>
+                <div class="timer">TIME <span id="time">60</span></div>
             </div>
             
-            <!-- Game Area -->
-            <div id="game-area">
-                <div id="runway">
-                    <div class="runway-lines"></div>
-                    <div class="lights"></div>
-                    
-                    <!-- Control Tower -->
-                    <div class="tower" style="left: 40px; height: 160px;"></div>
-                    <div class="tower" style="right: 40px; height: 210px;"></div>
-                    
-                    <!-- Player Aircraft -->
-                    <div id="aircraft">✈️</div>
-                    
-                    <!-- Score -->
-                    <div id="score-display">00000</div>
-                    
-                    <!-- Timer -->
-                    <div id="timer">00:00</div>
-                </div>
-            </div>
+            <div class="title">BAGGAGE</div>
             
             <!-- Instructions -->
             <div id="instructions">
-                ← DRAG LEFT / RIGHT TO STEER →
+                TAP BAGS → CLAIM ZONE<br>
+                <span style="font-size:11px; color:#88ffcc;">GREEN = +100 • RED = -50</span>
             </div>
+            
+            <!-- Start Screen -->
+            <div id="start-screen">
+                <h1>BAGGAGE<br>CLAIM</h1>
+                <p>FLIGHT DLX-472<br>HAS LANDED<br><br>GRAB YOUR LUGGAGE<br>BEFORE IT DISAPPEARS!</p>
+                <button onclick="startGame()" class="btn">START CLAIMING</button>
+                <div style="margin-top:40px; font-size:11px; opacity:0.6;">PORTRAIT MODE • TAP FAST</div>
+            </div>
+            
+            <!-- Game Over -->
+            <div id="game-over">
+                <h1 style="color:#ff3366; font-size:38px; margin-bottom:10px;">MISSED FLIGHT</h1>
+                <div style="font-size:15px; margin-bottom:30px;">FINAL SCORE</div>
+                <div id="final-score">12480</div>
+                <button onclick="restartGame()" class="btn" style="margin-top:30px;">TRY AGAIN</button>
+                <div id="high-score-text" style="margin-top:40px; font-size:13px; opacity:0.7;"></div>
+            </div>
+            
+            <!-- Belt -->
+            <div class="belt"></div>
+            
+            <!-- Claim Zone -->
+            <div class="claim-zone">
+                CLAIM<br>HERE →
+            </div>
+            
+            <div id="combo">×2 COMBO!</div>
         </div>
-    </div>
-    
-    <!-- Game Over Screen -->
-    <div id="game-over">
-        <div style="font-size: 38px; margin-bottom: 10px;">MISSION ABORTED</div>
-        <div id="final-score">SCORE: 12480</div>
-        <div style="color: #aaa; font-size: 24px; margin: 20px 0;">AIRCRAFT LOST ON RWY 27R</div>
-        <button onclick="restartGame()">REATTEMPT LANDING</button>
-    </div>
-    
-    <script>
-        // =============== THREE.JS BACKGROUND ===============
-        let scene, camera, renderer;
-        let particles = [];
         
+        <!-- Scanline effect -->
+        <div class="scanline"></div>
+    </div>
+
+    <script>
+        // ================ VARIABLES ================
+        let score = 0;
+        let timeLeft = 60;
+        let gameRunning = false;
+        let combo = 1;
+        let comboTimer = 0;
+        
+        let bags = [];
+        let particles = [];
+        let lastSpawn = 0;
+        
+        let canvas, ctx;
+        let threeScene, threeCamera, threeRenderer;
+        let conveyorMesh;
+        
+        let highScore = localStorage.getItem('baggageHighScore') || 12480;
+        
+        const COLORS = {
+            red: '#c44',
+            green: '#4a4',
+            blue: '#44a'
+        };
+        
+        // ================ THREE.JS SETUP ================
         function initThree() {
-            const canvas = document.getElementById('bg');
-            renderer = new THREE.WebGLRenderer({ 
-                canvas: canvas, 
+            const container = document.getElementById('game-container');
+            threeRenderer = new THREE.WebGLRenderer({
+                canvas: document.getElementById('three-canvas'),
                 antialias: true,
-                alpha: true 
+                alpha: true
             });
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            threeRenderer.setSize(420, 740);
+            threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 30;
+            threeScene = new THREE.Scene();
+            threeCamera = new THREE.PerspectiveCamera(60, 420 / 740, 0.1, 1000);
+            threeCamera.position.set(0, 8, 18);
+            threeCamera.lookAt(0, 0, 0);
             
-            // Ambient airport night lighting
-            const ambient = new THREE.AmbientLight(0x112244, 0.6);
-            scene.add(ambient);
+            // Ambient light
+            const ambient = new THREE.AmbientLight(0x6688aa, 0.6);
+            threeScene.add(ambient);
             
-            const pointLight = new THREE.PointLight(0x00eeff, 1.2, 100);
-            pointLight.position.set(10, 20, 30);
-            scene.add(pointLight);
+            // Directional light (airport overhead)
+            const dirLight = new THREE.DirectionalLight(0xffeecc, 1.2);
+            dirLight.position.set(10, 25, 15);
+            threeScene.add(dirLight);
             
-            // Runway lights (particles)
-            const geometry = new THREE.SphereGeometry(0.15, 8, 8);
-            const material = new THREE.MeshBasicMaterial({ 
-                color: 0xffdd44 
+            // Floor / terminal floor
+            const floorGeo = new THREE.PlaneGeometry(40, 40);
+            const floorMat = new THREE.MeshLambertMaterial({
+                color: 0x112233,
+                flatShading: true
             });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.y = -2.5;
+            threeScene.add(floor);
             
-            for (let i = 0; i < 180; i++) {
-                const light = new THREE.Mesh(geometry, material);
-                light.position.x = (Math.random() - 0.5) * 45;
-                light.position.y = (Math.random() - 0.5) * 60 - 20;
-                light.position.z = Math.random() * -40;
-                scene.add(light);
-                particles.push(light);
+            // Airport walls
+            const wallMat = new THREE.MeshLambertMaterial({ color: 0x334455 });
+            const backWall = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), wallMat);
+            backWall.position.set(0, 5, -12);
+            threeScene.add(backWall);
+            
+            // Conveyor belt in 3D (background element)
+            const beltGeo = new THREE.BoxGeometry(18, 0.8, 6);
+            const beltMat = new THREE.MeshPhongMaterial({
+                color: 0x445566,
+                shininess: 10
+            });
+            conveyorMesh = new THREE.Mesh(beltGeo, beltMat);
+            conveyorMesh.position.set(0, -1.2, 0);
+            conveyorMesh.rotation.x = 0.1;
+            threeScene.add(conveyorMesh);
+            
+            // Add some ceiling lights
+            for (let i = -2; i <= 2; i++) {
+                const light = new THREE.PointLight(0xaaffff, 0.8, 50);
+                light.position.set(i * 5, 18, -5);
+                threeScene.add(light);
             }
             
-            // Fog for airport atmosphere
-            scene.fog = new THREE.Fog(0x0a0e17, 10, 80);
-            
-            animateThree();
+            // Some luggage placeholders in background
+            for (let i = 0; i < 8; i++) {
+                const bagGeo = new THREE.BoxGeometry(1.8, 1.2, 2.2);
+                const bagMat = new THREE.MeshLambertMaterial({
+                    color: Math.random() > 0.5 ? 0x993333 : 0x336699
+                });
+                const bag = new THREE.Mesh(bagGeo, bagMat);
+                bag.position.set(
+                    (Math.random() - 0.5) * 22,
+                    -1.8,
+                    -8 - Math.random() * 6
+                );
+                bag.rotation.y = Math.random() * Math.PI;
+                threeScene.add(bag);
+            }
         }
         
-        function animateThree() {
-            requestAnimationFrame(animateThree);
+        // ================ 2D CANVAS SETUP ================
+        function initCanvas() {
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
+            canvas.width = 420;
+            canvas.height = 740;
+        }
+        
+        // ================ BAG CLASS ================
+        class Bag {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.width = 58;
+                this.height = 42;
+                this.type = type; // 'red', 'green', 'blue'
+                this.speed = 1.8 + Math.random() * 0.6;
+                this.angle = (Math.random() - 0.5) * 12;
+                this.vx = 0;
+                this.vy = this.speed;
+                this.grabbed = false;
+                this.claimed = false;
+                this.id = Date.now() + Math.random();
+            }
             
-            // Slow moving clouds / particles
-            particles.forEach((p, i) => {
-                p.position.y -= 0.08;
-                if (p.position.y < -40) {
-                    p.position.y = 45;
-                    p.position.x = (Math.random() - 0.5) * 45;
+            update() {
+                if (this.grabbed) return;
+                
+                this.y += this.vy;
+                
+                // Slight horizontal drift on conveyor
+                this.x += Math.sin(this.y / 30) * 0.6;
+                
+                // Remove if off screen
+                if (this.y > 780) {
+                    return true; // mark for removal
                 }
-                p.rotation.y += 0.01;
-            });
+                return false;
+            }
             
-            renderer.render(scene, camera);
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                ctx.rotate(this.angle * Math.PI / 180);
+                
+                // Shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillRect(-this.width/2 + 6, this.height/2 + 4, this.width, 8);
+                
+                // Main bag
+                if (this.type === 'green') {
+                    ctx.fillStyle = '#4caf50';
+                    ctx.strokeStyle = '#2e7d32';
+                } else if (this.type === 'blue') {
+                    ctx.fillStyle = '#2196f3';
+                    ctx.strokeStyle = '#1565c0';
+                } else {
+                    ctx.fillStyle = '#f44336';
+                    ctx.strokeStyle = '#c62828';
+                }
+                
+                ctx.lineWidth = 5;
+                ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                ctx.strokeRect(-this.width/2, -this.height/2, this.width, this.height);
+                
+                // Handle
+                ctx.fillStyle = '#111';
+                ctx.fillRect(-12, -this.height/2 - 8, 24, 10);
+                
+                // Label
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 11px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('DLX', 0, 6);
+                
+                ctx.restore();
+            }
+            
+            isTapped(tx, ty) {
+                return tx > this.x && tx < this.x + this.width &&
+                       ty > this.y && ty < this.y + this.height;
+            }
         }
         
-        // =============== GAME LOGIC ===============
-        let score = 0;
-        let timeLeft = 45;
-        let gameRunning = true;
-        let planeX = 0;
-        let velocity = 0;
-        let obstacles = [];
-        let lastSpawn = 0;
-        let touchStartX = 0;
-        let isDragging = false;
-        
-        const runway = document.getElementById('runway');
-        const aircraft = document.getElementById('aircraft');
-        const scoreEl = document.getElementById('score-display');
-        const timerEl = document.getElementById('timer');
-        const gameOverScreen = document.getElementById('game-over');
-        const finalScoreEl = document.getElementById('final-score');
-        
-        function formatScore(s) {
-            return String(Math.floor(s)).padStart(5, '0');
+        // ================ PARTICLE SYSTEM ================
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 9;
+                this.vy = (Math.random() - 0.5) * 9 - 3;
+                this.life = 38;
+                this.color = color;
+                this.size = 6 + Math.random() * 7;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.28;
+                this.life--;
+                this.size *= 0.96;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life / 38;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.restore();
+            }
         }
         
-        function updateScore() {
-            score += 12;
-            scoreEl.textContent = formatScore(score);
+        function createBurst(x, y, count, color) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+        
+        // ================ GAME LOGIC ================
+        function spawnBag() {
+            if (!gameRunning) return;
+            
+            const types = ['red', 'green', 'blue'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            // Spawn from left or right side of belt
+            const fromLeft = Math.random() > 0.5;
+            const x = fromLeft ? 40 + Math.random() * 80 : 300 + Math.random() * 80;
+            
+            const bag = new Bag(x, -60, type);
+            bags.push(bag);
+        }
+        
+        function updateBags() {
+            for (let i = bags.length - 1; i >= 0; i--) {
+                const remove = bags[i].update();
+                if (remove) {
+                    if (!bags[i].claimed && bags[i].type === 'green') {
+                        // Missed good bag = penalty
+                        score = Math.max(0, score - 80);
+                        updateScore();
+                    }
+                    bags.splice(i, 1);
+                }
+            }
+        }
+        
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+        
+        function updateCombo() {
+            if (comboTimer > 0) {
+                comboTimer--;
+                if (comboTimer === 0) {
+                    combo = 1;
+                    document.getElementById('combo').style.opacity = 0;
+                }
+            }
         }
         
         function updateTimer() {
             if (!gameRunning) return;
             
-            timeLeft -= 0.1;
-            const seconds = Math.max(0, Math.ceil(timeLeft));
-            timerEl.textContent = `00:${seconds.toString().padStart(2, '0')}`;
+            timeLeft--;
+            document.getElementById('time').textContent = timeLeft;
             
             if (timeLeft <= 10) {
-                timerEl.style.color = '#ff2a2a';
+                document.getElementById('time').style.color = '#ff3366';
             }
             
             if (timeLeft <= 0) {
-                endGame(true);
+                endGame();
             }
         }
         
-        function createObstacle() {
-            if (!gameRunning) return;
-            
-            const obstacle = document.createElement('div');
-            obstacle.className = 'obstacle';
-            obstacle.textContent = Math.random() > 0.5 ? '🛫' : '🛬';
-            
-            // Random horizontal position within runway bounds
-            const posX = Math.random() * 68 + 16; // percent
-            obstacle.style.left = `${posX}%`;
-            obstacle.style.top = '-60px';
-            
-            runway.appendChild(obstacle);
-            obstacles.push(obstacle);
-            
-            // Random speed for variety
-            const speed = 2.8 + Math.random() * 1.6;
-            obstacle.dataset.speed = speed;
+        function updateScore() {
+            document.getElementById('score').textContent = String(Math.floor(score)).padStart(5, '0');
         }
         
-        function moveObstacles() {
+        function claimBag(bag) {
+            if (bag.claimed) return;
+            
+            bag.claimed = true;
+            
+            let points = 0;
+            
+            if (bag.type === 'green') {
+                points = 120;
+                createBurst(bag.x + 29, bag.y + 21, 24, '#aaff77');
+                document.getElementById('combo').style.opacity = 1;
+                document.getElementById('combo').textContent = `×${combo} COMBO!`;
+                comboTimer = 45;
+                combo = Math.min(combo + 1, 5);
+            } 
+            else if (bag.type === 'blue') {
+                points = 60;
+                createBurst(bag.x + 29, bag.y + 21, 14, '#88ddff');
+            } 
+            else {
+                points = -65;
+                createBurst(bag.x + 29, bag.y + 21, 18, '#ff6688');
+            }
+            
+            score += points * combo;
+            if (score < 0) score = 0;
+            
+            updateScore();
+            
+            // Remove bag after claim animation
+            setTimeout(() => {
+                const idx = bags.indexOf(bag);
+                if (idx > -1) bags.splice(idx, 1);
+            }, 120);
+        }
+        
+        // ================ INPUT HANDLING ================
+        function handleTap(e) {
             if (!gameRunning) return;
             
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                const obs = obstacles[i];
-                let top = parseFloat(obs.style.top);
-                const speed = parseFloat(obs.dataset.speed);
-                
-                top += speed;
-                obs.style.top = `${top}px`;
-                
-                // Check collision
-                if (checkCollision(obs)) {
-                    endGame(false);
-                    return;
+            const rect = canvas.getBoundingClientRect();
+            let tx, ty;
+            
+            if (e.touches) {
+                tx = e.touches[0].clientX - rect.left;
+                ty = e.touches[0].clientY - rect.top;
+            } else {
+                tx = e.clientX - rect.left;
+                ty = e.clientY - rect.top;
+            }
+            
+            // Scale coordinates because canvas is 420x740 fixed
+            tx = (tx / rect.width) * 420;
+            ty = (ty / rect.height) * 740;
+            
+            let hit = false;
+            
+            for (let i = bags.length - 1; i >= 0; i--) {
+                const bag = bags[i];
+                if (!bag.claimed && bag.isTapped(tx, ty)) {
+                    claimBag(bag);
+                    hit = true;
+                    break;
                 }
-                
-                // Remove when off screen
-                if (top > 580) {
-                    obs.remove();
-                    obstacles.splice(i, 1);
-                    // Small score bonus for successful dodge
-                    score += 35;
-                }
+            }
+            
+            // Visual feedback on miss
+            if (!hit) {
+                createBurst(tx, ty, 6, '#ffffff');
             }
         }
         
-        function checkCollision(obstacle) {
-            const planeRect = aircraft.getBoundingClientRect();
-            const obsRect = obstacle.getBoundingClientRect();
-            const runwayRect = runway.getBoundingClientRect();
+        // ================ RENDER LOOP ================
+        function render() {
+            // Clear 2D canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            const planeCenterX = planeRect.left + planeRect.width / 2;
-            const obsCenterX = obsRect.left + obsRect.width / 2;
+            // Update and draw bags
+            updateBags();
+            for (let bag of bags) {
+                bag.draw();
+            }
             
-            return (
-                Math.abs(planeCenterX - obsCenterX) < 38 &&
-                obsRect.bottom > planeRect.top + 10 &&
-                obsRect.top < planeRect.bottom - 10
-            );
+            // Draw particles
+            updateParticles();
+            for (let p of particles) {
+                p.draw();
+            }
+            
+            // Subtle conveyor movement lines
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 12; i++) {
+                const offset = (Date.now() / 18 % 90) - 30;
+                ctx.beginPath();
+                ctx.moveTo(20, 520 + i * 18 + offset);
+                ctx.lineTo(400, 520 + i * 18 + offset);
+                ctx.stroke();
+            }
+            
+            requestAnimationFrame(render);
         }
         
+        function animateThree() {
+            if (conveyorMesh) {
+                conveyorMesh.rotation.z = Math.sin(Date.now() / 1200) * 0.015;
+            }
+            threeRenderer.render(threeScene, threeCamera);
+            requestAnimationFrame(animateThree);
+        }
+        
+        // ================ GAME FLOW ================
         function gameLoop() {
             if (!gameRunning) return;
             
-            moveObstacles();
-            updateScore();
+            const now = Date.now();
             
-            // Gentle auto forward movement simulation
-            velocity *= 0.92;
-            planeX += velocity * 0.8;
-            
-            // Clamp plane position
-            planeX = Math.max(-135, Math.min(135, planeX));
-            aircraft.style.transform = `translateX(${planeX}px)`;
-            
-            // Spawn new obstacles
-            if (Date.now() - lastSpawn > 680) {
-                createObstacle();
-                lastSpawn = Date.now();
-                
-                // Occasionally spawn two at once after 15 seconds
-                if (score > 8000 && Math.random() > 0.7) {
-                    setTimeout(() => {
-                        if (gameRunning) createObstacle();
-                    }, 220);
-                }
+            // Spawn logic
+            if (now - lastSpawn > (620 - timeLeft * 6)) {
+                spawnBag();
+                if (Math.random() > 0.6) spawnBag(); // occasional double spawn
+                lastSpawn = now;
             }
             
-            requestAnimationFrame(gameLoop);
-        }
-        
-        function startTimer() {
-            setInterval(updateTimer, 100);
-        }
-        
-        function endGame(success) {
-            gameRunning = false;
+            updateCombo();
             
-            if (success) {
-                finalScoreEl.innerHTML = `FINAL SCORE<br><span style="color:#ffd700;font-size:68px;">${formatScore(score)}</span>`;
-            } else {
-                finalScoreEl.textContent = `CRASHED • ${formatScore(score)}`;
-            }
-            
-            gameOverScreen.style.display = 'flex';
-            
-            // Explosion effect on crash
-            if (!success) {
-                createExplosion();
-            }
+            setTimeout(gameLoop, 1000 / 60);
         }
         
-        function createExplosion() {
-            for (let i = 0; i < 28; i++) {
-                const particle = document.createElement('div');
-                particle.style.position = 'absolute';
-                particle.style.left = aircraft.style.left || '50%';
-                particle.style.top = '420px';
-                particle.style.width = '12px';
-                particle.style.height = '12px';
-                particle.style.background = i % 3 === 0 ? '#ff8800' : '#ffdd00';
-                particle.style.borderRadius = '50%';
-                particle.style.zIndex = '999';
-                particle.style.opacity = '0.9';
-                runway.appendChild(particle);
-                
-                const angle = Math.random() * Math.PI * 2;
-                const vel = 4 + Math.random() * 7;
-                
-                let px = 0;
-                let py = 0;
-                
-                const anim = setInterval(() => {
-                    px += Math.cos(angle) * vel;
-                    py += Math.sin(angle) * vel - 1.2; // gravity
-                    
-                    particle.style.transform = `translate(${px}px, ${py}px)`;
-                    particle.style.opacity = parseFloat(particle.style.opacity) - 0.035;
-                    
-                    if (parseFloat(particle.style.opacity) <= 0.05) {
-                        clearInterval(anim);
-                        particle.remove();
-                    }
-                }, 16);
-            }
+        function timerLoop() {
+            if (!gameRunning) return;
+            updateTimer();
+            setTimeout(timerLoop, 1000);
         }
         
-        function restartGame() {
-            // Reset everything
+        function startGame() {
+            document.getElementById('start-screen').style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('start-screen').style.display = 'none';
+            }, 600);
+            
+            // Reset values
             score = 0;
-            timeLeft = 45;
-            planeX = 0;
-            velocity = 0;
-            obstacles.forEach(o => o.remove());
-            obstacles = [];
+            timeLeft = 60;
+            combo = 1;
+            bags = [];
+            particles = [];
             
-            scoreEl.textContent = '00000';
-            timerEl.textContent = '00:45';
-            timerEl.style.color = '#ffdd88';
+            document.getElementById('score').textContent = '00000';
+            document.getElementById('time').textContent = '60';
+            document.getElementById('time').style.color = '#ff00aa';
             
-            aircraft.style.transform = 'translateX(0px)';
-            
-            gameOverScreen.style.display = 'none';
             gameRunning = true;
             lastSpawn = Date.now();
             
             gameLoop();
+            timerLoop();
         }
         
-        // =============== INPUT HANDLING ===============
-        function handleStart(e) {
-            if (!gameRunning) return;
-            isDragging = true;
-            touchStartX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-        }
-        
-        function handleMove(e) {
-            if (!isDragging || !gameRunning) return;
+        function endGame() {
+            gameRunning = false;
             
-            const currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-            const delta = (currentX - touchStartX) * 1.8;
-            
-            velocity = delta / 12;
-            touchStartX = currentX;
-        }
-        
-        function handleEnd() {
-            isDragging = false;
-        }
-        
-        // =============== INITIALIZATION ===============
-        function initGame() {
-            // Three.js background
-            initThree();
-            
-            // Touch / mouse controls
-            runway.addEventListener('mousedown', handleStart);
-            runway.addEventListener('mousemove', handleMove);
-            runway.addEventListener('mouseup', handleEnd);
-            runway.addEventListener('mouseleave', handleEnd);
-            
-            runway.addEventListener('touchstart', handleStart, { passive: false });
-            runway.addEventListener('touchmove', handleMove, { passive: false });
-            runway.addEventListener('touchend', handleEnd);
-            
-            // Keyboard support (for desktop testing)
-            document.addEventListener('keydown', (e) => {
-                if (!gameRunning) return;
-                if (e.key === 'ArrowLeft') planeX -= 28;
-                if (e.key === 'ArrowRight') planeX += 28;
-                planeX = Math.max(-135, Math.min(135, planeX));
-                aircraft.style.transform = `translateX(${planeX}px)`;
-            });
-            
-            // Start game systems
-            lastSpawn = Date.now();
-            gameLoop();
-            startTimer();
-            
-            // Spawn first obstacles
-            setTimeout(() => createObstacle(), 400);
-            setTimeout(() => createObstacle(), 1200);
-            
-            // Occasional cloud particles in background (CSS)
-            for (let i = 0; i < 6; i++) {
-                const cloud = document.createElement('div');
-                cloud.className = 'cloud';
-                cloud.textContent = '☁︎';
-                cloud.style.left = Math.random() * 100 + '%';
-                cloud.style.top = Math.random() * 40 + '%';
-                cloud.style.animationDuration = (18 + Math.random() * 22) + 's';
-                cloud.style.animationDelay = '-' + Math.random() * 30 + 's';
-                document.body.appendChild(cloud);
+            // Check high score
+            if (score > highScore) {
+                highScore = Math.floor(score);
+                localStorage.setItem('baggageHighScore', highScore);
             }
             
-            // Resize handler
-            window.addEventListener('resize', () => {
-                if (renderer) {
-                    renderer.setSize(window.innerWidth, window.innerHeight);
-                    camera.aspect = window.innerWidth / window.innerHeight;
-                    camera.updateProjectionMatrix();
-                }
-            });
+            document.getElementById('final-score').textContent = String(Math.floor(score)).padStart(5, '0');
+            document.getElementById('high-score-text').innerHTML = `HIGH SCORE<br><span style="color:#ffcc33;">${String(highScore).padStart(5, '0')}</span>`;
+            document.getElementById('game-over').style.display = 'flex';
         }
         
-        // Launch the experience
-        window.onload = initGame;
+        function restartGame() {
+            document.getElementById('game-over').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+            document.getElementById('start-screen').style.opacity = 1;
+        }
+        
+        // ================ TOUCH & MOUSE ================
+        function setupInput() {
+            const gameCanvas = document.getElementById('game-canvas');
+            
+            gameCanvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleTap(e);
+            });
+            
+            gameCanvas.addEventListener('mousedown', (e) => {
+                handleTap(e);
+            });
+            
+            // Prevent right click menu
+            gameCanvas.addEventListener('contextmenu', e => e.preventDefault());
+        }
+        
+        // ================ INITIALIZE EVERYTHING ================
+        function initialize() {
+            initThree();
+            initCanvas();
+            setupInput();
+            
+            // Initial demo bags (non-interactive)
+            setTimeout(() => {
+                if (!gameRunning) {
+                    bags.push(new Bag(120, 380, 'green'));
+                    bags.push(new Bag(260, 520, 'blue'));
+                    bags.push(new Bag(90, 640, 'red'));
+                }
+            }, 300);
+            
+            // Start render loops
+            render();
+            animateThree();
+            
+            // Keyboard support for testing (space to spawn)
+            document.addEventListener('keydown', (e) => {
+                if (e.key === ' ' && gameRunning) {
+                    spawnBag();
+                }
+                if (e.key === 'r' && !gameRunning) {
+                    restartGame();
+                }
+            });
+            
+            // Show the theme clearly through visuals
+            console.log('%cAIRPORT BAGGAGE CLAIM MINI-GAME LOADED\nTap the moving suitcases and drag them into the glowing claim zone!', 
+                'color:#00ffcc; font-family:monospace');
+        }
+        
+        // Boot the experience
+        window.onload = initialize;
     </script>
 </body>
 </html>
