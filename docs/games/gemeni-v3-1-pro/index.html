@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TERMINAL RADAR APPROACH CONTROL</title>
+    <style>
+        :root {
+            --radar-green: #20ff20;
+            --radar-dark: #001500;
+            --radar-alert: #ff3030;
+            --radar-bg: #030503;
+        }
+        
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--radar-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+            touch-action: none; /* Prevents mobile scrolling/zooming */
+        }
+
+        /* Strict 9:16 Portrait Container */
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 177.77vw; /* 16/9 = 1.777 */
+            max-height: 100vh;
+            max-width: 56.25vh; /* 9/16 = 0.5625 */
+            background-color: var(--radar-dark);
+            box-shadow: 0 0 50px rgba(32, 255, 32, 0.1) inset, 
+                        0 0 20px rgba(0, 0, 0, 1);
+            overflow: hidden;
+        }
+
+        /* CRT Screen curve and vignette */
+        #gameContainer::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.9);
+            border-radius: 16px;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            filter: drop-shadow(0px 0px 4px rgba(32, 255, 32, 0.5));
+        }
+
+        /* Hardware Acceleration */
+        canvas {
+            transform: translateZ(0);
+        }
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <canvas id="radarCanvas"></canvas>
+</div>
+
+<script>
+/**
+ * TERMINAL RADAR APPROACH CONTROL (TRACON)
+ * Theme: Airport / Air Traffic Control
+ * A mobile-first interactive physics & path-drawing game.
+ */
+
+// --- 1. CORE CONSTANTS & CONFIG ---
+const GAME_WIDTH = 900;
+const GAME_HEIGHT = 1600;
+const CENTER_X = GAME_WIDTH / 2;
+const CENTER_Y = GAME_HEIGHT / 2;
+const AIRPORT_RADIUS = 70;
+const CRASH_RADIUS = 30;
+const WARNING_RADIUS = 150;
+const SWEEP_SPEED = 0.02;
+const MAX_TRAIL = 15;
+
+const COLOR_GREEN = '#20ff20';
+const COLOR_DARK_GREEN = '#004000';
+const COLOR_RED = '#ff3030';
+const COLOR_WHITE = '#ffffff';
+
+// --- 2. AUDIO SYNTHESIS ENGINE ---
+// Generates purely vanilla synthesized airport/radar sounds
+class AudioEngine {
+    constructor() {
+        this.ctx = null;
+        this.enabled = false;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            this.enabled = true;
+        }
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    playSweepPing() {
+        if (!this.enabled) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.3);
+    }
+
+    playWarning() {
+        if (!this.enabled) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(600, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.2);
+    }
+
+    playExplosion() {
+        if (!this.enabled) return;
+        const bufferSize = this.ctx.sampleRate * 2; // 2 seconds
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1000, this.ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 1.5);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1.5);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+    }
+}
+
+const sfx = new AudioEngine();
+
+// --- 3. MATH & UTILITIES ---
+class Vec2 {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    dist(v) {
+        return Math.hypot(this.x - v.x, this.y - v.y);
+    }
+    mag() {
+        return Math.hypot(this.x, this.y);
+    }
+    normalize() {
+        let m = this.mag();
+        if (m > 0) { this.x /= m; this.y /= m; }
+        return this;
+    }
+    add(v) {
+        this.x += v.x;
+        this.y += v.y;
+        return this;
+    }
+    mult(scalar) {
+        this.x *= scalar;
+        this.y *= scalar;
+        return this;
+    }
+}
+
+function rand(min, max) { return Math.random() * (max - min) + min; }
+function randInt(min, max) { return Math.floor(rand(min, max)); }
+
+// --- 4. PARTICLE SYSTEMS ---
+class Particle {
+    constructor(x, y, color, speed, life, size) {
+        this.pos = new Vec2(x, y);
+        let angle = rand(0, Math.PI * 2);
+        let vel = rand(speed * 0.5, speed * 1.5);
+        this.vel = new Vec2(Math.cos(angle) * vel, Math.sin(angle) * vel);
+        this.color = color;
+        this.life = life;
+        this.maxLife = life;
+        this.size = size;
+        this.friction = 0.95;
+    }
+    update(dt) {
+        this.pos.x += this.vel.x * dt * 60;
+        this.pos.y += this.vel.y * dt * 60;
+        this.vel.mult(this.friction);
+        this.life -= dt;
+    }
+    draw(ctx) {
+        let alpha = Math.max(0, this.life / this.maxLife);
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+class TextAlert {
+    constructor(x, y, text, color) {
+        this.pos = new Vec2(x, y);
+        this.text = text;
+        this.color = color;
+        this.life = 1.5;
+        this.maxLife = 1.5;
+    }
+    update(dt) {
+        this.pos.y -= 30 * dt;
+        this.life -= dt;
+    }
+    draw(ctx) {
+        let alpha = Math.max(0, this.life / this.maxLife);
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = alpha;
+        ctx.font = '24px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.text, this.pos.x, this.pos.y);
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+// --- 5. AIRCRAFT ENTITY ---
+class Aircraft {
+    constructor(id) {
+        this.id = id;
+        
+        // Spawn around the perimeter
+        let angle = rand(0, Math.PI * 2);
+        let distFromCenter = GAME_HEIGHT * 0.6;
+        this.pos = new Vec2(CENTER_X + Math.cos(angle) * distFromCenter, 
+                            CENTER_Y + Math.sin(angle) * distFromCenter);
+        
+        // Target generally towards center
+        let targetAngle = angle + Math.PI + rand(-0.5, 0.5);
+        this.speed = rand(40, 80);
+        this.vel = new Vec2(Math.cos(targetAngle) * this.speed, Math.sin(targetAngle) * this.speed);
+        this.heading = targetAngle;
+        
+        this.path = [];
+        this.history = [];
+        this.historyTimer = 0;
+        
+        this.altitude = randInt(100, 300); // Flight Level (e.g., FL240)
+        this.warnLevel = 0; // 0: safe, 1: proximity alert
+        this.isSelected = false;
+        this.landed = false;
+        this.dead = false;
+    }
+
+    update(dt) {
+        // Leave history trail
+        this.historyTimer += dt;
+        if (this.historyTimer > 0.5) {
+            this.history.push(new Vec2(this.pos.x, this.pos.y));
+            if (this.history.length > MAX_TRAIL) this.history.shift();
+            this.historyTimer = 0;
+        }
+
+        // Move along user-drawn path
+        if (this.path.length > 0) {
+            let target = this.path[0];
+            let dx = target.x - this.pos.x;
+            let dy = target.y - this.pos.y;
+            let d = Math.hypot(dx, dy);
+
+            if (d < 10) {
+                this.path.shift(); // Reached waypoint
+            } else {
+                this.heading = Math.atan2(dy, dx);
+                this.pos.x += Math.cos(this.heading) * this.speed * dt;
+                this.pos.y += Math.sin(this.heading) * this.speed * dt;
+            }
+        } else {
+            // No path, fly straight
+            this.pos.x += Math.cos(this.heading) * this.speed * dt;
+            this.pos.y += Math.sin(this.heading) * this.speed * dt;
+        }
+
+        // Landing logic (reduce altitude if near center)
+        let distToCenter = Math.hypot(this.pos.x - CENTER_X, this.pos.y - CENTER_Y);
+        if (distToCenter < AIRPORT_RADIUS * 2) {
+            this.altitude -= 50 * dt;
+            if (this.altitude < 0) this.altitude = 0;
+        }
+    }
+
+    draw(ctx) {
+        // Draw drawn path
+        if (this.path.length > 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = this.isSelected ? COLOR_WHITE : COLOR_GREEN;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.moveTo(this.pos.x, this.pos.y);
+            for (let p of this.path) ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw endpoint crosshair
+            let last = this.path[this.path.length - 1];
+            ctx.beginPath();
+            ctx.arc(last.x, last.y, 5, 0, Math.PI*2);
+            ctx.stroke();
+        }
+
+        // Draw history trail
+        ctx.fillStyle = COLOR_DARK_GREEN;
+        for (let i = 0; i < this.history.length; i++) {
+            let p = this.history[i];
+            let size = (i / this.history.length) * 3;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, size, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        // Plane icon styling
+        let color = this.warnLevel > 0 ? COLOR_RED : (this.isSelected ? COLOR_WHITE : COLOR_GREEN);
+        
+        // Draw Plane Chevron
+        ctx.save();
+        ctx.translate(this.pos.x, this.pos.y);
+        ctx.rotate(this.heading);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.lineTo(-8, 8);
+        ctx.lineTo(-4, 0);
+        ctx.lineTo(-8, -8);
+        ctx.closePath();
+        ctx.stroke();
+        
+        if (this.isSelected) {
+            ctx.beginPath();
+            ctx.arc(0, 0, 25, 0, Math.PI*2);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // Draw Data Block (Flight Tag)
+        ctx.fillStyle = color;
+        ctx.font = '16px Courier New';
+        ctx.textAlign = 'left';
+        let txtX = this.pos.x + 15;
+        let txtY = this.pos.y - 15;
+        ctx.fillText(this.id, txtX, txtY);
+        ctx.fillText(`FL${Math.max(0, Math.floor(this.altitude)).toString().padStart(3, '0')}`, txtX, txtY + 18);
+        ctx.fillText(`${Math.floor(this.speed * 4)}KT`, txtX, txtY + 36);
+        
+        // Warning outline
+        if (this.warnLevel > 0) {
+            ctx.strokeStyle = COLOR_RED;
+            ctx.beginPath();
+            ctx.arc(this.pos.x, this.pos.y, WARNING_RADIUS, 0, Math.PI*2);
+            ctx.stroke();
+        }
+    }
+}
+
+// --- 6. MAIN GAME CONTROLLER ---
+class Game {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.state = 'BOOT'; // BOOT, MENU, PLAY, OVER
+        
+        this.lastTime = 0;
+        this.radarAngle = 0;
+        
+        this.reset();
+        this.handleResize();
+        window.addEventListener('resize', () => this.handleResize());
+        this.setupInput();
+
+        // Boot sequence texts
+        this.bootText = [];
+        this.bootTimer = 0;
+        this.bootStep = 0;
+        this.bootLines = [
+            "INIT TRACON SYSTEM v9.4...",
+            "LOADING AIRSPACE GEOMETRY...",
+            "ESTABLISHING SATELLITE UPLINK...",
+            "SYNCHRONIZING RADAR ARRAY...",
+            "SYSTEM READY."
+        ];
+        
+        // Start loop
+        requestAnimationFrame((t) => this.loop(t));
+    }
+
+    reset() {
+        this.score = 0;
+        this.timeElapsed = 0;
+        this.planes = [];
+        this.particles = [];
+        this.alerts = [];
+        this.spawnTimer = 0;
+        this.spawnRate = 4.0;
+        this.planeCount = 0;
+        this.activePlane = null;
+        this.gameOverTimer = 0;
+    }
+
+    handleResize() {
+        // Enforce internal coordinate system, CSS handles visual scaling
+        this.canvas.width = GAME_WIDTH;
+        this.canvas.height = GAME_HEIGHT;
+    }
+
+    getPointerPos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return new Vec2((clientX - rect.left) * scaleX, (clientY - rect.top) * scaleY);
+    }
+
+    setupInput() {
+        const down = (e) => {
+            e.preventDefault();
+            sfx.init(); // Init audio context on first interaction
+            
+            if (this.state === 'BOOT') {
+                this.state = 'MENU';
+                return;
+            }
+            if (this.state === 'MENU') {
+                this.reset();
+                this.state = 'PLAY';
+                return;
+            }
+            if (this.state === 'OVER') {
+                if (this.gameOverTimer > 1.5) {
+                    this.state = 'MENU';
+                }
+                return;
+            }
+
+            if (this.state === 'PLAY') {
+                let pos = this.getPointerPos(e);
+                // Find closest plane
+                let closest = null;
+                let minDist = 60; // Touch forgiveness radius
+                
+                for (let p of this.planes) {
+                    let d = p.pos.dist(pos);
+                    if (d < minDist) {
+                        minDist = d;
+                        closest = p;
+                    }
+                }
+
+                if (closest) {
+                    this.activePlane = closest;
+                    this.activePlane.isSelected = true;
+                    this.activePlane.path = []; // Reset path on new touch
+                    this.activePlane.path.push(new Vec2(pos.x, pos.y));
+                }
+            }
+        };
+
+        const move = (e) => {
+            e.preventDefault();
+            if (this.state === 'PLAY' && this.activePlane) {
+                let pos = this.getPointerPos(e);
+                let path = this.activePlane.path;
+                let lastPoint = path.length > 0 ? path[path.length - 1] : this.activePlane.pos;
+                
+                // Add points if distance is sufficient (smooth drawing)
+                if (lastPoint.dist(pos) > 15) {
+                    path.push(new Vec2(pos.x, pos.y));
+                }
+            }
+        };
+
+        const up = (e) => {
+            e.preventDefault();
+            if (this.activePlane) {
+                this.activePlane.isSelected = false;
+                this.activePlane = null;
+            }
+        };
+
+        this.canvas.addEventListener('mousedown', down);
+        this.canvas.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+        
+        this.canvas.addEventListener('touchstart', down, {passive: false});
+        this.canvas.addEventListener('touchmove', move, {passive: false});
+        window.addEventListener('touchend', up, {passive: false});
+    }
+
+    spawnPlane() {
+        this.planeCount++;
+        let airlines = ["AA", "DL", "UA", "SW", "JB"];
+        let id = airlines[randInt(0, airlines.length)] + randInt(100, 999);
+        this.planes.push(new Aircraft(id));
+    }
+
+    spawnExplosion(x, y, color, amount) {
+        for (let i = 0; i < amount; i++) {
+            this.particles.push(new Particle(x, y, color, rand(2, 10), rand(0.5, 1.5), rand(2, 5)));
+        }
+    }
+
+    checkCollisions() {
+        // Reset warning levels
+        for (let p of this.planes) p.warnLevel = 0;
+
+        for (let i = 0; i < this.planes.length; i++) {
+            let p1 = this.planes[i];
+            
+            // Check landing
+            if (p1.pos.dist(new Vec2(CENTER_X, CENTER_Y)) < AIRPORT_RADIUS && p1.altitude < 50) {
+                p1.landed = true;
+                this.score += 100;
+                this.spawnExplosion(p1.pos.x, p1.pos.y, COLOR_GREEN, 20);
+                this.alerts.push(new TextAlert(p1.pos.x, p1.pos.y, "LANDED +100", COLOR_GREEN));
+                continue; // Skip collision check if landed
+            }
+
+            // OOB bounds check (penalty)
+            if (p1.pos.x < -200 || p1.pos.x > GAME_WIDTH + 200 || 
+                p1.pos.y < -200 || p1.pos.y > GAME_HEIGHT + 200) {
+                p1.dead = true;
+                this.score -= 50;
+                this.alerts.push(new TextAlert(CENTER_X, CENTER_Y - 100, "COMM LOST -50", COLOR_RED));
+            }
+
+            for (let j = i + 1; j < this.planes.length; j++) {
+                let p2 = this.planes[j];
+                let d = p1.pos.dist(p2.pos);
+                
+                if (d < CRASH_RADIUS) {
+                    // CRASH!
+                    p1.dead = true;
+                    p2.dead = true;
+                    this.spawnExplosion(p1.pos.x, p1.pos.y, COLOR_RED, 100);
+                    this.spawnExplosion(p2.pos.x, p2.pos.y, '#ffaa00', 50);
+                    sfx.playExplosion();
+                    this.state = 'OVER';
+                    this.gameOverTimer = 0;
+                } else if (d < WARNING_RADIUS) {
+                    p1.warnLevel = 1;
+                    p2.warnLevel = 1;
+                    // Draw proximity line
+                    this.ctx.beginPath();
+                    this.ctx.strokeStyle = COLOR_RED;
+                    this.ctx.setLineDash([10, 10]);
+                    this.ctx.lineWidth = 2;
+                    this.ctx.moveTo(p1.pos.x, p1.pos.y);
+                    this.ctx.lineTo(p2.pos.x, p2.pos.y);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]);
+                    
+                    if (Math.random() < 0.05) sfx.playWarning();
+                }
+            }
+        }
+
+        // Clean up
+        this.planes = this.planes.filter(p => !p.landed && !p.dead);
+    }
+
+    drawRadarBackground() {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        
+        // Grid lines
+        ctx.strokeStyle = COLOR_DARK_GREEN;
+        ctx.lineWidth = 1;
+        for(let x=0; x<GAME_WIDTH; x+=100) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,GAME_HEIGHT); ctx.stroke(); }
+        for(let y=0; y<GAME_HEIGHT; y+=100) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(GAME_WIDTH,y); ctx.stroke(); }
+
+        // Concentric Range Rings
+        ctx.strokeStyle = '#005000';
+        for(let r=200; r<=800; r+=200) {
+            ctx.beginPath();
+            ctx.arc(CENTER_X, CENTER_Y, r, 0, Math.PI*2);
+            ctx.stroke();
+            // Range text
+            ctx.fillStyle = '#005000';
+            ctx.font = '14px Courier New';
+            ctx.fillText(`${r/10}NM`, CENTER_X + 5, CENTER_Y - r - 5);
+        }
+
+        // The Airport (Runway icon in center)
+        ctx.save();
+        ctx.translate(CENTER_X, CENTER_Y);
+        // Airport Boundary
+        ctx.strokeStyle = COLOR_GREEN;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]);
+        ctx.beginPath();
+        ctx.arc(0, 0, AIRPORT_RADIUS, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Runways
+        ctx.fillStyle = COLOR_DARK_GREEN;
+        ctx.fillRect(-10, -50, 20, 100);
+        ctx.fillStyle = COLOR_GREEN;
+        // Center lines
+        for(let y=-40; y<40; y+=20) ctx.fillRect(-2, y, 4, 10);
+        ctx.restore();
+
+        // Radar Sweep Line
+        ctx.save();
+        ctx.translate(CENTER_X, CENTER_Y);
+        ctx.rotate(this.radarAngle);
+        
+        // Sweep wedge gradient (Canvas fallback for conic gradient)
+        let grad = ctx.createLinearGradient(0, 0, 0, -1000);
+        grad.addColorStop(0, 'rgba(32, 255, 32, 0.4)');
+        grad.addColorStop(1, 'rgba(32, 255, 32, 0)');
+        
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, 1500, -0.2, 0);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Leading edge
+        ctx.beginPath();
+        ctx.strokeStyle = COLOR_GREEN;
+        ctx.lineWidth = 3;
+        ctx.moveTo(0, 0);
+        ctx.lineTo(1500, 0);
+        ctx.stroke();
+        ctx.restore();
+
+        // Top UI
+        ctx.fillStyle = COLOR_GREEN;
+        ctx.font = '24px Courier New';
+        ctx.textAlign = 'left';
+        ctx.fillText(`SCORE: ${this.score}`, 20, 40);
+        ctx.textAlign = 'right';
+        ctx.fillText(`AIRCRAFT: ${this.planes.length}`, GAME_WIDTH - 20, 40);
+        
+        // Current Time UTC
+        let d = new Date();
+        let timeStr = d.getUTCHours().toString().padStart(2,'0') + d.getUTCMinutes().toString().padStart(2,'0') + "Z";
+        ctx.textAlign = 'center';
+        ctx.fillText(timeStr, CENTER_X, 40);
+    }
+
+    loop(timestamp) {
+        let dt = (timestamp - this.lastTime) / 1000;
+        if (dt > 0.1) dt = 0.1; // clamp dt for lag
+        this.lastTime = timestamp;
+
+        this.radarAngle += SWEEP_SPEED * dt * 60;
+        if (this.radarAngle > Math.PI * 2) {
+            this.radarAngle -= Math.PI * 2;
+            sfx.playSweepPing();
+        }
+
+        this.drawRadarBackground();
+
+        if (this.state === 'BOOT') {
+            this.bootTimer += dt;
+            if (this.bootTimer > 0.5 && this.bootStep < this.bootLines.length) {
+                this.bootText.push(this.bootLines[this.bootStep]);
+                this.bootStep++;
+                this.bootTimer = 0;
+            }
+            this.ctx.fillStyle = COLOR_GREEN;
+            this.ctx.font = '28px Courier New';
+            this.ctx.textAlign = 'left';
+            for (let i = 0; i < this.bootText.length; i++) {
+                this.ctx.fillText(this.bootText[i], 50, 100 + i * 40);
+            }
+            // Blinking cursor
+            if (Math.floor(timestamp / 500) % 2 === 0 && this.bootStep === this.bootLines.length) {
+                this.ctx.fillText("TAP TO CONNECT_", 50, 100 + this.bootText.length * 40 + 40);
+            }
+        } 
+        else if (this.state === 'MENU') {
+            this.ctx.fillStyle = COLOR_GREEN;
+            this.ctx.textAlign = 'center';
+            this.ctx.font = 'bold 60px Courier New';
+            this.ctx.fillText("TRACON", CENTER_X, CENTER_Y - 150);
+            this.ctx.font = '30px Courier New';
+            this.ctx.fillText("AIR TRAFFIC CONTROL", CENTER_X, CENTER_Y - 100);
+            
+            // Tutorial Animation
+            let animT = (timestamp / 1000) % 3;
+            let startX = CENTER_X - 200;
+            let startY = CENTER_Y + 300;
+            
+            this.ctx.strokeStyle = COLOR_GREEN;
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.arc(startX, startY, 20, 0, Math.PI*2);
+            this.ctx.stroke();
+            this.ctx.fillText("FL100", startX + 40, startY);
+            
+            if (animT > 0.5) {
+                let endX = CENTER_X;
+                let endY = CENTER_Y + AIRPORT_RADIUS;
+                let progress = Math.min(1, (animT - 0.5) / 1.5);
+                let currentX = startX + (endX - startX) * progress;
+                let currentY = startY + (endY - startY) * progress;
+                
+                this.ctx.beginPath();
+                this.ctx.setLineDash([10,10]);
+                this.ctx.moveTo(startX, startY);
+                this.ctx.lineTo(currentX, currentY);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+                
+                // Finger icon
+                this.ctx.beginPath();
+                this.ctx.arc(currentX, currentY, 15, 0, Math.PI*2);
+                this.ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                this.ctx.fill();
+            }
+
+            this.ctx.fillStyle = COLOR_WHITE;
+            this.ctx.font = '24px Courier New';
+            this.ctx.fillText("> DRAW FLIGHT PATHS TO RUNWAY", CENTER_X, CENTER_Y + 150);
+            this.ctx.fillStyle = COLOR_RED;
+            this.ctx.fillText("> AVOID MIDAIR COLLISIONS", CENTER_X, CENTER_Y + 200);
+            
+            if (Math.floor(timestamp / 500) % 2 === 0) {
+                this.ctx.fillStyle = COLOR_GREEN;
+                this.ctx.fillText("TAP TO BEGIN SHIFT", CENTER_X, CENTER_Y + 300);
+            }
+        }
+        else if (this.state === 'PLAY' || this.state === 'OVER') {
+            
+            if (this.state === 'PLAY') {
+                this.timeElapsed += dt;
+                this.spawnTimer -= dt;
+                
+                // Difficulty curve
+                this.spawnRate = Math.max(1.0, 4.0 - (this.timeElapsed / 60)); 
+                
+                if (this.spawnTimer <= 0) {
+                    this.spawnPlane();
+                    this.spawnTimer = this.spawnRate;
+                }
+            } else {
+                this.gameOverTimer += dt;
+            }
+
+            // Update entities
+            for (let p of this.planes) p.update(dt);
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                this.particles[i].update(dt);
+                if (this.particles[i].life <= 0) this.particles.splice(i, 1);
+            }
+            for (let i = this.alerts.length - 1; i >= 0; i--) {
+                this.alerts[i].update(dt);
+                if (this.alerts[i].life <= 0) this.alerts.splice(i, 1);
+            }
+
+            this.checkCollisions();
+
+            // Draw entities
+            for (let p of this.planes) p.draw(this.ctx);
+            for (let p of this.particles) p.draw(this.ctx);
+            for (let a of this.alerts) a.draw(this.ctx);
+
+            if (this.state === 'OVER') {
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                this.ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                
+                this.ctx.fillStyle = COLOR_RED;
+                this.ctx.textAlign = 'center';
+                this.ctx.font = 'bold 60px Courier New';
+                this.ctx.fillText("COLLISION DETECTED", CENTER_X, CENTER_Y - 50);
+                
+                this.ctx.fillStyle = COLOR_WHITE;
+                this.ctx.font = '30px Courier New';
+                this.ctx.fillText(`FINAL SCORE: ${this.score}`, CENTER_X, CENTER_Y + 20);
+                this.ctx.fillText(`TIME: ${Math.floor(this.timeElapsed)}s`, CENTER_X, CENTER_Y + 60);
+
+                if (this.gameOverTimer > 1.5 && Math.floor(timestamp / 500) % 2 === 0) {
+                    this.ctx.fillStyle = COLOR_GREEN;
+                    this.ctx.fillText("TAP TO RESTART", CENTER_X, CENTER_Y + 150);
+                }
+            }
+        }
+
+        requestAnimationFrame((t) => this.loop(t));
+    }
+}
+
+// Init Game on load
+window.onload = () => {
+    const canvas = document.getElementById('radarCanvas');
+    const game = new Game(canvas);
+};
+
+</script>
+</body>
+</html>
