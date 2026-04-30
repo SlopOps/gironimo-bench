@@ -10,7 +10,7 @@
         
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            background: #0a0e17;
+            background: #05080f;
             color: #fff;
             font-family: 'Press Start 2P', system-ui;
             overflow: hidden;
@@ -26,26 +26,38 @@
         .header {
             position: absolute;
             top: 0; left: 0; width: 100%;
-            padding: 15px 20px;
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
-            background: linear-gradient(to bottom, rgba(10,14,23,0.95), transparent);
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(5,8,15,0.95), transparent);
             z-index: 30;
         }
         
-        .logo { font-size: 22px; color: #FF6200; text-shadow: 0 0 15px #FF6200; }
+        .logo {
+            font-size: 26px;
+            color: #FF6200;
+            text-shadow: 0 0 20px #FF6200;
+        }
         
-        .stats { display: flex; gap: 25px; font-size: 14px; }
-        .label { font-size: 9px; opacity: 0.7; }
-        .value { color: #FF6200; text-shadow: 0 0 10px #FF6200; }
+        .stats {
+            display: flex;
+            gap: 30px;
+            font-size: 15px;
+        }
+        
+        .label { font-size: 10px; opacity: 0.7; }
+        .value { color: #FFDD44; text-shadow: 0 0 10px #FF6200; }
         
         #viewport {
             position: absolute;
-            top: 85px; left: 0; right: 0; bottom: 190px;
-            background: linear-gradient(#1a2538, #0f1828);
+            top: 85px;
+            bottom: 195px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(#0f1b2e, #1a2a44);
             overflow: hidden;
-            border-top: 5px solid #FF6200;
-            border-bottom: 5px solid #FF6200;
+            border: 6px solid #FF6200;
         }
         
         #plane-container {
@@ -59,92 +71,93 @@
         
         #nozzle-indicator {
             position: absolute;
-            top: 25%;
-            font-size: 28px;
-            transition: left 0.2s ease;
-            text-shadow: 0 0 15px #FFAA00;
+            top: 38%;
+            font-size: 42px;
+            color: #FFEE00;
+            text-shadow: 0 0 25px #FFAA00;
+            transition: left 0.25s ease;
             z-index: 25;
             pointer-events: none;
+        }
+        
+        #ice-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.92;
         }
         
         #controls {
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            height: 185px;
-            background: rgba(10,14,23,0.97);
-            border-top: 4px solid #334155;
-            padding: 15px;
+            height: 190px;
+            background: rgba(5,8,15,0.98);
+            border-top: 5px solid #334155;
+            padding: 15px 20px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
             pointer-events: auto;
         }
         
         .btn {
-            flex: 1;
-            background: #1e2937;
+            padding: 16px;
+            background: #1e2a44;
             border: 4px solid #FF6200;
             color: white;
             font-family: 'Press Start 2P';
             font-size: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            text-align: center;
             box-shadow: 0 6px 0 #c44a00;
             user-select: none;
         }
         
-        .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c44a00; }
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #c44a00;
+        }
         
         .spray-btn {
             background: linear-gradient(#FF6200, #FF8800);
-            border-color: #fff;
+            border-color: #FFEE88;
             color: #000;
-            font-size: 18px;
+            font-size: 19px;
             font-weight: bold;
-            box-shadow: 0 8px 0 #c44a00;
+            box-shadow: 0 10px 0 #c44a00;
         }
         
         #progress {
             position: absolute;
-            top: 65px; left: 20px; right: 20px;
-            height: 14px;
-            background: #1e2937;
+            top: 68px; left: 20px; right: 20px;
+            height: 18px;
+            background: #1e2a44;
             border: 3px solid #FF6200;
             overflow: hidden;
         }
         #progress-bar {
             height: 100%;
+            background: linear-gradient(to right, #FF6200, #FFEE00);
             width: 0%;
-            background: linear-gradient(to right, #FF6200, #FFCC00);
-            box-shadow: 0 0 20px #FF6200;
+            box-shadow: 0 0 25px #FFAA00;
         }
         
-        .ice-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        
         #start-screen, #game-over {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10,14,23,0.98);
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            position: absolute; inset: 0;
+            background: rgba(5,8,15,0.97);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             z-index: 100;
         }
         
         .title {
-            font-size: 48px;
+            font-size: 52px;
             color: #FF6200;
             text-shadow: 0 0 30px #FF6200;
-            margin-bottom: 10px;
-        }
-        
-        .start-btn {
-            margin-top: 40px;
-            padding: 20px 70px;
-            background: #FF6200;
-            color: black;
-            font-size: 20px;
-            border: none;
-            box-shadow: 0 10px 0 #c44a00;
+            margin-bottom: 8px;
         }
     </style>
 </head>
@@ -164,280 +177,267 @@
 
         <div id="viewport">
             <div id="plane-container">
-                <svg width="320" height="220" viewBox="0 0 320 220" id="plane-svg">
-                    <!-- Fuselage -->
-                    <path d="M70 110 Q160 75 250 110 Q160 145 70 110" fill="#e2e8f0" stroke="#475569" stroke-width="28"/>
+                <!-- Improved Airplane SVG -->
+                <svg width="340" height="240" viewBox="0 0 340 240" id="plane-svg">
+                    <!-- Main fuselage -->
+                    <ellipse cx="170" cy="125" rx="95" ry="28" fill="#e6ecf5" stroke="#475569" stroke-width="22"/>
+                    <!-- Nose -->
+                    <path d="M75 125 Q40 115 35 125 Q40 135 75 125" fill="#cbd5e1"/>
+                    <!-- Cockpit windows -->
+                    <path d="M65 115 Q85 105 105 115" fill="none" stroke="#1e2937" stroke-width="11"/>
+                    
                     <!-- Wings -->
-                    <polygon id="left-wing" points="140 115 55 55 95 145" fill="#94a3b8" stroke="#475569" stroke-width="16"/>
-                    <polygon id="right-wing" points="140 105 55 165 95 75" fill="#94a3b8" stroke="#475569" stroke-width="16"/>
+                    <polygon id="left-wing" points="165 125 70 45 125 155" fill="#94a3b8" stroke="#475569" stroke-width="18"/>
+                    <polygon id="right-wing" points="165 125 70 205 125 95" fill="#94a3b8" stroke="#475569" stroke-width="18"/>
+                    
                     <!-- Tail -->
-                    <polygon id="tail" points="245 95 285 55 285 145" fill="#64748b" stroke="#334155" stroke-width="14"/>
-                    <!-- Nozzle visual -->
-                    <circle id="nozzle" cx="125" cy="85" r="12" fill="#FFAA00" stroke="#FF6200" stroke-width="6"/>
+                    <polygon id="tail" points="255 115 310 65 310 165" fill="#64748b" stroke="#334155" stroke-width="16"/>
+                    
+                    <!-- Nozzle (bright & obvious) -->
+                    <g id="nozzle-group">
+                        <circle id="nozzle" cx="145" cy="105" r="16" fill="#FFEE00" stroke="#FF6200" stroke-width="8"/>
+                        <circle cx="145" cy="105" r="8" fill="#FF6200"/>
+                    </g>
                 </svg>
             </div>
             
+            <!-- Nozzle position indicator -->
             <div id="nozzle-indicator">▼</div>
             
-            <canvas id="ice-canvas" class="ice-layer" width="400" height="300"></canvas>
+            <canvas id="ice-canvas"></canvas>
         </div>
 
         <div id="controls">
-            <div style="display:flex; gap:12px;">
+            <div style="display: flex; gap: 12px;">
                 <div onclick="moveNozzle(-1)" class="btn">← LEFT WING</div>
                 <div onclick="moveNozzle(1)" class="btn">RIGHT WING →</div>
             </div>
-            <div onclick="startSpray()" id="spray-btn" class="btn spray-btn">HOLD TO SPRAY DE-ICER</div>
-            <div style="text-align:center; font-size:11px; opacity:0.7;">
-                Move nozzle • Melt all ice before time runs out
+            <div id="spray-btn" class="btn spray-btn">HOLD TO SPRAY DE-ICER</div>
+            <div style="text-align:center; font-size:12px; opacity:0.75;">
+                Tap buttons or swipe plane • Hold orange button to melt ice
             </div>
         </div>
     </div>
 
-    <!-- Start Screen -->
+    <!-- Start -->
     <div id="start-screen">
         <div class="title">DE-ICE</div>
-        <p style="color:#94a3b8; margin:20px 0;">WINTER STORM • CLEAR THE PLANE</p>
-        <div onclick="startGame()" class="start-btn">BEGIN MISSION</div>
+        <p style="color:#94a3b8; margin:30px 0 50px; text-align:center; max-width:280px;">
+            Clear the ice from Flight 472<br>before takeoff!
+        </p>
+        <div onclick="startGame()" style="padding:22px 80px; background:#FF6200; color:#000; font-size:22px; box-shadow:0 10px 0 #c44a00; cursor:pointer;">
+            START MISSION
+        </div>
     </div>
 
     <!-- Game Over -->
-    <div id="game-over" style="display:none;">
-        <h2 id="result-text" style="color:#f87171;">TIME'S UP</h2>
-        <p style="margin:20px 0 10px;">FINAL SCORE</p>
-        <h1 id="final-score" style="color:#FFCC00; font-size:42px;">08420</h1>
-        <div onclick="restartGame()" style="margin-top:60px; padding:16px 50px; background:#334155; border:4px solid #64748b; cursor:pointer;">
+    <div id="game-over" style="display:none; flex-direction:column;">
+        <h2 id="result" style="color:#f87171; margin-bottom:20px;">MISSION FAILED</h2>
+        <p style="margin:10px 0;">FINAL SCORE</p>
+        <div id="final-score" style="font-size:48px; color:#FFEE00;">00000</div>
+        <div onclick="location.reload()" style="margin-top:70px; padding:18px 60px; background:#1e2a44; border:4px solid #64748b; cursor:pointer;">
             TRY AGAIN
         </div>
     </div>
 
     <script>
-        // === GAME VARIABLES ===
         let score = 0, timeLeft = 90, iceLevel = 100;
         let gameRunning = false;
-        let nozzlePos = 1; // 0 = left, 1 = center, 2 = right
-        let iceSections = [88, 82, 91, 79]; // left, body, right, tail
-        let isSpraying = false;
-        let sprayInterval = null;
-
-        let scene, camera, renderer, snowParticles;
+        let nozzlePos = 1; // 0 left, 1 center, 2 right
+        let iceSections = [95, 88, 96, 82];
         let deiceParticles = [];
-        let iceCtx;
-
+        let timerInterval, sprayInterval;
+        
+        let scene, camera, renderer;
+        
         const scoreEl = document.getElementById('score');
         const timerEl = document.getElementById('timer');
         const progressBar = document.getElementById('progress-bar');
         const nozzleIndicator = document.getElementById('nozzle-indicator');
         const iceCanvas = document.getElementById('ice-canvas');
+        let iceCtx;
 
         function pad(n) { return ("00000" + Math.floor(n)).slice(-5); }
 
         function updateUI() {
             scoreEl.textContent = pad(score);
             timerEl.textContent = timeLeft;
-            progressBar.style.width = (100 - iceLevel) + "%";
+            progressBar.style.width = Math.max(0, 100 - iceLevel) + "%";
         }
 
-        // ===================== THREE.JS BACKGROUND =====================
+        // ==================== THREE.JS SNOW BACKGROUND ====================
         function initThree() {
             scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x0a0e17, 15, 90);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 200);
+            camera.position.set(0, 15, 35);
 
-            camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 200);
-            camera.position.set(0, 12, 28);
-
-            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true, alpha: true });
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('bg-canvas'), 
+                antialias: true, 
+                alpha: true 
+            });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
 
-            const light = new THREE.DirectionalLight(0x99ccff, 1.1);
-            light.position.set(10, 30, 20);
-            scene.add(light);
-            scene.add(new THREE.AmbientLight(0xaaaaaa, 0.5));
+            scene.add(new THREE.AmbientLight(0x99bbff, 0.6));
+            const sun = new THREE.DirectionalLight(0xffeecc, 1);
+            sun.position.set(20, 40, 30);
+            scene.add(sun);
 
             createSnow();
         }
 
         function createSnow() {
-            const count = 1200;
-            const geometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(count * 3);
-
-            for(let i = 0; i < count*3; i+=3){
-                positions[i]   = (Math.random()-0.5)*80;
-                positions[i+1] = Math.random()*50;
-                positions[i+2] = (Math.random()-0.5)*40 - 15;
+            const count = 1500;
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(count * 3);
+            
+            for(let i = 0; i < count*3; i += 3) {
+                pos[i]   = (Math.random() - 0.5) * 90;
+                pos[i+1] = Math.random() * 60;
+                pos[i+2] = (Math.random() - 0.5) * 50;
             }
-
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-            const material = new THREE.PointsMaterial({
-                color: 0xdddddd,
-                size: 0.45,
-                transparent: true,
-                opacity: 0.85
-            });
-
-            snowParticles = new THREE.Points(geometry, material);
-            scene.add(snowParticles);
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            
+            const mat = new THREE.PointsMaterial({ color: 0xeeeeee, size: 0.5, transparent: true });
+            const snow = new THREE.Points(geo, mat);
+            scene.add(snow);
         }
 
         function animateThree() {
-            if(!gameRunning) return;
+            if (!gameRunning) return;
             requestAnimationFrame(animateThree);
-
-            if(snowParticles){
-                const pos = snowParticles.geometry.attributes.position.array;
-                for(let i = 1; i < pos.length; i+=3){
-                    pos[i] -= 0.18;
-                    if(pos[i] < -12) pos[i] = 45;
-                }
-                snowParticles.geometry.attributes.position.needsUpdate = true;
-            }
             renderer.render(scene, camera);
         }
 
-        // ===================== ICE CANVAS =====================
-        function initIceCanvas() {
+        // ==================== ICE SYSTEM ====================
+        function initIce() {
             iceCtx = iceCanvas.getContext('2d');
             iceCanvas.width = 420;
-            iceCanvas.height = 300;
+            iceCanvas.height = 280;
             drawIce();
         }
 
         function drawIce() {
             iceCtx.clearRect(0, 0, iceCanvas.width, iceCanvas.height);
             
-            // Left wing ice
-            iceCtx.fillStyle = 'rgba(220,235,255,0.85)';
-            iceCtx.beginPath();
-            iceCtx.ellipse(95, 105, 68 * (iceSections[0]/100), 28, -0.5, 0, Math.PI*2);
-            iceCtx.fill();
-
-            // Body ice
-            iceCtx.fillStyle = 'rgba(200,225,255,0.9)';
-            iceCtx.fillRect(125, 72, 135 * (iceSections[1]/100), 58);
-
-            // Right wing ice
-            iceCtx.fillStyle = 'rgba(220,235,255,0.85)';
-            iceCtx.beginPath();
-            iceCtx.ellipse(105, 165, 65 * (iceSections[2]/100), 26, 0.6, 0, Math.PI*2);
-            iceCtx.fill();
-
-            // Tail ice
-            iceCtx.fillStyle = 'rgba(210,230,255,0.9)';
-            iceCtx.beginPath();
-            iceCtx.moveTo(245, 78);
-            iceCtx.lineTo(245 + 52*(iceSections[3]/100), 52);
-            iceCtx.lineTo(245 + 52*(iceSections[3]/100), 118);
-            iceCtx.fill();
+            // Left wing
+            iceCtx.fillStyle = '#e0f0ff';
+            iceCtx.globalAlpha = iceSections[0] / 100;
+            iceCtx.fillRect(40, 65, 110, 55);
+            
+            // Fuselage
+            iceCtx.globalAlpha = iceSections[1] / 100;
+            iceCtx.fillRect(130, 95, 140, 48);
+            
+            // Right wing
+            iceCtx.globalAlpha = iceSections[2] / 100;
+            iceCtx.fillRect(40, 165, 110, 55);
+            
+            // Tail
+            iceCtx.globalAlpha = iceSections[3] / 100;
+            iceCtx.fillRect(255, 75, 70, 80);
+            
+            iceCtx.globalAlpha = 1.0;
         }
 
-        function createDeiceBurst(baseX, baseY) {
-            for(let i = 0; i < 35; i++){
+        function createSprayEffect() {
+            const baseX = 80 + nozzlePos * 75;
+            for(let i = 0; i < 40; i++) {
                 deiceParticles.push({
-                    x: baseX + (Math.random()-0.5)*40,
-                    y: baseY + (Math.random()-0.5)*30,
-                    vx: (Math.random()-0.5)*8 + (nozzlePos-1)*3,
-                    vy: -6 - Math.random()*7,
-                    life: 45,
-                    size: 4 + Math.random()*5
+                    x: baseX + Math.random() * 80 - 20,
+                    y: 90 + Math.random() * 80,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: - (5 + Math.random() * 10),
+                    life: 35,
+                    color: Math.random() > 0.5 ? '#FFCC00' : '#FF8800'
                 });
             }
         }
 
-        function updateAndDrawParticles() {
-            iceCtx.save();
-            for(let i = deiceParticles.length-1; i >= 0; i--){
+        function updateParticles() {
+            for(let i = deiceParticles.length - 1; i >= 0; i--) {
                 const p = deiceParticles[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vy += 0.25;
+                p.vy += 0.35;
                 p.life--;
-
-                const alpha = p.life / 45;
-                iceCtx.globalAlpha = alpha;
-                iceCtx.fillStyle = '#FFCC44';
-                iceCtx.fillRect(p.x, p.y, p.size, p.size);
-
-                if(p.life <= 0) deiceParticles.splice(i,1);
+                if(p.life <= 0) deiceParticles.splice(i, 1);
             }
-            iceCtx.restore();
         }
 
-        // ===================== GAME LOGIC =====================
+        function drawParticles() {
+            for(let p of deiceParticles) {
+                const alpha = p.life / 35;
+                iceCtx.save();
+                iceCtx.globalAlpha = alpha * 0.9;
+                iceCtx.fillStyle = p.color;
+                iceCtx.fillRect(p.x, p.y, 6, 6);
+                iceCtx.restore();
+            }
+        }
+
+        // ==================== GAME LOGIC ====================
         function moveNozzle(dir) {
             nozzlePos = Math.max(0, Math.min(2, nozzlePos + dir));
             
-            // Move nozzle visual
             const nozzle = document.getElementById('nozzle');
-            const positions = [95, 135, 175];
+            const positions = [118, 158, 198];
             nozzle.setAttribute('cx', positions[nozzlePos]);
             
-            // Move indicator
-            nozzleIndicator.style.left = (28 + nozzlePos * 32) + "%";
+            nozzleIndicator.style.left = (22 + nozzlePos * 29) + "%";
         }
 
-        function startSpray() {
+        function startSpraying() {
             if (!gameRunning) return;
-            isSpraying = true;
             
-            if(sprayInterval) clearInterval(sprayInterval);
+            if (sprayInterval) clearInterval(sprayInterval);
             
             sprayInterval = setInterval(() => {
-                if(!isSpraying) return;
-                
-                // Reduce ice based on nozzle position
-                if(nozzlePos === 0) iceSections[0] = Math.max(0, iceSections[0] - 7.5);
-                else if(nozzlePos === 2) iceSections[2] = Math.max(0, iceSections[2] - 7.5);
+                // Melt ice
+                if (nozzlePos === 0) iceSections[0] = Math.max(0, iceSections[0] - 11);
+                else if (nozzlePos === 2) iceSections[2] = Math.max(0, iceSections[2] - 11);
                 else {
-                    iceSections[1] = Math.max(0, iceSections[1] - 8);
-                    iceSections[0] = Math.max(0, iceSections[0] - 3);
-                    iceSections[2] = Math.max(0, iceSections[2] - 3);
+                    iceSections[1] = Math.max(0, iceSections[1] - 13);
+                    iceSections[0] = Math.max(0, iceSections[0] - 5);
+                    iceSections[2] = Math.max(0, iceSections[2] - 5);
                 }
                 
                 iceLevel = (iceSections[0] + iceSections[1] + iceSections[2] + iceSections[3]) / 4;
+                score += 22;
                 
-                score += 18;
-                
-                // Visual spray
-                const sprayX = 80 + nozzlePos * 70 + Math.random()*50;
-                createDeiceBurst(sprayX, 95);
-                
+                createSprayEffect();
                 drawIce();
-                updateAndDrawParticles();
+                updateParticles();
+                drawParticles();
                 updateUI();
                 
-                if(iceLevel <= 6){
-                    winGame();
-                }
-            }, 60);
+                if (iceLevel < 8) winGame();
+            }, 45);
         }
 
-        function stopSpray() {
-            isSpraying = false;
-            if(sprayInterval){
+        function stopSpraying() {
+            if (sprayInterval) {
                 clearInterval(sprayInterval);
                 sprayInterval = null;
             }
         }
 
-        function gameTimer() {
-            if(!gameRunning) return;
-            
+        function gameTick() {
+            if (!gameRunning) return;
             timeLeft--;
             timerEl.textContent = timeLeft;
             
-            // Slow ice regrowth
-            if(Math.random() > 0.55){
-                iceSections = iceSections.map(v => Math.min(100, v + 0.8));
+            // Slow ice buildup
+            if (Math.random() > 0.5) {
+                iceSections = iceSections.map(s => Math.min(100, s + 1.2));
                 iceLevel = (iceSections[0] + iceSections[1] + iceSections[2] + iceSections[3]) / 4;
                 drawIce();
             }
             
             updateUI();
             
-            if(timeLeft <= 0) endGame();
+            if (timeLeft <= 0) endGame();
         }
 
         function startGame() {
@@ -446,62 +446,54 @@
             score = 0;
             timeLeft = 90;
             iceLevel = 100;
-            iceSections = [88, 82, 91, 79];
+            iceSections = [95, 88, 96, 82];
             nozzlePos = 1;
-            deiceParticles = [];
             
             drawIce();
             updateUI();
-            moveNozzle(0); // reset position
+            moveNozzle(0);
             
-            setInterval(gameTimer, 1000);
+            timerInterval = setInterval(gameTick, 1000);
             animateThree();
         }
 
         function winGame() {
             gameRunning = false;
-            stopSpray();
-            alert("✅ AIRCRAFT CLEAR!\n\nYou did it! Final Score: " + pad(score + 2500));
+            clearInterval(timerInterval);
+            stopSpraying();
+            alert("EXCELLENT JOB!\n\nThe plane is clear for takeoff!\nFinal Score: " + pad(score + 3000));
             location.reload();
         }
 
         function endGame() {
             gameRunning = false;
-            stopSpray();
+            clearInterval(timerInterval);
+            stopSpraying();
             document.getElementById('final-score').textContent = pad(score);
             document.getElementById('game-over').style.display = 'flex';
         }
 
-        function restartGame() {
-            location.reload();
-        }
-
-        // Init
         function init() {
             initThree();
-            initIceCanvas();
+            initIce();
             
             const sprayBtn = document.getElementById('spray-btn');
-            sprayBtn.addEventListener('mousedown', startSpray);
-            sprayBtn.addEventListener('mouseup', stopSpray);
-            sprayBtn.addEventListener('mouseleave', stopSpray);
-            sprayBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startSpray(); });
-            sprayBtn.addEventListener('touchend', stopSpray);
+            sprayBtn.addEventListener('mousedown', startSpraying);
+            sprayBtn.addEventListener('mouseup', stopSpraying);
+            sprayBtn.addEventListener('mouseleave', stopSpraying);
+            sprayBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); startSpraying(); });
+            sprayBtn.addEventListener('touchend', stopSpraying);
             
-            // Touch swipe for nozzle
+            // Swipe support
             let startX = 0;
-            document.getElementById('viewport').addEventListener('touchstart', e => {
-                startX = e.touches[0].clientX;
-            });
+            document.getElementById('viewport').addEventListener('touchstart', e => startX = e.touches[0].clientX);
             document.getElementById('viewport').addEventListener('touchend', e => {
                 const diff = e.changedTouches[0].clientX - startX;
-                if(Math.abs(diff) > 60){
-                    moveNozzle(diff > 0 ? 1 : -1);
-                }
+                if (Math.abs(diff) > 50) moveNozzle(diff > 0 ? 1 : -1);
             });
             
             window.addEventListener('resize', () => {
-                if(renderer){
+                if (renderer) {
                     renderer.setSize(window.innerWidth, window.innerHeight);
                     camera.aspect = window.innerWidth / window.innerHeight;
                     camera.updateProjectionMatrix();
