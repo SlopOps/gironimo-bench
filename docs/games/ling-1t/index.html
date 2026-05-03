@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AXIS OF SOUND</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --fg: #f0f0f0;
+      --accent: #ff2d55;
+      --accent2: #00d4ff;
+      --accent3: #ffd700;
+      --panel: rgba(15, 15, 25, 0.92);
+      --glow: rgba(255, 45, 85, 0.6);
+      --glow2: rgba(0, 212, 255, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Stage backdrop */
+    #stageCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    /* Main container */
+    .main-container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Header - Band logo and energy */
+    .header {
+      padding: 12px 16px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(10,10,15,0.95) 0%, transparent 100%);
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      filter: drop-shadow(0 0 20px rgba(255,45,85,0.5));
+    }
+
+    .logo-sub {
+      font-size: 9px;
+      color: var(--accent2);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .energy-bar-container {
+      flex: 1;
+      margin: 0 12px;
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .energy-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 3px;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px var(--glow);
+    }
+
+    .energy-pulse {
+      position: absolute;
+      right: -4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 15px var(--glow);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translateY(-50%) scale(1); opacity: 1; }
+      50% { transform: translateY(-50%) scale(1.5); opacity: 0.6; }
+    }
+
+    .score-display {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--accent3);
+      text-shadow: 0 0 20px rgba(255,215,0,0.5);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Game area */
+    .game-stage {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 20px 16px 40px;
+      min-height: 0;
+    }
+
+    .game-title {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--accent2);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      text-align: center;
+      opacity: 0.8;
+    }
+
+    /* Drum pads grid */
+    .drum-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 320px;
+      margin-bottom: 20px;
+    }
+
+    .drum-pad {
+      aspect-ratio: 1;
+      border-radius: 16px;
+      border: 2px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.08s ease, border-color 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    .drum-pad::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .drum-pad.active {
+      transform: scale(0.92);
+      border-color: var(--accent);
+      box-shadow: 0 0 30px var(--glow), inset 0 0 30px rgba(255,45,85,0.2);
+    }
+
+    .drum-pad.active::before {
+      opacity: 1;
+    }
+
+    .drum-pad.kick { border-color: rgba(255,45,85,0.3); }
+    .drum-pad.snare { border-color: rgba(0,212,255,0.3); }
+    .drum-pad.hihat { border-color: rgba(255,215,0,0.3); }
+    .drum-pad.tom { border-color: rgba(128,0,255,0.3); }
+
+    .drum-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+      text-shadow: 0 0 20px currentColor;
+    }
+
+    .drum-label {
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+    }
+
+    /* Combo display */
+    .combo-display {
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--fg);
+      text-shadow: 0 0 40px rgba(255,45,85,0.6);
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.15s ease;
+    }
+
+    .combo-display.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .combo-display.x10 { color: var(--accent); }
+    .combo-display.x20 { color: var(--accent2); }
+    .combo-display.x30 { color: var(--accent3); }
+
+    /* Beat indicator */
+    .beat-tracker {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    .beat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      transition: all 0.1s ease;
+    }
+
+    .beat-dot.active {
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--glow);
+      transform: scale(1.5);
+    }
+
+    /* Timer bar */
+    .timer-bar-container {
+      width: 100%;
+      max-width: 320px;
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px;
+      transition: width 0.1s linear;
+    }
+
+    /* Instructions overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,15,0.95);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.05);
+    }
+
+    .overlay-title {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .overlay-subtitle {
+      font-size: 12px;
+      color: var(--accent2);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 30px;
+    }
+
+    .instructions {
+      text-align: center;
+      max-width: 260px;
+      margin-bottom: 30px;
+    }
+
+    .instructions p {
+      font-size: 13px;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 12px;
+    }
+
+    .instructions strong {
+      color: var(--fg);
+    }
+
+    .start-btn {
+      padding: 16px 48px;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 50px;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .start-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 40px var(--glow);
+    }
+
+    .start-btn:hover::before {
+      opacity: 1;
+    }
+
+    .start-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Feedback particles */
+    .feedback-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 50;
+      font-size: 14px;
+      font-weight: 900;
+      animation: particleUp 0.8s ease-out forwards;
+    }
+
+    @keyframes particleUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-60px) scale(0.5); }
+    }
+
+    /* Result screen */
+    .result-screen {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,15,0.95);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .result-screen.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .result-title {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .result-score {
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--accent3);
+      margin-bottom: 16px;
+    }
+
+    .result-rank {
+      font-size: 14px;
+      color: var(--accent2);
+      letter-spacing: 2px;
+      margin-bottom: 30px;
+    }
+
+    /* Bottom hud */
+    .bottom-hud {
+      padding: 12px 16px 16px;
+      background: linear-gradient(0deg, rgba(10,10,15,0.95) 0%, transparent 100%);
+      position: relative;
+      z-index: 10;
+    }
+
+    .bpm-display {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    .bpm-value {
+      color: var(--accent3);
+      font-weight: 700;
+    }
+
+    /* Visualizer bars */
+    .visualizer-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      padding: 0 20px 8px;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .visualizer-bar {
+      width: 4px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      border-radius: 2px 2px 0 0;
+      transition: height 0.05s ease;
+      min-height: 2px;
+    }
+
+    /* Tap ripple */
+    .tap-ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+      pointer-events: none;
+      animation: rippleOut 0.4s ease-out forwards;
+    }
+
+    @keyframes rippleOut {
+      0% { width: 0; height: 0; opacity: 1; }
+      100% { width: 100px; height: 100px; opacity: 0; }
+    }
+
+    /* Screen flash */
+    .screen-flash {
+      position: fixed;
+      inset: 0;
+      background: white;
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.05s ease;
+    }
+
+    .screen-flash.active {
+      opacity: 0.3;
+    }
+
+    /* Mobile optimizations */
+    @media (max-width: 380px) {
+      .drum-grid {
+        gap: 8px;
+      }
+      .drum-icon {
+        font-size: 20px;
+      }
+      .drum-label {
+        font-size: 8px;
+      }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <canvas id="stageCanvas"></canvas>
+    
+    <div class="main-container">
+      <header class="header">
+        <div class="logo-container">
+          <div class="logo">AXIS OF SOUND</div>
+          <div class="logo-sub">Tour 2026</div>
+        </div>
+        <div class="energy-bar-container">
+          <div class="energy-bar" id="energyBar"></div>
+          <div class="energy-pulse"></div>
+        </div>
+        <div class="score-display" id="scoreDisplay">0</div>
+      </header>
+
+      <main class="game-stage">
+        <div class="game-title">Live Show Mix</div>
+        
+        <div class="beat-tracker" id="beatTracker">
+          <div class="beat-dot"></div>
+          <div class="beat-dot"></div>
+          <div class="beat-dot"></div>
+          <div class="beat-dot"></div>
+        </div>
+
+        <div class="timer-bar-container">
+          <div class="timer-bar" id="timerBar"></div>
+        </div>
+
+        <div class="combo-display" id="comboDisplay">0x</div>
+
+        <div class="drum-grid" id="drumGrid"></div>
+      </main>
+
+      <footer class="bottom-hud">
+        <div class="bpm-display">LIVE BPM: <span class="bpm-value" id="bpmValue">128</span></div>
+      </footer>
+    </div>
+
+    <div class="visualizer-container" id="visualizer"></div>
+    <div class="screen-flash" id="screenFlash"></div>
+
+    <div class="overlay" id="startOverlay">
+      <h1 class="overlay-title">AXIS OF SOUND</h1>
+      <div class="overlay-subtitle">Live Tour Mixing</div>
+      <div class="instructions">
+        <p><strong>Hit the drums</strong> on beat to build the crowd's energy!</p>
+        <p>Keep the <strong>energy bar</strong> full by matching the rhythm.</p>
+        <p>Higher combos = bigger crowd roar!</p>
+      </div>
+      <button class="start-btn" id="startBtn">
+        <span>Start Show</span>
+      </button>
+    </div>
+
+    <div class="result-screen" id="resultScreen">
+      <div class="result-title" id="resultTitle">Encore!</div>
+      <div class="result-score" id="resultScore">0</div>
+      <div class="result-rank" id="resultRank">ROCK STAR</div>
+      <button class="start-btn" id="restartBtn" style="margin-top: 20px;">
+        <span>Play Again</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // ============================================
+    // ROCK BAND LIVE SHOW MIXING GAME
+    // Theme: Rock Band - every element screams concert
+    // Game: Hit drum pads on beat to maintain crowd energy
+    // ============================================
+
+    // Audio context for Web Audio API synthesis
+    class DrumSynth {
+      constructor() {
+        this.audioCtx = null;
+        this.initialized = false;
+      }
+
+      init() {
+        if (this.initialized) return;
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        this.initialized = true;
+      }
+
+      playKick(time) {
+        if (!this.audioCtx) return;
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        
+        osc.frequency.setValueAtTime(150, time);
+        osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.15);
+        gain.gain.setValueAtTime(1, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
+        
+        osc.start(time);
+        osc.stop(time + 0.15);
+      }
+
+      playSnare(time) {
+        if (!this.audioCtx) return;
+        const noise = this.audioCtx.createBufferSource();
+        const bufferSize = this.audioCtx.sampleRate * 0.1;
+        const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        noise.buffer = buffer;
+        
+        const filter = this.audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 1000;
+        
+        const gain = this.audioCtx.createGain();
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        
+        gain.gain.setValueAtTime(0.7, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+        
+        noise.start(time);
+        noise.stop(time + 0.1);
+        
+        // Body
+        const osc = this.audioCtx.createOscillator();
+        const oscGain = this.audioCtx.createGain();
+        osc.connect(oscGain);
+        oscGain.connect(this.audioCtx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(100, time);
+        oscGain.gain.setValueAtTime(0.3, time);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+        osc.start(time);
+        osc.stop(time + 0.05);
+      }
+
+      playHihat(time) {
+        if (!this.audioCtx) return;
+        const noise = this.audioCtx.createBufferSource();
+        const bufferSize = this.audioCtx.sampleRate * 0.05;
+        const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        noise.buffer = buffer;
+        
+        const filter = this.audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 7000;
+        
+        const gain = this.audioCtx.createGain();
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        
+        gain.gain.setValueAtTime(0.5, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.03);
+        
+        noise.start(time);
+        noise.stop(time + 0.03);
+      }
+
+      playTom(time) {
+        if (!this.audioCtx) return;
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(200, time);
+        osc.frequency.exponentialRampToValueAtTime(50, time + 0.2);
+        gain.gain.setValueAtTime(0.6, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+        
+        osc.start(time);
+        osc.stop(time + 0.2);
+      }
+    }
+
+    // 3D Stage Scene
+    class StageScene {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(60, 9/16, 0.1, 1000);
+        this.renderer = new THREE.WebGLRenderer({ 
+          canvas: canvas, 
+          alpha: true,
+          antialias: true 
+        });
+        
+        this.drumMeshes = [];
+        this.particles = [];
+        this.spotLights = [];
+        this.smokeParticles = [];
+        
+        this.init();
+      }
+
+      init() {
+        const rect = this.canvas.getBoundingClientRect();
+        this.renderer.setSize(rect.width, rect.height);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        
+        this.camera.position.set(0, 3, 8);
+        this.camera.lookAt(0, 0, 0);
+
+        // Stage floor
+        const floorGeo = new THREE.PlaneGeometry(20, 20);
+        const floorMat = new THREE.MeshStandardMaterial({
+          color: 0x0a0a0f,
+          roughness: 0.8,
+          metalness: 0.2
+        });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -1;
+        this.scene.add(floor);
+
+        // Grid helper
+        const gridHelper = new THREE.GridHelper(20, 20, 0xff2d55, 0x0a0a0f);
+        gridHelper.position.y = -0.99;
+        gridHelper.material.opacity = 0.3;
+        gridHelper.material.transparent = true;
+        this.scene.add(gridHelper);
+
+        // Create drum kit
+        this.createDrumKit();
+
+        // Ambient light
+        const ambient = new THREE.AmbientLight(0x404080, 0.3);
+        this.scene.add(ambient);
+
+        // Spotlights for stage
+        for (let i = 0; i < 4; i++) {
+          const spot = new THREE.SpotLight(0xffffff, 1);
+          spot.position.set(-3 + i * 2, 5, 5);
+          spot.angle = Math.PI / 6;
+          spot.penumbra = 0.5;
+          spot.decay = 2;
+          spot.distance = 20;
+          this.scene.add(spot);
+          this.spotLights.push(spot);
+        }
+
+        // Colored stage lights
+        const colors = [0xff2d55, 0x00d4ff, 0xffd700, 0x8000ff];
+        for (let i = 0; i < 4; i++) {
+          const light = new THREE.SpotLight(colors[i], 0.8);
+          light.position.set(-3 + i * 2, 8, -3);
+          light.angle = Math.PI / 4;
+          light.target.position.set(-3 + i * 2, 0, 0);
+          this.scene.add(light);
+          this.scene.add(light.target);
+        }
+
+        // Fog for atmosphere
+        this.scene.fog = new THREE.FogExp2(0x0a0a0f, 0.03);
+
+        // Create particle system
+        this.createParticleSystem();
+
+        // Create smoke particles
+        this.createSmokeSystem();
+      }
+
+      createDrumKit() {
+        const drumColors = [0xff2d55, 0x00d4ff, 0xffd700, 0x8000ff];
+        
+        for (let i = 0; i < 4; i++) {
+          const group = new THREE.Group();
+          
+          // Drum body
+          const bodyGeo = new THREE.CylinderGeometry(0.8, 1, 0.6, 32);
+          const bodyMat = new THREE.MeshStandardMaterial({
+            color: drumColors[i],
+            metalness: 0.8,
+            roughness: 0.3
+          });
+          const body = new THREE.Mesh(bodyGeo, bodyMat);
+          body.position.y = 0.3;
+          group.add(body);
+
+          // Drum head
+          const headGeo = new THREE.CircleGeometry(0.85, 32);
+          const headMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            metalness: 0.9,
+            roughness: 0.2
+          });
+          const head = new THREE.Mesh(headGeo, headMat);
+          head.rotation.x = -Math.PI / 2;
+          head.position.y = 0.61;
+          group.add(head);
+
+          group.position.x = -2.5 + i * 1.7;
+          group.position.y = -0.7;
+          group.position.z = 0;
+          
+          this.drumMeshes.push(group);
+          this.scene.add(group);
+        }
+      }
+
+      createParticleSystem() {
+        const particleCount = 200;
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+        const sizes = new Float32Array(particleCount);
+        
+        const colorPalette = [
+          new THREE.Color(0xff2d55),
+          new THREE.Color(0x00d4ff),
+          new THREE.Color(0xffd700),
+          new THREE.Color(0x8000ff),
+          new THREE.Color(0xffffff)
+        ];
+        
+        for (let i = 0; i < particleCount; i++) {
+          positions[i * 3] = (Math.random() - 0.5) * 20;
+          positions[i * 3 + 1] = Math.random() * 10 + 2;
+          positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+          
+          const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+          colors[i * 3] = color.r;
+          colors[i * 3 + 1] = color.g;
+          colors[i * 3 + 2] = color.b;
+          
+          sizes[i] = Math.random() * 3 + 1;
+        }
+        
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+        
+        const material = new THREE.PointsMaterial({
+          size: 0.15,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.8,
+          blending: THREE.AdditiveBlending
+        });
+        
+        this.particleSystem = new THREE.Points(geometry, material);
+        this.scene.add(this.particleSystem);
+      }
+
+      createSmokeSystem() {
+        const smokeCount = 30;
+        for (let i = 0; i < smokeCount; i++) {
+          const geometry = new THREE.SphereGeometry(Math.random() * 2 + 1, 16, 16);
+          const material = new THREE.MeshBasicMaterial({
+            color: 0x333344,
+            transparent: true,
+            opacity: 0.1
+          });
+          const smoke = new THREE.Mesh(geometry, material);
+          smoke.position.set(
+            (Math.random() - 0.5) * 15,
+            Math.random() * 5,
+            (Math.random() - 0.5) * 10 - 2
+          );
+          smoke.userData = {
+            velocity: new THREE.Vector3(
+              (Math.random() - 0.5) * 0.02,
+              Math.random() * 0.02 + 0.01,
+              (Math.random() - 0.5) * 0.01
+            ),
+            scale: Math.random() * 0.5 + 0.5
+          };
+          this.smokeParticles.push(smoke);
+          this.scene.add(smoke);
+        }
+      }
+
+      update(beatActive, energy) {
+        const time = performance.now() * 0.001;
+        
+        // Rotate drums slightly on beat
+        this.drumMeshes.forEach((mesh, i) => {
+          const bounce = beatActive && i === this.lastHitDrum ? Math.sin(time * 20) * 0.1 : 0;
+          mesh.position.y = -0.7 + bounce;
+          mesh.rotation.y = Math.sin(time * 0.5 + i) * 0.05;
+        });
+
+        // Update particles
+        if (this.particleSystem) {
+          const positions = this.particleSystem.geometry.attributes.position.array;
+          for (let i = 0; i < positions.length; i += 3) {
+            positions[i + 1] += 0.02 * (energy / 100);
+            if (positions[i + 1] > 12) {
+              positions[i + 1] = 0;
+            }
+          }
+          this.particleSystem.geometry.attributes.position.needsUpdate = true;
+          
+          // Pulse particles on beat
+          this.particleSystem.scale.setScalar(1 + (beatActive ? 0.1 : 0));
+        }
+
+        // Update smoke
+        this.smokeParticles.forEach(smoke => {
+          smoke.position.add(smoke.userData.velocity);
+          smoke.material.opacity = 0.1 + Math.sin(time * 2 + smoke.position.x) * 0.05;
+          if (smoke.position.y > 6) {
+            smoke.position.y = -1;
+          }
+        });
+
+        // Rotate particle system
+        if (this.particleSystem) {
+          this.particleSystem.rotation.y = time * 0.05;
+        }
+
+        // Animate spotlights
+        this.spotLights.forEach((light, i) => {
+          light.intensity = 0.5 + Math.sin(time * 2 + i) * 0.3;
+        });
+
+        this.renderer.render(this.scene, this.camera);
+      }
+
+      hitDrum(index, energy) {
+        this.lastHitDrum = index;
+        
+        // Add impact particles
+        this.spawnImpactParticles(index, energy);
+      }
+
+      spawnImpactParticles(index, energy) {
+        const drumPos = this.drumMeshes[index].position;
+        const burstCount = Math.floor(energy / 20) + 5;
+        
+        for (let i = 0; i < burstCount; i++) {
+          const geometry = new THREE.SphereGeometry(0.05, 8, 8);
+          const material = new THREE.MeshBasicMaterial({
+            color: this.drumMeshes[index].children[0].material.color,
+            transparent: true,
+            opacity: 0.8
+          });
+          const particle = new THREE.Mesh(geometry, material);
+          particle.position.copy(drumPos);
+          particle.position.y += 0.5;
+          particle.userData = {
+            velocity: new THREE.Vector3(
+              (Math.random() - 0.5) * 0.3,
+              Math.random() * 0.5 + 0.2,
+              (Math.random() - 0.5) * 0.3
+            ),
+            life: 1
+          };
+          this.scene.add(particle);
+          
+          setTimeout(() => {
+            if (this.scene) this.scene.remove(particle);
+            geometry.dispose();
+            material.dispose();
+          }, 500);
+        }
+      }
+
+      resize() {
+        const rect = this.canvas.getBoundingClientRect();
+        this.renderer.setSize(rect.width, rect.height);
+        this.camera.aspect = 9 / 16;
+        this.camera.updateProjectionMatrix();
+      }
+    }
+
+    // Main Game Controller
+    class RockBandGame {
+      constructor() {
+        this.score = 0;
+        this.combo = 0;
+        this.maxCombo = 0;
+        this.energy = 50;
+        this.energyDecayRate = 0.05;
+        this.energyGainPerfect = 8;
+        this.energyGainGood = 4;
+        this.energyGainMiss = -15;
+        this.gameTime = 60; // seconds
+        this.timeLeft = this.gameTime;
+        this.gameRunning = false;
+        this.gameStarted = false;
+        this.bpm = 128;
+        this.beatInterval = 60 / this.bpm;
+        this.lastBeatTime = 0;
+        this.beatIndex = 0;
+        this.nextBeatTime = 0;
+        this.hitWindowPerfect = 0.12; // seconds
+        this.hitWindowGood = 0.2;
+        this.lastHitDrum = -1;
+        this.drumSequence = [];
+        this.currentSequenceIndex = 0;
+        this.visualizerBars = [];
+        this.feedbackElements = [];
+        
+        this.drumTypes = [
+          { name: 'kick', label: 'Kick', icon: '🥁', color: 'var(--accent)' },
+          { name: 'snare', label: 'Snare', icon: '🥁', color: 'var(--accent2)' },
+          { name: 'hihat', label: 'Hi-Hat', icon: '🔔', color: 'var(--accent3)' },
+          { name: 'tom', label: 'Tom', icon: '🥁', color: '#8000ff' }
+        ];
+
+        this.drumSynth = new DrumSynth();
+        this.stageScene = null;
+        
+        this.initElements();
+        this.initStage();
+        this.initVisualizer();
+        this.initEventListeners();
+        this.generateSequence();
+        this.animate();
+      }
+
+      initElements() {
+        this.startOverlay = document.getElementById('startOverlay');
+        this.startBtn = document.getElementById('startBtn');
+        this.resultScreen = document.getElementById('resultScreen');
+        this.resultTitle = document.getElementById('resultTitle');
+        this.resultScore = document.getElementById('resultScore');
+        this.resultRank = document.getElementById('resultRank');
+        this.restartBtn = document.getElementById('restartBtn');
+        this.scoreDisplay = document.getElementById('scoreDisplay');
+        this.comboDisplay = document.getElementById('comboDisplay');
+        this.energyBar = document.getElementById('energyBar');
+        this.timerBar = document.getElementById('timerBar');
+        this.bpmValue = document.getElementById('bpmValue');
+        this.drumGrid = document.getElementById('drumGrid');
+        this.beatTracker = document.getElementById('beatTracker');
+        this.visualizerContainer = document.getElementById('visualizer');
+        this.screenFlash = document.getElementById('screenFlash');
+        this.stageCanvas = document.getElementById('stageCanvas');
+        this.beatDots = this.beatTracker.querySelectorAll('.beat-dot');
+      }
+
+      initStage() {
+        this.stageScene = new StageScene(this.stageCanvas);
+      }
+
+      initVisualizer() {
+        const barCount = 32;
+        for (let i = 0; i < barCount; i++) {
+          const bar = document.createElement('div');
+          bar.className = 'visualizer-bar';
+          bar.style.height = '2px';
+          this.visualizerContainer.appendChild(bar);
+          this.visualizerBars.push(bar);
+        }
+      }
+
+      initEventListeners() {
+        this.startBtn.addEventListener('click', () => this.startGame());
+        this.restartBtn.addEventListener('click', () => this.restartGame());
+        
+        window.addEventListener('resize', () => {
+          this.stageScene.resize();
+        });
+
+        // Prevent context menu
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+      }
+
+      generateSequence() {
+        this.drumSequence = [];
+        const sequenceLength = 32;
+        for (let i = 0; i < sequenceLength; i++) {
+          const drumIndex = Math.floor(Math.random() * 4);
+          this.drumSequence.push({
+            drumIndex,
+            time: i * this.beatInterval
+          });
+        }
+        this.currentSequenceIndex = 0;
+      }
+
+      createDrumPads() {
+        this.drumGrid.innerHTML = '';
+        this.drumPads = [];
+        
+        this.drumTypes.forEach((drum, index) => {
+          const pad = document.createElement('div');
+          pad.className = `drum-pad ${drum.name}`;
+          pad.dataset.index = index;
+          
+          pad.innerHTML = `
+            <div class="drum-icon">${drum.icon}</div>
+            <div class="drum-label">${drum.label}</div>
+          `;
+          
+          pad.addEventListener('click', (e) => this.handleDrumHit(index, e));
+          pad.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.handleDrumHit(index, e);
+          }, { passive: false });
+          
+          this.drumGrid.appendChild(pad);
+          this.drumPads.push(pad);
+        });
+      }
+
+      handleDrumHit(drumIndex, event) {
+        if (!this.gameRunning) return;
+        
+        this.drumSynth.init();
+        
+        const hitTime = this.gameTime - this.timeLeft;
+        const expectedTime = this.drumSequence[this.currentSequenceIndex]?.time || 0;
+        const timeDiff = Math.abs(hitTime - expectedTime);
+        
+        let hitQuality = null;
+        let energyGain = 0;
+        let points = 0;
+        
+        // Check if hitting correct drum for current sequence position
+        const expectedDrum = this.drumSequence[this.currentSequenceIndex]?.drumIndex;
+        const correctDrum = drumIndex === expectedDrum;
+        
+        // Visual feedback
+        this.showTapRipple(event, this.drumPads[drumIndex]);
+        this.flashScreen();
+        
+        // Play sound
+        switch (drumIndex) {
+          case 0: this.drumSynth.playKick(0); break;
+          case 1: this.drumSynth.playSnare(0); break;
+          case 2: this.drumSynth.playHihat(0); break;
+          case 3: this.drumSynth.playTom(0); break;
+        }
+        
+        // Animate drum pad
+        this.drumPads[drumIndex].classList.add('active');
+        setTimeout(() => {
+          this.drumPads[drumIndex].classList.remove('active');
+        }, 150);
+        
+        // 3D stage animation
+        this.stageScene.hitDrum(drumIndex, this.energy);
+        
+        // Determine hit quality
+        if (correctDrum && timeDiff <= this.hitWindowPerfect) {
+          hitQuality = 'PERFECT';
+          energyGain = this.energyGainPerfect;
+          points = 100 * (this.combo / 10 + 1);
+          this.combo++;
+          this.currentSequenceIndex++;
+        } else if (correctDrum && timeDiff <= this.hitWindowGood) {
+          hitQuality = 'GOOD';
+          energyGain = this.energyGainGood;
+          points = 50;
+          this.combo++;
+          this.currentSequenceIndex++;
+        } else if (correctDrum) {
+          hitQuality = 'MISSED';
+          energyGain = this.energyGainMiss;
+          points = 0;
+          this.combo = 0;
+        } else {
+          hitQuality = 'WRONG';
+          energyGain = -5;
+          points = 0;
+          if (this.combo > 0) this.combo = Math.max(0, this.combo - 1);
+        }
+        
+        // Update scores
+        this.score += points;
+        this.energy = Math.max(0, Math.min(100, this.energy + energyGain));
+        this.maxCombo = Math.max(this.maxCombo, this.combo);
+        
+        // Show feedback
+        this.showFeedback(points, hitQuality, event);
+        this.updateDisplay();
+        
+        // Check rhythm penalty for missing beats
+        this.checkBeatMiss();
+      }
+
+      checkBeatMiss() {
+        const hitTime = this.gameTime - this.timeLeft;
+        const nextBeat = this.drumSequence[this.currentSequenceIndex];
+        
+        if (nextBeat && hitTime - nextBeat.time > this.hitWindowGood) {
+          // Auto-fail the beat if too late
+          this.energy += this.energyGainMiss;
+          this.combo = 0;
+          this.currentSequenceIndex++;
+          this.updateDisplay();
+        }
+      }
+
+      showFeedback(points, quality, event) {
+        const feedback = document.createElement('div');
+        feedback.className = 'feedback-particle';
+        
+        let color;
+        switch (quality) {
+          case 'PERFECT': color = 'var(--accent3)'; break;
+          case 'GOOD': color = 'var(--accent2)'; break;
+          default: color = 'var(--accent)'; break;
+        }
+        
+        feedback.style.color = color;
+        feedback.style.left = (event.clientX || window.innerWidth / 2) + 'px';
+        feedback.style.top = (event.clientY || window.innerHeight / 2) + 'px';
+        feedback.textContent = quality;
+        
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => {
+          feedback.remove();
+        }, 800);
+        
+        if (points > 0) {
+          const scoreFeedback = document.createElement('div');
+          scoreFeedback.className = 'feedback-particle';
+          scoreFeedback.style.color = color;
+          scoreFeedback.style.left = (event.clientX || window.innerWidth / 2) + 'px';
+          scoreFeedback.style.top = (event.clientY + 20 || window.innerHeight / 2 + 20) + 'px';
+          scoreFeedback.textContent = '+' + points;
+          scoreFeedback.style.fontSize = '12px';
+          document.body.appendChild(scoreFeedback);
+          setTimeout(() => scoreFeedback.remove(), 800);
+        }
+      }
+
+      showTapRipple(event, element) {
+        const rect = element.getBoundingClientRect();
+        const ripple = document.createElement('div');
+        ripple.className = 'tap-ripple';
+        ripple.style.left = (rect.left + rect.width / 2 - 50) + 'px';
+        ripple.style.top = (rect.top + rect.height / 2 - 50) + 'px';
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 400);
+      }
+
+      flashScreen() {
+        this.screenFlash.classList.add('active');
+        setTimeout(() => this.screenFlash.classList.remove('active'), 50);
+      }
+
+      startGame() {
+        this.drumSynth.init();
+        this.startOverlay.classList.add('hidden');
+        this.createDrumPads();
+        this.resetGame();
+        this.gameStarted = true;
+        this.gameRunning = true;
+      }
+
+      resetGame() {
+        this.score = 0;
+        this.combo = 0;
+        this.maxCombo = 0;
+        this.energy = 50;
+        this.timeLeft = this.gameTime;
+        this.currentSequenceIndex = 0;
+        this.generateSequence();
+        this.updateDisplay();
+      }
+
+      restartGame() {
+        this.resultScreen.classList.remove('visible');
+        this.resetGame();
+        this.gameRunning = true;
+        this.startGame();
+      }
+
+      updateDisplay() {
+        this.scoreDisplay.textContent = this.score;
+        this.energyBar.style.width = this.energy + '%';
+        this.timerBar.style.width = (this.timeLeft / this.gameTime * 100) + '%';
+        this.bpmValue.textContent = this.bpm;
+        
+        // Combo display
+        if (this.combo >= 10) {
+          this.comboDisplay.textContent = (Math.floor(this.combo / 10) * 10) + 'x';
+          this.comboDisplay.classList.add('visible');
+          this.comboDisplay.className = 'combo-display visible';
+          if (this.combo >= 30) {
+            this.comboDisplay.classList.add('x30');
+            this.comboDisplay.classList.remove('x10', 'x20');
+          } else if (this.combo >= 20) {
+            this.comboDisplay.classList.add('x20');
+            this.comboDisplay.classList.remove('x10', 'x30');
+          } else {
+            this.comboDisplay.classList.add('x10');
+            this.comboDisplay.classList.remove('x20', 'x30');
+          }
+        } else {
+          this.comboDisplay.classList.remove('visible');
+        }
+      }
+
+      updateBeatIndicator() {
+        const hitTime = this.gameTime - this.timeLeft;
+        const beatTime = hitTime % this.beatInterval;
+        const progress = beatTime / this.beatInterval;
+        
+        this.beatDots.forEach((dot, i) => {
+          const dotProgress = (i * 0.25 + progress) % 1;
+          dot.style.opacity = 0.15 + (1 - dotProgress) * 0.7;
+          dot.style.transform = `scale(${1 + (1 - dotProgress) * 0.5})`;
+        });
+      }
+
+      updateVisualizer() {
+        const energyFactor = this.energy / 100;
+        const comboFactor = Math.min(this.combo / 20, 1);
+        
+        this.visualizerBars.forEach((bar, i) => {
+          const baseHeight = 2 + energyFactor * 20;
+          const comboBoost = comboFactor * 30;
+          const randomBoost = Math.random() * 10;
+          const beatBoost = (i % 4 === 0) ? 20 : 0;
+          
+          const height = Math.max(2, baseHeight + comboBoost + randomBoost + beatBoost);
+          bar.style.height = height + 'px';
+          
+          // Color based on energy
+          if (energyFactor > 0.7) {
+            bar.style.background = 'linear-gradient(180deg, var(--accent), var(--accent2))';
+          } else if (energyFactor > 0.4) {
+            bar.style.background = 'linear-gradient(180deg, var(--accent2), var(--accent3))';
+          } else {
+            bar.style.background = 'linear-gradient(180deg, #555, #333)';
+          }
+        });
+      }
+
+      checkGameOver() {
+        if (this.energy <= 0) {
+          this.endGame('Crowd Walkout', 'TRY AGAIN');
+          return true;
+        }
+        
+        if (this.timeLeft <= 0) {
+          this.endGame('Encore!', this.getRank());
+          return true;
+        }
+        
+        return false;
+      }
+
+      getRank() {
+        const score = this.score;
+        const comboBonus = this.maxCombo * 10;
+        const total = score + comboBonus;
+        
+        if (total >= 5000) return 'ROCK LEGEND';
+        if (total >= 3000) return 'ROCK STAR';
+        if (total >= 1500) return 'ROCKER';
+        return 'ROOKIE';
+      }
+
+      endGame(title, rank) {
+        this.gameRunning = false;
+        this.resultTitle.textContent = title;
+        this.resultScore.textContent = this.score;
+        this.resultRank.textContent = rank;
+        
+        setTimeout(() => {
+          this.resultScreen.classList.add('visible');
+        }, 500);
+      }
+
+      animate() {
+        if (this.gameRunning && this.gameStarted) {
+          // Update timer
+          this.timeLeft -= 1/60;
+          
+          // Speed up tempo as energy increases
+          this.bpm = 128 + Math.floor(this.energy / 10) * 8;
+          this.beatInterval = 60 / this.bpm;
+          
+          // Energy decay based on performance
+          const decay = this.energyDecayRate * (1 - this.energy / 100) * 0.5;
+          this.energy = Math.max(0, this.energy - decay);
+          
+          if (this.checkGameOver()) {
+            requestAnimationFrame(() => this.animate());
+            return;
+          }
+          
+          this.updateDisplay();
+          this.updateBeatIndicator();
+          this.updateVisualizer();
+          
+          // 3D stage update
+          const beatActive = this.beatDots[0].style.opacity > 0.5;
+          this.stageScene.update(beatActive, this.energy);
+        } else if (!this.gameStarted) {
+          // Animate intro
+          this.stageScene.update(false, 50);
+        }
+        
+        requestAnimationFrame(() => this.animate());
+      }
+    }
+
+    // Initialize game when page loads
+    window.addEventListener('load', () => {
+      new RockBandGame();
+    });
+
+    // Prevent zoom on double tap
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('gesturestart', (e) => e.preventDefault());
+  </script>
+</body>
+</html>
