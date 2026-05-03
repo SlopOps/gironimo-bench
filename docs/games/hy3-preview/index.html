@@ -18,13 +18,18 @@
             background: #000;
             overflow: hidden;
             font-family: 'Metal Mania', cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
         #game-container {
             position: relative;
-            margin: 0 auto;
             background: #000;
             overflow: hidden;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 30px #ff0000;
         }
 
         #three-canvas, #game-canvas {
@@ -91,11 +96,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             color: #fff;
             text-align: center;
             pointer-events: auto;
             z-index: 4;
+            cursor: pointer;
         }
 
         #start-screen h1, #game-over-screen h1 {
@@ -103,6 +109,12 @@
             margin-bottom: 20px;
             color: #ff0000;
             text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         #start-screen p, #game-over-screen p {
@@ -128,6 +140,13 @@
             margin: 20px 0;
             text-shadow: 0 0 10px #ffff00;
         }
+
+        .lane-button {
+            position: absolute;
+            bottom: 0;
+            height: 10%;
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body>
@@ -142,6 +161,7 @@
                 <h1>RIFF MASTER</h1>
                 <p>TAP TO START</p>
                 <p class="sub">HIT NOTES WITH BUTTONS BELOW</p>
+                <p class="sub">4 LANES • MATCH COLORS • BUILD COMBO</p>
             </div>
             <div id="game-over-screen">
                 <h1>GAME OVER</h1>
@@ -159,6 +179,8 @@
         const threeCanvas = document.getElementById('three-canvas');
         const gameCanvas = document.getElementById('game-canvas');
         const ctx = gameCanvas.getContext('2d');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
 
         // Game config
         const LANE_COUNT = 4;
@@ -184,7 +206,7 @@
         let threeScene, threeCamera, threeRenderer, guitar, spotLights = [];
 
         // ========================
-        // 9:16 ASPECT RATIO HANDLER
+        // 9:16 ASPECT RATIO HANDLER (STRICT PORTRAIT)
         // ========================
         function resizeContainer() {
             const vw = window.innerWidth;
@@ -192,10 +214,15 @@
             let width = vw;
             let height = vw * 16 / 9;
 
+            // Force portrait 9:16 (if height is smaller, use height as base)
             if (height > vh) {
                 height = vh;
                 width = vh * 9 / 16;
             }
+
+            // Enforce max size for mobile
+            if (width > 450) width = 450;
+            height = width * 16 / 9;
 
             container.style.width = `${width}px`;
             container.style.height = `${height}px`;
@@ -227,19 +254,19 @@
             threeScene = new THREE.Scene();
             threeScene.background = new THREE.Color(0x000000);
 
-            // Camera setup
+            // Camera setup (portrait-friendly angle)
             const width = container.clientWidth;
             const height = container.clientHeight;
             threeCamera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-            threeCamera.position.set(0, 5, 10);
+            threeCamera.position.set(0, 3, 8);
             threeCamera.lookAt(0, 0, 0);
 
             // Renderer setup
             threeRenderer = new THREE.WebGLRenderer({ canvas: threeCanvas, alpha: true });
             threeRenderer.setSize(width, height);
-            threeRenderer.setPixelRatio(window.devicePixelRatio);
+            threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-            // Stage floor
+            // Stage floor with grunge texture
             const floorGeometry = new THREE.PlaneGeometry(20, 20);
             const floorMaterial = new THREE.MeshBasicMaterial({ color: 0x1a1a1a, side: THREE.DoubleSide });
             const floor = new THREE.Mesh(floorGeometry, floorMaterial);
@@ -247,7 +274,7 @@
             floor.position.y = -2;
             threeScene.add(floor);
 
-            // Guitar model (primitive shapes)
+            // Guitar model (primitive shapes for rock aesthetic)
             guitar = new THREE.Group();
 
             // Body
@@ -270,7 +297,7 @@
             head.position.y = 5;
             guitar.add(head);
 
-            // Strings
+            // Strings (glow effect)
             for (let i = -0.3; i <= 0.3; i += 0.2) {
                 const stringGeometry = new THREE.CylinderGeometry(0.02, 0.02, 5, 4);
                 const stringMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -295,7 +322,7 @@
             guitar.position.y = -1;
             threeScene.add(guitar);
 
-            // Dynamic stage lights
+            // Dynamic stage lights (rock concert aesthetic)
             const lightColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
             for (let i = 0; i < 4; i++) {
                 const light = new THREE.SpotLight(lightColors[i], 1);
@@ -316,7 +343,7 @@
             // Rotate guitar slowly
             if (guitar) guitar.rotation.y += 0.01;
 
-            // Animate lights in circular patterns
+            // Animate lights in circular patterns (concert light show)
             const time = Date.now() * 0.001;
             spotLights.forEach((light, i) => {
                 light.position.x = Math.cos(time + i * Math.PI / 2) * 10;
@@ -391,11 +418,16 @@
         }
 
         // ========================
-        // INPUT HANDLING
+        // INPUT HANDLING (FIXED TAP ISSUE)
         // ========================
-        gameCanvas.addEventListener('touchstart', handleInput);
-        gameCanvas.addEventListener('click', handleInput);
-        gameCanvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        // Add listeners to container and UI screens to ensure all taps register
+        container.addEventListener('touchstart', handleInput, { passive: false });
+        container.addEventListener('click', handleInput);
+        startScreen.addEventListener('touchstart', handleInput, { passive: false });
+        startScreen.addEventListener('click', handleInput);
+        gameOverScreen.addEventListener('touchstart', handleInput, { passive: false });
+        gameOverScreen.addEventListener('click', handleInput);
+        container.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
         function handleInput(e) {
             e.preventDefault();
@@ -437,19 +469,27 @@
                     const distance = Math.abs(note.y + note.height / 2 - hitZoneY);
                     if (distance < HIT_THRESHOLDS.OKAY) {
                         let points = 0;
-                        if (distance < HIT_THRESHOLDS.PERFECT) points = BASE_SCORES.PERFECT;
-                        else if (distance < HIT_THRESHOLDS.GOOD) points = BASE_SCORES.GOOD;
-                        else points = BASE_SCORES.OKAY;
+                        let hitText = '';
+                        if (distance < HIT_THRESHOLDS.PERFECT) {
+                            points = BASE_SCORES.PERFECT;
+                            hitText = 'PERFECT!';
+                        } else if (distance < HIT_THRESHOLDS.GOOD) {
+                            points = BASE_SCORES.GOOD;
+                            hitText = 'GOOD!';
+                        } else {
+                            points = BASE_SCORES.OKAY;
+                            hitText = 'OKAY';
+                        }
 
                         points *= (combo + 1);
                         score += points;
                         combo++;
                         if (combo > maxCombo) maxCombo = combo;
 
-                        // Spawn particles (EXTRA FEATURE)
+                        // Spawn particles (EXTRA FEATURE: Particle System)
                         const particleX = note.x + note.width / 2;
                         const particleY = hitZoneY;
-                        for (let i = 0; i < 15; i++) {
+                        for (let i = 0; i < 20; i++) {
                             particles.push(new Particle(particleX, particleY, note.color));
                         }
 
@@ -467,7 +507,7 @@
         // ========================
         function startGame() {
             gameState = 'playing';
-            document.getElementById('start-screen').style.display = 'none';
+            startScreen.style.display = 'none';
             score = 0;
             combo = 0;
             timer = 60;
@@ -493,12 +533,12 @@
         function gameOver() {
             gameState = 'gameOver';
             document.getElementById('final-score').textContent = `SCORE: ${score}`;
-            document.getElementById('game-over-screen').style.display = 'flex';
+            gameOverScreen.style.display = 'flex';
         }
 
         function resetGame() {
             gameState = 'start';
-            document.getElementById('game-over-screen').style.display = 'none';
+            gameOverScreen.style.display = 'none';
         }
 
         // ========================
@@ -551,13 +591,19 @@
                     ctx.stroke();
                 }
 
-                // Draw bottom buttons
+                // Draw bottom buttons (obvious tappable areas)
                 for (let i = 0; i < LANE_COUNT; i++) {
                     ctx.fillStyle = LANE_COLORS[i] + '80';
                     ctx.fillRect(i * laneWidth, gameCanvas.height - buttonHeight, laneWidth, buttonHeight);
                     ctx.strokeStyle = LANE_COLORS[i];
                     ctx.lineWidth = 3;
                     ctx.strokeRect(i * laneWidth, gameCanvas.height - buttonHeight, laneWidth, buttonHeight);
+                    
+                    // Draw button labels
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '20px Metal Mania';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('TAP', i * laneWidth + laneWidth/2, gameCanvas.height - buttonHeight/2 + 7);
                 }
             }
 
