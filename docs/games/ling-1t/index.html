@@ -1,1465 +1,1792 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AXIS OF SOUND</title>
-  <style>
-    :root {
-      --bg: #0a0a0f;
-      --fg: #f0f0f0;
-      --accent: #ff2d55;
-      --accent2: #00d4ff;
-      --accent3: #ffd700;
-      --panel: rgba(15, 15, 25, 0.92);
-      --glow: rgba(255, 45, 85, 0.6);
-      --glow2: rgba(0, 212, 255, 0.4);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>SMASH STAGE - Rock & Roll Destruction</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+@font-face {
+  font-family: 'StageFont';
+  src: local('Impact'), local('Arial Black'), local('Helvetica Neue');
+}
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      touch-action: manipulation;
-      user-select: none;
-      -webkit-user-select: none;
-    }
+:root {
+  --blood: #cc0000;
+  --blood-dark: #8a0000;
+  --blood-light: #ff3333;
+  --electric-blue: #00d4ff;
+  --neon-pink: #ff0066;
+  --smoke: #1a1a1a;
+  --ash: #2a2a2a;
+  --charcoal: #0d0d0d;
+  --gold: #ffcc00;
+  --gold-dark: #b38f00;
+  --wood: #8B4513;
+  --wood-dark: #5D2906;
+  --metal: #4a4a4a;
+  --metal-shine: #7a7a7a;
+}
 
-    #app {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-    }
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--charcoal);
+  font-family: 'StageFont', Impact, 'Arial Black', sans-serif;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
 
-    /* Stage backdrop */
-    #stageCanvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-    }
+#stage-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
 
-    /* Main container */
-    .main-container {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      width: 100%;
-    }
+#canvas-3d {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
 
-    /* Header - Band logo and energy */
-    .header {
-      padding: 12px 16px 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: linear-gradient(180deg, rgba(10,10,15,0.95) 0%, transparent 100%);
-      position: relative;
-      z-index: 10;
-    }
+#canvas-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
 
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+#ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+}
 
-    .logo {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      text-shadow: none;
-      filter: drop-shadow(0 0 20px rgba(255,45,85,0.5));
-    }
+#top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+  pointer-events: none;
+}
 
-    .logo-sub {
-      font-size: 9px;
-      color: var(--accent2);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-    }
+#top-bar .stat-box {
+  background: rgba(204, 0, 0, 0.3);
+  border: 2px solid var(--blood);
+  border-radius: 8px;
+  padding: 6px 14px;
+  color: var(--gold);
+  font-size: 18px;
+  text-shadow: 0 0 10px var(--blood);
+  letter-spacing: 2px;
+  min-width: 80px;
+  text-align: center;
+}
 
-    .energy-bar-container {
-      flex: 1;
-      margin: 0 12px;
-      height: 6px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 3px;
-      overflow: hidden;
-      position: relative;
-    }
+#top-bar .stat-box .label {
+  display: block;
+  font-size: 10px;
+  color: var(--electric-blue);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
 
-    .energy-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border-radius: 3px;
-      transition: width 0.3s ease;
-      box-shadow: 0 0 10px var(--glow);
-    }
+#top-bar .stat-box .value {
+  display: block;
+  font-size: 24px;
+  line-height: 1.2;
+}
 
-    .energy-pulse {
-      position: absolute;
-      right: -4px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 12px;
-      height: 12px;
-      background: var(--accent);
-      border-radius: 50%;
-      box-shadow: 0 0 15px var(--glow);
-      animation: pulse 1s ease-in-out infinite;
-    }
+#game-area {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
 
-    @keyframes pulse {
-      0%, 100% { transform: translateY(-50%) scale(1); opacity: 1; }
-      50% { transform: translateY(-50%) scale(1.5); opacity: 0.6; }
-    }
+#smash-zone {
+  width: 280px;
+  height: 280px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  perspective: 800px;
+}
 
-    .score-display {
-      font-size: 24px;
-      font-weight: 900;
-      color: var(--accent3);
-      text-shadow: 0 0 20px rgba(255,215,0,0.5);
-      font-variant-numeric: tabular-nums;
-    }
+#smash-zone .guitar-sprite {
+  width: 180px;
+  height: 180px;
+  position: relative;
+  transition: transform 0.1s ease;
+  filter: drop-shadow(0 0 20px rgba(255, 51, 51, 0.5));
+}
 
-    /* Game area */
-    .game-stage {
-      flex: 1;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 20px 16px 40px;
-      min-height: 0;
-    }
+#smash-zone .guitar-sprite svg {
+  width: 100%;
+  height: 100%;
+}
 
-    .game-title {
-      font-size: 11px;
-      letter-spacing: 4px;
-      color: var(--accent2);
-      text-transform: uppercase;
-      margin-bottom: 16px;
-      text-align: center;
-      opacity: 0.8;
-    }
+#smash-zone .guitar-sprite.broken {
+  animation: breakAnim 0.6s ease-out forwards;
+}
 
-    /* Drum pads grid */
-    .drum-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      width: 100%;
-      max-width: 320px;
-      margin-bottom: 20px;
-    }
+@keyframes breakAnim {
+  0% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-15deg) scale(1.1); }
+  40% { transform: rotate(20deg) scale(0.95); }
+  60% { transform: rotate(-10deg) scale(1.05); }
+  80% { transform: rotate(5deg) scale(0.98); }
+  100% { transform: rotate(0deg) scale(1); filter: none; opacity: 0.7; }
+}
 
-    .drum-pad {
-      aspect-ratio: 1;
-      border-radius: 16px;
-      border: 2px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.03);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.08s ease, border-color 0.2s ease;
-      touch-action: manipulation;
-    }
+#smash-zone .impact-ring {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--electric-blue);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0);
+}
 
-    .drum-pad::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 14px;
-      background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
+#smash-zone .impact-ring.active {
+  animation: impactPulse 0.5s ease-out forwards;
+}
 
-    .drum-pad.active {
-      transform: scale(0.92);
-      border-color: var(--accent);
-      box-shadow: 0 0 30px var(--glow), inset 0 0 30px rgba(255,45,85,0.2);
-    }
+@keyframes impactPulse {
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(4); opacity: 0; border-width: 1px; }
+}
 
-    .drum-pad.active::before {
-      opacity: 1;
-    }
+#smash-zone .combo-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--gold);
+  font-size: 48px;
+  text-shadow: 0 0 20px var(--gold), 0 0 40px var(--neon-pink);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 5;
+}
 
-    .drum-pad.kick { border-color: rgba(255,45,85,0.3); }
-    .drum-pad.snare { border-color: rgba(0,212,255,0.3); }
-    .drum-pad.hihat { border-color: rgba(255,215,0,0.3); }
-    .drum-pad.tom { border-color: rgba(128,0,255,0.3); }
+#smash-zone .combo-text.show {
+  animation: comboPop 0.8s ease-out forwards;
+}
 
-    .drum-icon {
-      font-size: 24px;
-      margin-bottom: 4px;
-      text-shadow: 0 0 20px currentColor;
-    }
+@keyframes comboPop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+  40% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -100%) scale(0.8); }
+}
 
-    .drum-label {
-      font-size: 9px;
-      letter-spacing: 1px;
-      color: rgba(255,255,255,0.5);
-      text-transform: uppercase;
-    }
+#controls-area {
+  padding: 20px;
+  text-align: center;
+  pointer-events: auto;
+}
 
-    /* Combo display */
-    .combo-display {
-      font-size: 48px;
-      font-weight: 900;
-      color: var(--fg);
-      text-shadow: 0 0 40px rgba(255,45,85,0.6);
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transform: scale(0.8);
-      transition: all 0.15s ease;
-    }
+#smash-btn {
+  background: linear-gradient(180deg, var(--blood) 0%, var(--blood-dark) 100%);
+  border: 3px solid var(--gold);
+  border-radius: 50%;
+  width: 140px;
+  height: 140px;
+  color: var(--gold);
+  font-size: 24px;
+  font-family: inherit;
+  font-weight: bold;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(204, 0, 0, 0.5), inset 0 0 20px rgba(255,204,0,0.2);
+  transition: all 0.1s;
+  position: relative;
+  overflow: hidden;
+}
 
-    .combo-display.visible {
-      opacity: 1;
-      transform: scale(1);
-    }
+#smash-btn:active {
+  transform: scale(0.9);
+  box-shadow: 0 0 10px rgba(204, 0, 0, 0.8);
+}
 
-    .combo-display.x10 { color: var(--accent); }
-    .combo-display.x20 { color: var(--accent2); }
-    .combo-display.x30 { color: var(--accent3); }
+#smash-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg, transparent, rgba(255,204,0,0.3), transparent);
+  animation: spinGlow 3s linear infinite;
+  opacity: 0.5;
+}
 
-    /* Beat indicator */
-    .beat-tracker {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 20px;
-      align-items: center;
-    }
+@keyframes spinGlow {
+  100% { transform: rotate(360deg); }
+}
 
-    .beat-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.15);
-      transition: all 0.1s ease;
-    }
+#smash-btn .btn-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
 
-    .beat-dot.active {
-      background: var(--accent);
-      box-shadow: 0 0 12px var(--glow);
-      transform: scale(1.5);
-    }
+#smash-btn .btn-icon {
+  font-size: 36px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
 
-    /* Timer bar */
-    .timer-bar-container {
-      width: 100%;
-      max-width: 320px;
-      height: 4px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 2px;
-      margin-bottom: 16px;
-      overflow: hidden;
-    }
+#instruction {
+  color: var(--electric-blue);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 12px;
+  text-shadow: 0 0 10px var(--electric-blue);
+}
 
-    .timer-bar {
-      height: 100%;
-      width: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border-radius: 2px;
-      transition: width 0.1s linear;
-    }
+#progress-container {
+  width: 90%;
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  margin: 10px auto;
+  overflow: hidden;
+  border: 1px solid var(--blood);
+}
 
-    /* Instructions overlay */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(10,10,15,0.95);
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
+#progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blood), var(--neon-pink), var(--electric-blue));
+  border-radius: 4px;
+  transition: width 0.3s;
+  box-shadow: 0 0 10px var(--blood);
+}
 
-    .overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-      transform: scale(1.05);
-    }
+#stage-floor {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: linear-gradient(0deg, var(--charcoal), transparent);
+  z-index: 2;
+  pointer-events: none;
+}
 
-    .overlay-title {
-      font-size: 32px;
-      font-weight: 900;
-      letter-spacing: -1px;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
+#screen-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
 
-    .overlay-subtitle {
-      font-size: 12px;
-      color: var(--accent2);
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      margin-bottom: 30px;
-    }
+#screen-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-    .instructions {
-      text-align: center;
-      max-width: 260px;
-      margin-bottom: 30px;
-    }
+#start-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, #1a0000 0%, #0d0d0d 70%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 101;
+}
 
-    .instructions p {
-      font-size: 13px;
-      line-height: 1.8;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 12px;
-    }
+#start-screen .title {
+  font-size: 48px;
+  color: var(--gold);
+  text-shadow: 0 0 30px var(--blood), 0 0 60px var(--blood), 0 0 100px var(--neon-pink);
+  letter-spacing: 8px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  animation: titlePulse 2s ease-in-out infinite;
+}
 
-    .instructions strong {
-      color: var(--fg);
-    }
+@keyframes titlePulse {
+  0%, 100% { transform: scale(1); text-shadow: 0 0 30px var(--blood), 0 0 60px var(--blood); }
+  50% { transform: scale(1.05); text-shadow: 0 0 50px var(--blood), 0 0 100px var(--blood), 0 0 150px var(--neon-pink); }
+}
 
-    .start-btn {
-      padding: 16px 48px;
-      font-size: 16px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border: none;
-      border-radius: 50px;
-      color: white;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      position: relative;
-      overflow: hidden;
-    }
+#start-screen .subtitle {
+  font-size: 14px;
+  color: var(--electric-blue);
+  letter-spacing: 4px;
+  margin-bottom: 40px;
+  text-transform: uppercase;
+}
 
-    .start-btn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, var(--accent2), var(--accent));
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
+#start-screen .start-btn {
+  background: linear-gradient(180deg, var(--blood) 0%, var(--blood-dark) 100%);
+  border: 3px solid var(--gold);
+  border-radius: 50px;
+  padding: 16px 48px;
+  color: var(--gold);
+  font-size: 20px;
+  font-family: inherit;
+  font-weight: bold;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(204, 0, 0, 0.5);
+  transition: all 0.2s;
+}
 
-    .start-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 40px var(--glow);
-    }
+#start-screen .start-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 50px rgba(204, 0, 0, 0.8);
+}
 
-    .start-btn:hover::before {
-      opacity: 1;
-    }
+#game-over-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(50,0,0,0.9) 0%, rgba(0,0,0,0.95) 100%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 102;
+}
 
-    .start-btn span {
-      position: relative;
-      z-index: 1;
-    }
+#game-over-screen.show {
+  display: flex;
+}
 
-    /* Feedback particles */
-    .feedback-particle {
-      position: fixed;
-      pointer-events: none;
-      z-index: 50;
-      font-size: 14px;
-      font-weight: 900;
-      animation: particleUp 0.8s ease-out forwards;
-    }
+#game-over-screen .game-over-title {
+  font-size: 42px;
+  color: var(--blood);
+  text-shadow: 0 0 20px var(--blood);
+  letter-spacing: 6px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
 
-    @keyframes particleUp {
-      0% { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-60px) scale(0.5); }
-    }
+#game-over-screen .final-score {
+  font-size: 64px;
+  color: var(--gold);
+  text-shadow: 0 0 30px var(--gold);
+  margin-bottom: 30px;
+}
 
-    /* Result screen */
-    .result-screen {
-      position: fixed;
-      inset: 0;
-      background: rgba(10,10,15,0.95);
-      z-index: 200;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
+#game-over-screen .restart-btn {
+  background: linear-gradient(180deg, var(--blood) 0%, var(--blood-dark) 100%);
+  border: 2px solid var(--gold);
+  border-radius: 30px;
+  padding: 14px 36px;
+  color: var(--gold);
+  font-size: 16px;
+  font-family: inherit;
+  font-weight: bold;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
 
-    .result-screen.visible {
-      opacity: 1;
-      pointer-events: all;
-    }
+#floating-points {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
 
-    .result-title {
-      font-size: 28px;
-      font-weight: 900;
-      margin-bottom: 8px;
-    }
+.float-point {
+  position: absolute;
+  color: var(--gold);
+  font-size: 24px;
+  font-weight: bold;
+  text-shadow: 0 0 10px var(--gold);
+  pointer-events: none;
+  animation: floatUp 1s ease-out forwards;
+}
 
-    .result-score {
-      font-size: 48px;
-      font-weight: 900;
-      color: var(--accent3);
-      margin-bottom: 16px;
-    }
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.5); }
+}
 
-    .result-rank {
-      font-size: 14px;
-      color: var(--accent2);
-      letter-spacing: 2px;
-      margin-bottom: 30px;
-    }
+#screen-shake {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 50;
+  pointer-events: none;
+}
 
-    /* Bottom hud */
-    .bottom-hud {
-      padding: 12px 16px 16px;
-      background: linear-gradient(0deg, rgba(10,10,15,0.95) 0%, transparent 100%);
-      position: relative;
-      z-index: 10;
-    }
+#screen-shake.shaking {
+  animation: shake 0.3s ease-out;
+}
 
-    .bpm-display {
-      font-size: 11px;
-      color: rgba(255,255,255,0.4);
-      text-align: center;
-      letter-spacing: 1px;
-    }
+@keyframes shake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-5px, -5px) rotate(-1deg); }
+  20% { transform: translate(5px, -3px) rotate(1deg); }
+  30% { transform: translate(-4px, 2px) rotate(0deg); }
+  40% { transform: translate(3px, 4px) rotate(-0.5deg); }
+  50% { transform: translate(-2px, -2px) rotate(0.5deg); }
+  60% { transform: translate(2px, 1px) rotate(0deg); }
+  70% { transform: translate(-1px, -1px) rotate(-0.2deg); }
+  80% { transform: translate(1px, 1px) rotate(0.2deg); }
+  90% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
 
-    .bpm-value {
-      color: var(--accent3);
-      font-weight: 700;
-    }
+#speaker-indicator {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  pointer-events: none;
+  z-index: 5;
+}
 
-    /* Visualizer bars */
-    .visualizer-container {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 3px;
-      padding: 0 20px 8px;
-      z-index: 5;
-      pointer-events: none;
-    }
+.speaker-bar {
+  width: 6px;
+  background: var(--electric-blue);
+  border-radius: 3px;
+  height: 4px;
+  transition: height 0.15s;
+  box-shadow: 0 0 5px var(--electric-blue);
+}
 
-    .visualizer-bar {
-      width: 4px;
-      background: linear-gradient(180deg, var(--accent), var(--accent2));
-      border-radius: 2px 2px 0 0;
-      transition: height 0.05s ease;
-      min-height: 2px;
-    }
+#vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+}
 
-    /* Tap ripple */
-    .tap-ripple {
-      position: absolute;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
-      pointer-events: none;
-      animation: rippleOut 0.4s ease-out forwards;
-    }
+#flash-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  z-index: 51;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.05s;
+}
 
-    @keyframes rippleOut {
-      0% { width: 0; height: 0; opacity: 1; }
-      100% { width: 100px; height: 100px; opacity: 0; }
-    }
+#flash-overlay.flash {
+  opacity: 0.6;
+}
 
-    /* Screen flash */
-    .screen-flash {
-      position: fixed;
-      inset: 0;
-      background: white;
-      z-index: 300;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.05s ease;
-    }
+/* Stage spotlight beams */
+.spotlight {
+  position: absolute;
+  bottom: 0;
+  width: 300px;
+  height: 400px;
+  background: radial-gradient(ellipse at top center, rgba(255,51,51,0.15) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
 
-    .screen-flash.active {
-      opacity: 0.3;
-    }
+.spotlight.left { left: -50px; }
+.spotlight.right { right: -50px; }
 
-    /* Mobile optimizations */
-    @media (max-width: 380px) {
-      .drum-grid {
-        gap: 8px;
-      }
-      .drum-icon {
-        font-size: 20px;
-      }
-      .drum-label {
-        font-size: 8px;
-      }
-    }
+/* CRT scanline effect */
+#scanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 6;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+}
 
-    /* Reduced motion */
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-  </style>
+/* Glitch overlay */
+#glitch-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 7;
+  pointer-events: none;
+  opacity: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(255,0,102,0.03) 2px,
+    rgba(255,0,102,0.03) 4px
+  );
+}
+
+#glitch-overlay.active {
+  animation: glitchAnim 0.3s ease-out;
+}
+
+@keyframes glitchAnim {
+  0% { transform: translateX(0); opacity: 0.1; }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); opacity: 0.15; }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+  100% { transform: translateX(0); opacity: 0; }
+}
+
+/* Combo meter */
+#combo-meter {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+  text-align: center;
+}
+
+#combo-meter .combo-label {
+  font-size: 10px;
+  color: var(--electric-blue);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+#combo-meter .combo-value {
+  font-size: 36px;
+  color: var(--gold);
+  text-shadow: 0 0 20px var(--gold);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+#combo-meter .combo-value.visible {
+  opacity: 1;
+}
+
+/* Combo multiplier */
+#multiplier {
+  position: absolute;
+  top: 130px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+#multiplier .mult-value {
+  font-size: 18px;
+  color: var(--neon-pink);
+  text-shadow: 0 0 10px var(--neon-pink);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+#multiplier .mult-value.visible {
+  opacity: 1;
+}
+
+/* Energy bar decorative */
+#energy-bar {
+  position: absolute;
+  top: 10px;
+  width: 200px;
+  height: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.05);
+  border-radius: 2px;
+  z-index: 10;
+  overflow: hidden;
+}
+
+#energy-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blood), var(--neon-pink));
+  width: 0%;
+  transition: width 0.15s;
+  box-shadow: 0 0 10px var(--blood);
+}
+
+/* Responsive */
+@media (max-width: 400px) {
+  #smash-btn {
+    width: 120px;
+    height: 120px;
+    font-size: 18px;
+  }
+  #smash-btn .btn-icon {
+    font-size: 28px;
+  }
+  .title {
+    font-size: 36px !important;
+  }
+}
+</style>
 </head>
 <body>
-  <div id="app">
-    <canvas id="stageCanvas"></canvas>
+
+<div id="stage-container">
+  <canvas id="canvas-3d"></canvas>
+  <canvas id="canvas-particles"></canvas>
+  
+  <div class="spotlight left"></div>
+  <div class="spotlight right"></div>
+  
+  <div id="scanlines"></div>
+  <div id="vignette"></div>
+  <div id="glitch-overlay"></div>
+  <div id="screen-shake"></div>
+  <div id="flash-overlay"></div>
+  
+  <div id="ui-layer">
+    <div id="energy-bar">
+      <div id="energy-fill"></div>
+    </div>
     
-    <div class="main-container">
-      <header class="header">
-        <div class="logo-container">
-          <div class="logo">AXIS OF SOUND</div>
-          <div class="logo-sub">Tour 2026</div>
-        </div>
-        <div class="energy-bar-container">
-          <div class="energy-bar" id="energyBar"></div>
-          <div class="energy-pulse"></div>
-        </div>
-        <div class="score-display" id="scoreDisplay">0</div>
-      </header>
-
-      <main class="game-stage">
-        <div class="game-title">Live Show Mix</div>
-        
-        <div class="beat-tracker" id="beatTracker">
-          <div class="beat-dot"></div>
-          <div class="beat-dot"></div>
-          <div class="beat-dot"></div>
-          <div class="beat-dot"></div>
-        </div>
-
-        <div class="timer-bar-container">
-          <div class="timer-bar" id="timerBar"></div>
-        </div>
-
-        <div class="combo-display" id="comboDisplay">0x</div>
-
-        <div class="drum-grid" id="drumGrid"></div>
-      </main>
-
-      <footer class="bottom-hud">
-        <div class="bpm-display">LIVE BPM: <span class="bpm-value" id="bpmValue">128</span></div>
-      </footer>
-    </div>
-
-    <div class="visualizer-container" id="visualizer"></div>
-    <div class="screen-flash" id="screenFlash"></div>
-
-    <div class="overlay" id="startOverlay">
-      <h1 class="overlay-title">AXIS OF SOUND</h1>
-      <div class="overlay-subtitle">Live Tour Mixing</div>
-      <div class="instructions">
-        <p><strong>Hit the drums</strong> on beat to build the crowd's energy!</p>
-        <p>Keep the <strong>energy bar</strong> full by matching the rhythm.</p>
-        <p>Higher combos = bigger crowd roar!</p>
+    <div id="top-bar">
+      <div class="stat-box">
+        <span class="label">SCORE</span>
+        <span class="value" id="score-value">0</span>
       </div>
-      <button class="start-btn" id="startBtn">
-        <span>Start Show</span>
-      </button>
+      <div class="stat-box">
+        <span class="label">TIME</span>
+        <span class="value" id="time-value">60</span>
+      </div>
+      <div class="stat-box">
+        <span class="label">SMASHES</span>
+        <span class="value" id="smashes-value">0</span>
+      </div>
     </div>
-
-    <div class="result-screen" id="resultScreen">
-      <div class="result-title" id="resultTitle">Encore!</div>
-      <div class="result-score" id="resultScore">0</div>
-      <div class="result-rank" id="resultRank">ROCK STAR</div>
-      <button class="start-btn" id="restartBtn" style="margin-top: 20px;">
-        <span>Play Again</span>
-      </button>
+    
+    <div id="game-area">
+      <div id="combo-meter">
+        <div class="combo-label">COMBO</div>
+        <div class="combo-value" id="combo-value">x1</div>
+      </div>
+      
+      <div id="multiplier">
+        <div class="mult-value" id="mult-value">x1 MULTIPLIER</div>
+      </div>
+      
+      <div id="smash-zone">
+        <div class="impact-ring" id="impact-ring"></div>
+        <div class="combo-text" id="combo-text">COMBO!</div>
+        <div class="guitar-sprite" id="guitar-sprite">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="neckGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#8B4513"/>
+                <stop offset="50%" style="stop-color:#D2B48C"/>
+                <stop offset="100%" style="stop-color:#654321"/>
+              </linearGradient>
+              <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#ff4444"/>
+                <stop offset="50%" style="stop-color:#cc0000"/>
+                <stop offset="100%" style="stop-color:#8a0000"/>
+              </linearGradient>
+              <radialGradient id="bodyShine" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" style="stop-color:rgba(255,200,200,0.6)"/>
+                <stop offset="100%" style="stop-color:rgba(255,0,0,0)"/>
+              </radialGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            
+            <!-- Guitar body -->
+            <path d="M100,40 
+                     C130,40 150,65 150,100 
+                     C150,135 130,160 100,160 
+                     C70,160 50,135 50,100 
+                     C50,65 70,40 100,40 Z" 
+                  fill="url(#bodyGrad)" stroke="#ff6666" stroke-width="3"/>
+            
+            <!-- Body shine -->
+            <ellipse cx="85" cy="80" rx="35" ry="25" fill="url(#bodyShine)"/>
+            
+            <!-- Scratch marks -->
+            <line x1="75" y1="55" x2="85" y2="50" stroke="#ff9999" stroke-width="2" stroke-linecap="round"/>
+            <line x1="130" y1="85" x2="120" y2="95" stroke="#8a0000" stroke-width="3" stroke-linecap="round"/>
+            <line x1="90" y1="140" x2="100" y2="135" stroke="#ff9999" stroke-width="2" stroke-linecap="round"/>
+            
+            <!-- Cracks -->
+            <path d="M80,70 L85,75 L80,85" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M125,110 L130,118 L122,120" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            
+            <!-- Strings hole -->
+            <ellipse cx="100" cy="100" rx="22" ry="30" fill="#222" stroke="#444" stroke-width="1"/>
+            
+            <!-- Strings -->
+            <line x1="100" y1="72" x2="100" y2="50" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="95" y1="72" x2="95" y2="50" stroke="#ddd" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="105" y1="72" x2="105" y2="50" stroke="#ddd" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="90" y1="72" x2="90" y2="50" stroke="#eee" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="110" y1="72" x2="110" y2="50" stroke="#eee" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="85" y1="72" x2="85" y2="50" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="115" y1="72" x2="115" y2="50" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+            
+            <!-- Bridge lines -->
+            <line x1="88" y1="125" x2="90" y2="72" stroke="#aaa" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+            <line x1="100" y1="125" x2="100" y2="72" stroke="#aaa" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+            <line x1="112" y1="125" x2="110" y2="72" stroke="#aaa" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+            
+            <!-- Bridge -->
+            <rect x="85" y="122" width="30" height="4" fill="#333" rx="1"/>
+            
+            <!-- Input jack -->
+            <circle cx="85" cy="155" r="5" fill="#555" stroke="#777" stroke-width="1"/>
+            <circle cx="85" cy="155" r="2" fill="#999"/>
+            
+            <!-- Neck -->
+            <rect x="94" y="0" width="12" height="48" fill="url(#neckGrad)" stroke="#5a3a1a" stroke-width="1"/>
+            
+            <!-- Fretboard -->
+            <rect x="95" y="0" width="10" height="48" fill="#3d2817"/>
+            
+            <!-- Frets -->
+            <rect x="95" y="8" width="10" height="1" fill="#d4b87a"/>
+            <rect x="95" y="16" width="10" height="1" fill="#d4b87a"/>
+            <rect x="95" y="24" width="10" height="1" fill="#d4b87a"/>
+            <rect x="95" y="32" width="10" height="1" fill="#d4b87a"/>
+            <rect x="95" y="40" width="10" height="1" fill="#d4b87a"/>
+            
+            <!-- Nut -->
+            <rect x="94" y="46" width="12" height="3" fill="#ddd"/>
+            
+            <!-- Pickguard -->
+            <path d="M115,35 L140,20 L135,55 L115,50 Z" fill="#fff" opacity="0.7"/>
+            
+            <!-- Volume knob -->
+            <circle cx="140" cy="45" r="6" fill="#333" stroke="#555" stroke-width="1"/>
+            <circle cx="140" cy="45" r="3" fill="#666"/>
+            <line x1="140" y1="42" x2="140" y2="39" stroke="#aaa" stroke-width="1" stroke-linecap="round"/>
+            
+            <!-- Tone knob -->
+            <circle cx="155" cy="50" r="6" fill="#333" stroke="#555" stroke-width="1"/>
+            <circle cx="155" cy="50" r="3" fill="#666"/>
+            
+            <!-- Screws -->
+            <circle cx="125" cy="155" r="2" fill="#555"/>
+            <circle cx="75" cy="155" r="2" fill="#555"/>
+            
+            <!-- Wood grain effect -->
+            <path d="M55,60 Q65,75 50,85 Q45,70 55,60" fill="none" stroke="#654321" stroke-width="1" opacity="0.3"/>
+            <path d="M145,80 Q155,95 140,105 Q135,90 145,80" fill="none" stroke="#654321" stroke-width="1" opacity="0.3"/>
+          </svg>
+        </div>
+      </div>
+      
+      <div id="progress-container">
+        <div id="progress-bar"></div>
+      </div>
+      
+      <div id="controls-area">
+        <button id="smash-btn">
+          <div class="btn-inner">
+            <span class="btn-icon">🎸</span>
+            SMASH!
+          </div>
+        </button>
+        <div id="instruction">TAP THE GUITAR TO SMASH IT</div>
+      </div>
     </div>
+    
+    <div id="stage-floor"></div>
   </div>
+  
+  <div id="floating-points"></div>
+  
+  <div id="speaker-indicator">
+    <div class="speaker-bar" id="sp1"></div>
+    <div class="speaker-bar" id="sp2"></div>
+    <div class="speaker-bar" id="sp3"></div>
+    <div class="speaker-bar" id="sp4"></div>
+    <div class="speaker-bar" id="sp5"></div>
+  </div>
+  
+  <div id="start-screen">
+    <div class="title">SMASH STAGE</div>
+    <div class="subtitle">Destroy everything</div>
+    <button class="start-btn" id="start-btn">START THE WAR</button>
+  </div>
+  
+  <div id="game-over-screen">
+    <div class="game-over-title">GUITAR DESTROYED</div>
+    <div class="final-score" id="final-score">0</div>
+    <button class="restart-btn" id="restart-btn">SMASH AGAIN</button>
+  </div>
+</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-    // ============================================
-    // ROCK BAND LIVE SHOW MIXING GAME
-    // Theme: Rock Band - every element screams concert
-    // Game: Hit drum pads on beat to maintain crowd energy
-    // ============================================
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ============================================
+// ROCK & ROLL GUITAR SMASHING GAME
+// Pure destruction theme - nothing but the carnage
+// ============================================
 
-    // Audio context for Web Audio API synthesis
-    class DrumSynth {
-      constructor() {
-        this.audioCtx = null;
-        this.initialized = false;
-      }
-
-      init() {
-        if (this.initialized) return;
-        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        this.initialized = true;
-      }
-
-      playKick(time) {
-        if (!this.audioCtx) return;
-        const osc = this.audioCtx.createOscillator();
-        const gain = this.audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(this.audioCtx.destination);
-        
-        osc.frequency.setValueAtTime(150, time);
-        osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.15);
-        gain.gain.setValueAtTime(1, time);
-        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
-        
-        osc.start(time);
-        osc.stop(time + 0.15);
-      }
-
-      playSnare(time) {
-        if (!this.audioCtx) return;
-        const noise = this.audioCtx.createBufferSource();
-        const bufferSize = this.audioCtx.sampleRate * 0.1;
-        const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = Math.random() * 2 - 1;
-        }
-        noise.buffer = buffer;
-        
-        const filter = this.audioCtx.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.value = 1000;
-        
-        const gain = this.audioCtx.createGain();
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.audioCtx.destination);
-        
-        gain.gain.setValueAtTime(0.7, time);
-        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
-        
-        noise.start(time);
-        noise.stop(time + 0.1);
-        
-        // Body
-        const osc = this.audioCtx.createOscillator();
-        const oscGain = this.audioCtx.createGain();
-        osc.connect(oscGain);
-        oscGain.connect(this.audioCtx.destination);
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(100, time);
-        oscGain.gain.setValueAtTime(0.3, time);
-        oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
-        osc.start(time);
-        osc.stop(time + 0.05);
-      }
-
-      playHihat(time) {
-        if (!this.audioCtx) return;
-        const noise = this.audioCtx.createBufferSource();
-        const bufferSize = this.audioCtx.sampleRate * 0.05;
-        const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = Math.random() * 2 - 1;
-        }
-        noise.buffer = buffer;
-        
-        const filter = this.audioCtx.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.value = 7000;
-        
-        const gain = this.audioCtx.createGain();
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.audioCtx.destination);
-        
-        gain.gain.setValueAtTime(0.5, time);
-        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.03);
-        
-        noise.start(time);
-        noise.stop(time + 0.03);
-      }
-
-      playTom(time) {
-        if (!this.audioCtx) return;
-        const osc = this.audioCtx.createOscillator();
-        const gain = this.audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(this.audioCtx.destination);
-        
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(200, time);
-        osc.frequency.exponentialRampToValueAtTime(50, time + 0.2);
-        gain.gain.setValueAtTime(0.6, time);
-        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
-        
-        osc.start(time);
-        osc.stop(time + 0.2);
-      }
+(function() {
+  'use strict';
+  
+  // ============================================
+  // GAME STATE
+  // ============================================
+  const GameState = {
+    score: 0,
+    timeLeft: 60,
+    smashes: 0,
+    combo: 0,
+    maxCombo: 0,
+    isPlaying: false,
+    gameTime: 0,
+    energy: 0,
+    multiplier: 1,
+    lastSmashTime: 0,
+    damageLevel: 0,
+    cracks: []
+  };
+  
+  // DOM Elements - must be cached
+  const $ = id => document.getElementById(id);
+  const scoreValue = $('score-value');
+  const timeValue = $('time-value');
+  const smashesValue = $('smashes-value');
+  const progressBar = $('progress-bar');
+  const guitarSprite = $('guitar-sprite');
+  const smashBtn = $('smash-btn');
+  const smashZone = $('smash-zone');
+  const impactRing = $('impact-ring');
+  const comboText = $('combo-text');
+  const comboValue = $('combo-value');
+  const multValue = $('mult-value');
+  const energyFill = $('energy-fill');
+  const startScreen = $('start-screen');
+  const gameOverScreen = $('game-over-screen');
+  const startBtn = $('start-btn');
+  const restartBtn = $('restart-btn');
+  const flashOverlay = $('flash-overlay');
+  const screenShake = $('screen-shake');
+  const glitchOverlay = $('glitch-overlay');
+  const finalScore = $('final-score');
+  const floatingPoints = $('floating-points');
+  
+  // Canvas contexts
+  const canvas3D = $('canvas-3d');
+  const ctx3D = canvas3D.getContext('2d');
+  const canvasParticles = $('canvas-particles');
+  const ctxParticles = canvasParticles.getContext('2d');
+  
+  // Three.js globals
+  let scene, camera, renderer;
+  let guitarMesh, stageMesh, lightMesh;
+  let particles = [];
+  let debris = [];
+  let sparks = [];
+  let smokeParticles = [];
+  
+  // Audio context for feedback (Web Audio API)
+  let audioCtx;
+  
+  // ============================================
+  // RESIZE HANDLER
+  // ============================================
+  function resize() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas3D.width = w;
+    canvas3D.height = h;
+    canvasParticles.width = w;
+    canvasParticles.height = h;
+    
+    if (renderer) {
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
     }
-
-    // 3D Stage Scene
-    class StageScene {
-      constructor(canvas) {
-        this.canvas = canvas;
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(60, 9/16, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ 
-          canvas: canvas, 
-          alpha: true,
-          antialias: true 
-        });
-        
-        this.drumMeshes = [];
-        this.particles = [];
-        this.spotLights = [];
-        this.smokeParticles = [];
-        
-        this.init();
-      }
-
-      init() {
-        const rect = this.canvas.getBoundingClientRect();
-        this.renderer.setSize(rect.width, rect.height);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        
-        this.camera.position.set(0, 3, 8);
-        this.camera.lookAt(0, 0, 0);
-
-        // Stage floor
-        const floorGeo = new THREE.PlaneGeometry(20, 20);
-        const floorMat = new THREE.MeshStandardMaterial({
-          color: 0x0a0a0f,
-          roughness: 0.8,
-          metalness: 0.2
-        });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI / 2;
-        floor.position.y = -1;
-        this.scene.add(floor);
-
-        // Grid helper
-        const gridHelper = new THREE.GridHelper(20, 20, 0xff2d55, 0x0a0a0f);
-        gridHelper.position.y = -0.99;
-        gridHelper.material.opacity = 0.3;
-        gridHelper.material.transparent = true;
-        this.scene.add(gridHelper);
-
-        // Create drum kit
-        this.createDrumKit();
-
-        // Ambient light
-        const ambient = new THREE.AmbientLight(0x404080, 0.3);
-        this.scene.add(ambient);
-
-        // Spotlights for stage
-        for (let i = 0; i < 4; i++) {
-          const spot = new THREE.SpotLight(0xffffff, 1);
-          spot.position.set(-3 + i * 2, 5, 5);
-          spot.angle = Math.PI / 6;
-          spot.penumbra = 0.5;
-          spot.decay = 2;
-          spot.distance = 20;
-          this.scene.add(spot);
-          this.spotLights.push(spot);
-        }
-
-        // Colored stage lights
-        const colors = [0xff2d55, 0x00d4ff, 0xffd700, 0x8000ff];
-        for (let i = 0; i < 4; i++) {
-          const light = new THREE.SpotLight(colors[i], 0.8);
-          light.position.set(-3 + i * 2, 8, -3);
-          light.angle = Math.PI / 4;
-          light.target.position.set(-3 + i * 2, 0, 0);
-          this.scene.add(light);
-          this.scene.add(light.target);
-        }
-
-        // Fog for atmosphere
-        this.scene.fog = new THREE.FogExp2(0x0a0a0f, 0.03);
-
-        // Create particle system
-        this.createParticleSystem();
-
-        // Create smoke particles
-        this.createSmokeSystem();
-      }
-
-      createDrumKit() {
-        const drumColors = [0xff2d55, 0x00d4ff, 0xffd700, 0x8000ff];
-        
-        for (let i = 0; i < 4; i++) {
-          const group = new THREE.Group();
-          
-          // Drum body
-          const bodyGeo = new THREE.CylinderGeometry(0.8, 1, 0.6, 32);
-          const bodyMat = new THREE.MeshStandardMaterial({
-            color: drumColors[i],
-            metalness: 0.8,
-            roughness: 0.3
-          });
-          const body = new THREE.Mesh(bodyGeo, bodyMat);
-          body.position.y = 0.3;
-          group.add(body);
-
-          // Drum head
-          const headGeo = new THREE.CircleGeometry(0.85, 32);
-          const headMat = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            metalness: 0.9,
-            roughness: 0.2
-          });
-          const head = new THREE.Mesh(headGeo, headMat);
-          head.rotation.x = -Math.PI / 2;
-          head.position.y = 0.61;
-          group.add(head);
-
-          group.position.x = -2.5 + i * 1.7;
-          group.position.y = -0.7;
-          group.position.z = 0;
-          
-          this.drumMeshes.push(group);
-          this.scene.add(group);
-        }
-      }
-
-      createParticleSystem() {
-        const particleCount = 200;
-        const positions = new Float32Array(particleCount * 3);
-        const colors = new Float32Array(particleCount * 3);
-        const sizes = new Float32Array(particleCount);
-        
-        const colorPalette = [
-          new THREE.Color(0xff2d55),
-          new THREE.Color(0x00d4ff),
-          new THREE.Color(0xffd700),
-          new THREE.Color(0x8000ff),
-          new THREE.Color(0xffffff)
-        ];
-        
-        for (let i = 0; i < particleCount; i++) {
-          positions[i * 3] = (Math.random() - 0.5) * 20;
-          positions[i * 3 + 1] = Math.random() * 10 + 2;
-          positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-          
-          const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
-          colors[i * 3] = color.r;
-          colors[i * 3 + 1] = color.g;
-          colors[i * 3 + 2] = color.b;
-          
-          sizes[i] = Math.random() * 3 + 1;
-        }
-        
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-        
-        const material = new THREE.PointsMaterial({
-          size: 0.15,
-          vertexColors: true,
-          transparent: true,
-          opacity: 0.8,
-          blending: THREE.AdditiveBlending
-        });
-        
-        this.particleSystem = new THREE.Points(geometry, material);
-        this.scene.add(this.particleSystem);
-      }
-
-      createSmokeSystem() {
-        const smokeCount = 30;
-        for (let i = 0; i < smokeCount; i++) {
-          const geometry = new THREE.SphereGeometry(Math.random() * 2 + 1, 16, 16);
-          const material = new THREE.MeshBasicMaterial({
-            color: 0x333344,
-            transparent: true,
-            opacity: 0.1
-          });
-          const smoke = new THREE.Mesh(geometry, material);
-          smoke.position.set(
-            (Math.random() - 0.5) * 15,
-            Math.random() * 5,
-            (Math.random() - 0.5) * 10 - 2
-          );
-          smoke.userData = {
-            velocity: new THREE.Vector3(
-              (Math.random() - 0.5) * 0.02,
-              Math.random() * 0.02 + 0.01,
-              (Math.random() - 0.5) * 0.01
-            ),
-            scale: Math.random() * 0.5 + 0.5
-          };
-          this.smokeParticles.push(smoke);
-          this.scene.add(smoke);
-        }
-      }
-
-      update(beatActive, energy) {
-        const time = performance.now() * 0.001;
-        
-        // Rotate drums slightly on beat
-        this.drumMeshes.forEach((mesh, i) => {
-          const bounce = beatActive && i === this.lastHitDrum ? Math.sin(time * 20) * 0.1 : 0;
-          mesh.position.y = -0.7 + bounce;
-          mesh.rotation.y = Math.sin(time * 0.5 + i) * 0.05;
-        });
-
-        // Update particles
-        if (this.particleSystem) {
-          const positions = this.particleSystem.geometry.attributes.position.array;
-          for (let i = 0; i < positions.length; i += 3) {
-            positions[i + 1] += 0.02 * (energy / 100);
-            if (positions[i + 1] > 12) {
-              positions[i + 1] = 0;
-            }
-          }
-          this.particleSystem.geometry.attributes.position.needsUpdate = true;
-          
-          // Pulse particles on beat
-          this.particleSystem.scale.setScalar(1 + (beatActive ? 0.1 : 0));
-        }
-
-        // Update smoke
-        this.smokeParticles.forEach(smoke => {
-          smoke.position.add(smoke.userData.velocity);
-          smoke.material.opacity = 0.1 + Math.sin(time * 2 + smoke.position.x) * 0.05;
-          if (smoke.position.y > 6) {
-            smoke.position.y = -1;
-          }
-        });
-
-        // Rotate particle system
-        if (this.particleSystem) {
-          this.particleSystem.rotation.y = time * 0.05;
-        }
-
-        // Animate spotlights
-        this.spotLights.forEach((light, i) => {
-          light.intensity = 0.5 + Math.sin(time * 2 + i) * 0.3;
-        });
-
-        this.renderer.render(this.scene, this.camera);
-      }
-
-      hitDrum(index, energy) {
-        this.lastHitDrum = index;
-        
-        // Add impact particles
-        this.spawnImpactParticles(index, energy);
-      }
-
-      spawnImpactParticles(index, energy) {
-        const drumPos = this.drumMeshes[index].position;
-        const burstCount = Math.floor(energy / 20) + 5;
-        
-        for (let i = 0; i < burstCount; i++) {
-          const geometry = new THREE.SphereGeometry(0.05, 8, 8);
-          const material = new THREE.MeshBasicMaterial({
-            color: this.drumMeshes[index].children[0].material.color,
-            transparent: true,
-            opacity: 0.8
-          });
-          const particle = new THREE.Mesh(geometry, material);
-          particle.position.copy(drumPos);
-          particle.position.y += 0.5;
-          particle.userData = {
-            velocity: new THREE.Vector3(
-              (Math.random() - 0.5) * 0.3,
-              Math.random() * 0.5 + 0.2,
-              (Math.random() - 0.5) * 0.3
-            ),
-            life: 1
-          };
-          this.scene.add(particle);
-          
-          setTimeout(() => {
-            if (this.scene) this.scene.remove(particle);
-            geometry.dispose();
-            material.dispose();
-          }, 500);
-        }
-      }
-
-      resize() {
-        const rect = this.canvas.getBoundingClientRect();
-        this.renderer.setSize(rect.width, rect.height);
-        this.camera.aspect = 9 / 16;
-        this.camera.updateProjectionMatrix();
-      }
-    }
-
-    // Main Game Controller
-    class RockBandGame {
-      constructor() {
-        this.score = 0;
-        this.combo = 0;
-        this.maxCombo = 0;
-        this.energy = 50;
-        this.energyDecayRate = 0.05;
-        this.energyGainPerfect = 8;
-        this.energyGainGood = 4;
-        this.energyGainMiss = -15;
-        this.gameTime = 60; // seconds
-        this.timeLeft = this.gameTime;
-        this.gameRunning = false;
-        this.gameStarted = false;
-        this.bpm = 128;
-        this.beatInterval = 60 / this.bpm;
-        this.lastBeatTime = 0;
-        this.beatIndex = 0;
-        this.nextBeatTime = 0;
-        this.hitWindowPerfect = 0.12; // seconds
-        this.hitWindowGood = 0.2;
-        this.lastHitDrum = -1;
-        this.drumSequence = [];
-        this.currentSequenceIndex = 0;
-        this.visualizerBars = [];
-        this.feedbackElements = [];
-        
-        this.drumTypes = [
-          { name: 'kick', label: 'Kick', icon: '🥁', color: 'var(--accent)' },
-          { name: 'snare', label: 'Snare', icon: '🥁', color: 'var(--accent2)' },
-          { name: 'hihat', label: 'Hi-Hat', icon: '🔔', color: 'var(--accent3)' },
-          { name: 'tom', label: 'Tom', icon: '🥁', color: '#8000ff' }
-        ];
-
-        this.drumSynth = new DrumSynth();
-        this.stageScene = null;
-        
-        this.initElements();
-        this.initStage();
-        this.initVisualizer();
-        this.initEventListeners();
-        this.generateSequence();
-        this.animate();
-      }
-
-      initElements() {
-        this.startOverlay = document.getElementById('startOverlay');
-        this.startBtn = document.getElementById('startBtn');
-        this.resultScreen = document.getElementById('resultScreen');
-        this.resultTitle = document.getElementById('resultTitle');
-        this.resultScore = document.getElementById('resultScore');
-        this.resultRank = document.getElementById('resultRank');
-        this.restartBtn = document.getElementById('restartBtn');
-        this.scoreDisplay = document.getElementById('scoreDisplay');
-        this.comboDisplay = document.getElementById('comboDisplay');
-        this.energyBar = document.getElementById('energyBar');
-        this.timerBar = document.getElementById('timerBar');
-        this.bpmValue = document.getElementById('bpmValue');
-        this.drumGrid = document.getElementById('drumGrid');
-        this.beatTracker = document.getElementById('beatTracker');
-        this.visualizerContainer = document.getElementById('visualizer');
-        this.screenFlash = document.getElementById('screenFlash');
-        this.stageCanvas = document.getElementById('stageCanvas');
-        this.beatDots = this.beatTracker.querySelectorAll('.beat-dot');
-      }
-
-      initStage() {
-        this.stageScene = new StageScene(this.stageCanvas);
-      }
-
-      initVisualizer() {
-        const barCount = 32;
-        for (let i = 0; i < barCount; i++) {
-          const bar = document.createElement('div');
-          bar.className = 'visualizer-bar';
-          bar.style.height = '2px';
-          this.visualizerContainer.appendChild(bar);
-          this.visualizerBars.push(bar);
-        }
-      }
-
-      initEventListeners() {
-        this.startBtn.addEventListener('click', () => this.startGame());
-        this.restartBtn.addEventListener('click', () => this.restartGame());
-        
-        window.addEventListener('resize', () => {
-          this.stageScene.resize();
-        });
-
-        // Prevent context menu
-        document.addEventListener('contextmenu', (e) => e.preventDefault());
-      }
-
-      generateSequence() {
-        this.drumSequence = [];
-        const sequenceLength = 32;
-        for (let i = 0; i < sequenceLength; i++) {
-          const drumIndex = Math.floor(Math.random() * 4);
-          this.drumSequence.push({
-            drumIndex,
-            time: i * this.beatInterval
-          });
-        }
-        this.currentSequenceIndex = 0;
-      }
-
-      createDrumPads() {
-        this.drumGrid.innerHTML = '';
-        this.drumPads = [];
-        
-        this.drumTypes.forEach((drum, index) => {
-          const pad = document.createElement('div');
-          pad.className = `drum-pad ${drum.name}`;
-          pad.dataset.index = index;
-          
-          pad.innerHTML = `
-            <div class="drum-icon">${drum.icon}</div>
-            <div class="drum-label">${drum.label}</div>
-          `;
-          
-          pad.addEventListener('click', (e) => this.handleDrumHit(index, e));
-          pad.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.handleDrumHit(index, e);
-          }, { passive: false });
-          
-          this.drumGrid.appendChild(pad);
-          this.drumPads.push(pad);
-        });
-      }
-
-      handleDrumHit(drumIndex, event) {
-        if (!this.gameRunning) return;
-        
-        this.drumSynth.init();
-        
-        const hitTime = this.gameTime - this.timeLeft;
-        const expectedTime = this.drumSequence[this.currentSequenceIndex]?.time || 0;
-        const timeDiff = Math.abs(hitTime - expectedTime);
-        
-        let hitQuality = null;
-        let energyGain = 0;
-        let points = 0;
-        
-        // Check if hitting correct drum for current sequence position
-        const expectedDrum = this.drumSequence[this.currentSequenceIndex]?.drumIndex;
-        const correctDrum = drumIndex === expectedDrum;
-        
-        // Visual feedback
-        this.showTapRipple(event, this.drumPads[drumIndex]);
-        this.flashScreen();
-        
-        // Play sound
-        switch (drumIndex) {
-          case 0: this.drumSynth.playKick(0); break;
-          case 1: this.drumSynth.playSnare(0); break;
-          case 2: this.drumSynth.playHihat(0); break;
-          case 3: this.drumSynth.playTom(0); break;
-        }
-        
-        // Animate drum pad
-        this.drumPads[drumIndex].classList.add('active');
-        setTimeout(() => {
-          this.drumPads[drumIndex].classList.remove('active');
-        }, 150);
-        
-        // 3D stage animation
-        this.stageScene.hitDrum(drumIndex, this.energy);
-        
-        // Determine hit quality
-        if (correctDrum && timeDiff <= this.hitWindowPerfect) {
-          hitQuality = 'PERFECT';
-          energyGain = this.energyGainPerfect;
-          points = 100 * (this.combo / 10 + 1);
-          this.combo++;
-          this.currentSequenceIndex++;
-        } else if (correctDrum && timeDiff <= this.hitWindowGood) {
-          hitQuality = 'GOOD';
-          energyGain = this.energyGainGood;
-          points = 50;
-          this.combo++;
-          this.currentSequenceIndex++;
-        } else if (correctDrum) {
-          hitQuality = 'MISSED';
-          energyGain = this.energyGainMiss;
-          points = 0;
-          this.combo = 0;
-        } else {
-          hitQuality = 'WRONG';
-          energyGain = -5;
-          points = 0;
-          if (this.combo > 0) this.combo = Math.max(0, this.combo - 1);
-        }
-        
-        // Update scores
-        this.score += points;
-        this.energy = Math.max(0, Math.min(100, this.energy + energyGain));
-        this.maxCombo = Math.max(this.maxCombo, this.combo);
-        
-        // Show feedback
-        this.showFeedback(points, hitQuality, event);
-        this.updateDisplay();
-        
-        // Check rhythm penalty for missing beats
-        this.checkBeatMiss();
-      }
-
-      checkBeatMiss() {
-        const hitTime = this.gameTime - this.timeLeft;
-        const nextBeat = this.drumSequence[this.currentSequenceIndex];
-        
-        if (nextBeat && hitTime - nextBeat.time > this.hitWindowGood) {
-          // Auto-fail the beat if too late
-          this.energy += this.energyGainMiss;
-          this.combo = 0;
-          this.currentSequenceIndex++;
-          this.updateDisplay();
-        }
-      }
-
-      showFeedback(points, quality, event) {
-        const feedback = document.createElement('div');
-        feedback.className = 'feedback-particle';
-        
-        let color;
-        switch (quality) {
-          case 'PERFECT': color = 'var(--accent3)'; break;
-          case 'GOOD': color = 'var(--accent2)'; break;
-          default: color = 'var(--accent)'; break;
-        }
-        
-        feedback.style.color = color;
-        feedback.style.left = (event.clientX || window.innerWidth / 2) + 'px';
-        feedback.style.top = (event.clientY || window.innerHeight / 2) + 'px';
-        feedback.textContent = quality;
-        
-        document.body.appendChild(feedback);
-        
-        setTimeout(() => {
-          feedback.remove();
-        }, 800);
-        
-        if (points > 0) {
-          const scoreFeedback = document.createElement('div');
-          scoreFeedback.className = 'feedback-particle';
-          scoreFeedback.style.color = color;
-          scoreFeedback.style.left = (event.clientX || window.innerWidth / 2) + 'px';
-          scoreFeedback.style.top = (event.clientY + 20 || window.innerHeight / 2 + 20) + 'px';
-          scoreFeedback.textContent = '+' + points;
-          scoreFeedback.style.fontSize = '12px';
-          document.body.appendChild(scoreFeedback);
-          setTimeout(() => scoreFeedback.remove(), 800);
-        }
-      }
-
-      showTapRipple(event, element) {
-        const rect = element.getBoundingClientRect();
-        const ripple = document.createElement('div');
-        ripple.className = 'tap-ripple';
-        ripple.style.left = (rect.left + rect.width / 2 - 50) + 'px';
-        ripple.style.top = (rect.top + rect.height / 2 - 50) + 'px';
-        document.body.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 400);
-      }
-
-      flashScreen() {
-        this.screenFlash.classList.add('active');
-        setTimeout(() => this.screenFlash.classList.remove('active'), 50);
-      }
-
-      startGame() {
-        this.drumSynth.init();
-        this.startOverlay.classList.add('hidden');
-        this.createDrumPads();
-        this.resetGame();
-        this.gameStarted = true;
-        this.gameRunning = true;
-      }
-
-      resetGame() {
-        this.score = 0;
-        this.combo = 0;
-        this.maxCombo = 0;
-        this.energy = 50;
-        this.timeLeft = this.gameTime;
-        this.currentSequenceIndex = 0;
-        this.generateSequence();
-        this.updateDisplay();
-      }
-
-      restartGame() {
-        this.resultScreen.classList.remove('visible');
-        this.resetGame();
-        this.gameRunning = true;
-        this.startGame();
-      }
-
-      updateDisplay() {
-        this.scoreDisplay.textContent = this.score;
-        this.energyBar.style.width = this.energy + '%';
-        this.timerBar.style.width = (this.timeLeft / this.gameTime * 100) + '%';
-        this.bpmValue.textContent = this.bpm;
-        
-        // Combo display
-        if (this.combo >= 10) {
-          this.comboDisplay.textContent = (Math.floor(this.combo / 10) * 10) + 'x';
-          this.comboDisplay.classList.add('visible');
-          this.comboDisplay.className = 'combo-display visible';
-          if (this.combo >= 30) {
-            this.comboDisplay.classList.add('x30');
-            this.comboDisplay.classList.remove('x10', 'x20');
-          } else if (this.combo >= 20) {
-            this.comboDisplay.classList.add('x20');
-            this.comboDisplay.classList.remove('x10', 'x30');
-          } else {
-            this.comboDisplay.classList.add('x10');
-            this.comboDisplay.classList.remove('x20', 'x30');
-          }
-        } else {
-          this.comboDisplay.classList.remove('visible');
-        }
-      }
-
-      updateBeatIndicator() {
-        const hitTime = this.gameTime - this.timeLeft;
-        const beatTime = hitTime % this.beatInterval;
-        const progress = beatTime / this.beatInterval;
-        
-        this.beatDots.forEach((dot, i) => {
-          const dotProgress = (i * 0.25 + progress) % 1;
-          dot.style.opacity = 0.15 + (1 - dotProgress) * 0.7;
-          dot.style.transform = `scale(${1 + (1 - dotProgress) * 0.5})`;
-        });
-      }
-
-      updateVisualizer() {
-        const energyFactor = this.energy / 100;
-        const comboFactor = Math.min(this.combo / 20, 1);
-        
-        this.visualizerBars.forEach((bar, i) => {
-          const baseHeight = 2 + energyFactor * 20;
-          const comboBoost = comboFactor * 30;
-          const randomBoost = Math.random() * 10;
-          const beatBoost = (i % 4 === 0) ? 20 : 0;
-          
-          const height = Math.max(2, baseHeight + comboBoost + randomBoost + beatBoost);
-          bar.style.height = height + 'px';
-          
-          // Color based on energy
-          if (energyFactor > 0.7) {
-            bar.style.background = 'linear-gradient(180deg, var(--accent), var(--accent2))';
-          } else if (energyFactor > 0.4) {
-            bar.style.background = 'linear-gradient(180deg, var(--accent2), var(--accent3))';
-          } else {
-            bar.style.background = 'linear-gradient(180deg, #555, #333)';
-          }
-        });
-      }
-
-      checkGameOver() {
-        if (this.energy <= 0) {
-          this.endGame('Crowd Walkout', 'TRY AGAIN');
-          return true;
-        }
-        
-        if (this.timeLeft <= 0) {
-          this.endGame('Encore!', this.getRank());
-          return true;
-        }
-        
-        return false;
-      }
-
-      getRank() {
-        const score = this.score;
-        const comboBonus = this.maxCombo * 10;
-        const total = score + comboBonus;
-        
-        if (total >= 5000) return 'ROCK LEGEND';
-        if (total >= 3000) return 'ROCK STAR';
-        if (total >= 1500) return 'ROCKER';
-        return 'ROOKIE';
-      }
-
-      endGame(title, rank) {
-        this.gameRunning = false;
-        this.resultTitle.textContent = title;
-        this.resultScore.textContent = this.score;
-        this.resultRank.textContent = rank;
-        
-        setTimeout(() => {
-          this.resultScreen.classList.add('visible');
-        }, 500);
-      }
-
-      animate() {
-        if (this.gameRunning && this.gameStarted) {
-          // Update timer
-          this.timeLeft -= 1/60;
-          
-          // Speed up tempo as energy increases
-          this.bpm = 128 + Math.floor(this.energy / 10) * 8;
-          this.beatInterval = 60 / this.bpm;
-          
-          // Energy decay based on performance
-          const decay = this.energyDecayRate * (1 - this.energy / 100) * 0.5;
-          this.energy = Math.max(0, this.energy - decay);
-          
-          if (this.checkGameOver()) {
-            requestAnimationFrame(() => this.animate());
-            return;
-          }
-          
-          this.updateDisplay();
-          this.updateBeatIndicator();
-          this.updateVisualizer();
-          
-          // 3D stage update
-          const beatActive = this.beatDots[0].style.opacity > 0.5;
-          this.stageScene.update(beatActive, this.energy);
-        } else if (!this.gameStarted) {
-          // Animate intro
-          this.stageScene.update(false, 50);
-        }
-        
-        requestAnimationFrame(() => this.animate());
-      }
-    }
-
-    // Initialize game when page loads
-    window.addEventListener('load', () => {
-      new RockBandGame();
+  }
+  
+  // ============================================
+  // 3D SCENE SETUP
+  // ============================================
+  function init3DScene() {
+    // Scene
+    scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x0d0d0d, 5, 30);
+    
+    // Camera
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 4, 8);
+    camera.lookAt(0, 0, 0);
+    
+    // Renderer
+    renderer = new THREE.WebGLRenderer({
+      canvas: canvas3D,
+      alpha: true,
+      antialias: true
     });
-
-    // Prevent zoom on double tap
-    document.addEventListener('touchstart', (e) => {
-      if (e.touches.length > 1) e.preventDefault();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setClearColor(0x0d0d0d, 0);
+    
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xff4444, 0.3);
+    scene.add(ambientLight);
+    
+    const mainLight = new THREE.SpotLight(0xff3333, 2, 20, Math.PI / 4, 0.5);
+    mainLight.position.set(3, 8, 5);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 512;
+    mainLight.shadow.mapSize.height = 512;
+    scene.add(mainLight);
+    
+    const backLight = new THREE.PointLight(0x00d4ff, 0.5, 15);
+    backLight.position.set(-3, 3, -3);
+    scene.add(backLight);
+    
+    const rimLight = new THREE.PointLight(0xff0066, 0.8, 10);
+    rimLight.position.set(0, 5, -5);
+    scene.add(rimLight);
+    
+    // Create guitar mesh (custom geometry)
+    const guitarGroup = new THREE.Group();
+    
+    // Body
+    const bodyShape = new THREE.Shape();
+    bodyShape.moveTo(0, -1);
+    bodyShape.quadraticCurveTo(1.5, -1.5, 2, -0.5);
+    bodyShape.quadraticCurveTo(2, 1, 1, 2);
+    bodyShape.quadraticCurveTo(-1, 2, -2, 1);
+    bodyShape.quadraticCurveTo(-2, -0.5, -1, -1.5);
+    bodyShape.quadraticCurveTo(0, -1, 0, -1);
+    
+    const extrudeSettings = { depth: 0.3, bevelEnabled: true, bevelSegments: 10, steps: 2, bevelSize: 0.1, bevelThickness: 0.1 };
+    const bodyGeom = new THREE.ExtrudeGeometry(bodyShape, extrudeSettings);
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: 0xcc0000,
+      metalness: 0.3,
+      roughness: 0.4,
+      emissive: 0x330000,
+      emissiveIntensity: 0.2
+    });
+    const bodyMesh = new THREE.Mesh(bodyGeom, bodyMat);
+    bodyMesh.position.z = 0.15;
+    bodyMesh.castShadow = true;
+    bodyMesh.receiveShadow = true;
+    guitarGroup.add(bodyMesh);
+    
+    // Body detail (shine)
+    const shineGeom = new THREE.CircleGeometry(0.8, 32);
+    const shineMat = new THREE.MeshStandardMaterial({
+      color: 0xff8888,
+      metalness: 0.8,
+      roughness: 0.2,
+      transparent: true,
+      opacity: 0.5
+    });
+    const shineMesh = new THREE.Mesh(shineGeom, shineMat);
+    shineMesh.position.set(0.3, 0.2, 0.35);
+    shineMesh.rotation.x = -Math.PI / 6;
+    guitarGroup.add(shineMesh);
+    
+    // Neck
+    const neckGeom = new THREE.BoxGeometry(0.15, 1.2, 0.3);
+    const neckMat = new THREE.MeshStandardMaterial({ color: 0xd2b48c, metalness: 0.1, roughness: 0.5 });
+    const neckMesh = new THREE.Mesh(neckGeom, neckMat);
+    neckMesh.position.set(0, 0.6, 0);
+    neckMesh.castShadow = true;
+    guitarGroup.add(neckMesh);
+    
+    // Fretboard
+    const fretboardGeom = new THREE.BoxGeometry(0.13, 1.1, 0.2);
+    const fretboardMat = new THREE.MeshStandardMaterial({ color: 0x3d2817, metalness: 0.1, roughness: 0.6 });
+    const fretboardMesh = new THREE.Mesh(fretboardGeom, fretboardMat);
+    fretboardMesh.position.set(0, 0.6, 0);
+    guitarGroup.add(fretboardMesh);
+    
+    // Frets
+    for (let i = 0; i < 5; i++) {
+      const fretGeom = new THREE.BoxGeometry(0.16, 0.02, 0.22);
+      const fretMat = new THREE.MeshStandardMaterial({ color: 0xd4b87a, metalness: 0.6, roughness: 0.3 });
+      const fretMesh = new THREE.Mesh(fretGeom, fretMat);
+      fretMesh.position.set(0, 0.4 + i * 0.22, 0);
+      guitarGroup.add(fretMesh);
+    }
+    
+    // Headstock
+    const headGeom = new THREE.BoxGeometry(0.2, 0.3, 0.3);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0x654321, metalness: 0.2, roughness: 0.5 });
+    const headMesh = new THREE.Mesh(headGeom, headMat);
+    headMesh.position.set(0, 1.25, 0);
+    guitarGroup.add(headMesh);
+    
+    // Strings
+    const stringMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.1 });
+    for (let i = 0; i < 6; i++) {
+      const stringGeom = new THREE.CylinderGeometry(0.005, 0.005, 1.8, 8);
+      const stringMesh = new THREE.Mesh(stringGeom, stringMat);
+      const offset = -0.05 + i * 0.02;
+      stringMesh.position.set(offset, 0, 0.15);
+      stringMesh.rotation.z = Math.PI / 2;
+      stringMesh.castShadow = true;
+      guitarGroup.add(stringMesh);
+    }
+    
+    // Bridge
+    const bridgeGeom = new THREE.BoxGeometry(0.2, 0.03, 0.15);
+    const bridgeMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5, roughness: 0.3 });
+    const bridgeMesh = new THREE.Mesh(bridgeGeom, bridgeMat);
+    bridgeMesh.position.set(0, -0.05, 0.1);
+    guitarGroup.add(bridgeMesh);
+    
+    // Position guitar
+    guitarMesh = guitarGroup;
+    guitarMesh.position.y = 0.5;
+    guitarMesh.castShadow = true;
+    guitarMesh.receiveShadow = true;
+    scene.add(guitarMesh);
+    
+    // Stage floor
+    const stageGeom = new THREE.PlaneGeometry(20, 20);
+    const stageMat = new THREE.MeshStandardMaterial({
+      color: 0x1a1a1a,
+      metalness: 0.2,
+      roughness: 0.8
+    });
+    stageMesh = new THREE.Mesh(stageGeom, stageMat);
+    stageMesh.rotation.x = -Math.PI / 2;
+    stageMesh.position.y = -0.1;
+    stageMesh.receiveShadow = true;
+    scene.add(stageMesh);
+    
+    // Stage light mesh (visual only)
+    const lightGeom = new THREE.ConeGeometry(0.5, 2, 32);
+    const lightMat = new THREE.MeshBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.5 });
+    lightMesh = new THREE.Mesh(lightGeom, lightMat);
+    lightMesh.position.set(3, 5, 5);
+    lightMesh.rotation.x = -Math.PI / 2;
+    scene.add(lightMesh);
+    
+    // Store references for animation
+    THREE_SCENE = { scene, camera, renderer, mainLight, guitarMesh, stageMesh, lightMesh };
+  }
+  
+  const THREE_SCENE = {};
+  
+  // ============================================
+  // PARTICLE SYSTEM
+  // ============================================
+  function createSparks(x, y, count) {
+    for (let i = 0; i < count; i++) {
+      sparks.push({
+        x: x + (Math.random() - 0.5) * 40,
+        y: y + (Math.random() - 0.5) * 40,
+        vx: (Math.random() - 0.5) * 10,
+        vy: (Math.random() - 0.5) * 10 - 5,
+        life: 1,
+        decay: 0.02 + Math.random() * 0.03,
+        size: 2 + Math.random() * 4,
+        color: Math.random() > 0.5 ? '#ffcc00' : '#ff3333'
+      });
+    }
+  }
+  
+  function createSmoke(x, y, count) {
+    for (let i = 0; i < count; i++) {
+      smokeParticles.push({
+        x: x + (Math.random() - 0.5) * 60,
+        y: y + (Math.random() - 0.5) * 60,
+        vx: (Math.random() - 0.5) * 2,
+        vy: -Math.random() * 2 - 1,
+        life: 1,
+        decay: 0.005 + Math.random() * 0.01,
+        size: 10 + Math.random() * 30,
+        color: '#333'
+      });
+    }
+  }
+  
+  function createDebris(x, y, count) {
+    for (let i = 0; i < count; i++) {
+      debris.push({
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 15,
+        vy: -Math.random() * 12 - 5,
+        life: 1,
+        decay: 0.01 + Math.random() * 0.02,
+        size: 3 + Math.random() * 8,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.3,
+        color: Math.random() > 0.5 ? '#8B4513' : '#cc0000',
+        type: Math.random() > 0.5 ? 'wood' : 'metal'
+      });
+    }
+  }
+  
+  function createFloatingText(x, y, text, color) {
+    const div = document.createElement('div');
+    div.className = 'float-point';
+    div.textContent = text;
+    div.style.left = x + 'px';
+    div.style.top = y + 'px';
+    div.style.color = color || '#ffcc00';
+    floatingPoints.appendChild(div);
+    setTimeout(() => {
+      if (div.parentNode) div.parentNode.removeChild(div);
+    }, 1200);
+  }
+  
+  // ============================================
+  // ANIMATION LOOPS
+  // ============================================
+  let lastTime = 0;
+  let frameCount = 0;
+  
+  function animate3D(timestamp) {
+    if (!GameState.isPlaying) return;
+    
+    const delta = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+    
+    // Rotate guitar slowly
+    THREE_SCENE.guitarMesh.rotation.y += 0.005;
+    THREE_SCENE.guitarMesh.rotation.x = Math.sin(timestamp * 0.001) * 0.05;
+    
+    // Animate light
+    THREE_SCENE.lightMesh.rotation.z += 0.02;
+    THREE_SCENE.lightMesh.material.opacity = 0.3 + Math.sin(timestamp * 0.003) * 0.2;
+    
+    // Move camera slightly
+    THREE_SCENE.camera.position.x = Math.sin(timestamp * 0.0005) * 0.5;
+    THREE_SCENE.camera.lookAt(0, 0, 0);
+    
+    // Render
+    try {
+      THREE_SCENE.renderer.render(THREE_SCENE.scene, THREE_SCENE.camera);
+    } catch(e) {}
+    
+    requestAnimationFrame(animate3D);
+  }
+  
+  function animateParticles(timestamp) {
+    const ctx = ctxParticles;
+    ctx.clearRect(0, 0, canvasParticles.width, canvasParticles.height);
+    
+    // Update and draw sparks
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i];
+      s.x += s.vx;
+      s.y += s.vy;
+      s.vy += 0.3; // gravity
+      s.life -= s.decay;
+      
+      if (s.life <= 0) {
+        sparks.splice(i, 1);
+        continue;
+      }
+      
+      ctx.globalAlpha = s.life;
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Trail
+      ctx.globalAlpha = s.life * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x - s.vx * 2, s.y - s.vy * 2);
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = s.size * 0.5;
+      ctx.stroke();
+    }
+    
+    // Update and draw debris
+    for (let i = debris.length - 1; i >= 0; i--) {
+      const d = debris[i];
+      d.x += d.vx;
+      d.y += d.vy;
+      d.vy += 0.4;
+      d.vx *= 0.98;
+      d.rotation += d.rotSpeed;
+      d.life -= d.decay;
+      
+      if (d.life <= 0) {
+        debris.splice(i, 1);
+        continue;
+      }
+      
+      ctx.globalAlpha = d.life;
+      ctx.fillStyle = d.color;
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      ctx.rotate(d.rotation);
+      
+      if (d.type === 'wood') {
+        ctx.fillRect(-d.size/2, -d.size/4, d.size, d.size/2);
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(0, -d.size/2);
+        ctx.lineTo(d.size/2, d.size/2);
+        ctx.lineTo(-d.size/2, d.size/2);
+        ctx.closePath();
+        ctx.fill();
+      }
+      
+      ctx.restore();
+    }
+    
+    // Update and draw smoke
+    for (let i = smokeParticles.length - 1; i >= 0; i--) {
+      const s = smokeParticles[i];
+      s.x += s.vx;
+      s.y += s.vy;
+      s.vx *= 0.98;
+      s.vy -= 0.1;
+      s.life -= s.decay;
+      s.size += 0.3;
+      
+      if (s.life <= 0) {
+        smokeParticles.splice(i, 1);
+        continue;
+      }
+      
+      const alpha = s.life * 0.4;
+      const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size);
+      grad.addColorStop(0, `rgba(60, 60, 60, ${alpha})`);
+      grad.addColorStop(0.5, `rgba(40, 40, 40, ${alpha * 0.5})`);
+      grad.addColorStop(1, 'rgba(20, 20, 20, 0)');
+      
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(animateParticles);
+  }
+  
+  // ============================================
+  // AUDIO FEEDBACK
+  // ============================================
+  function initAudio() {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) {
+      console.log('Audio not available');
+    }
+  }
+  
+  function playSmashSound() {
+    if (!audioCtx) return;
+    
+    try {
+      // Noise burst for breaking sound
+      const bufferSize = audioCtx.sampleRate * 0.2;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+      }
+      
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 200 + Math.random() * 400;
+      filter.Q.value = 1;
+      
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+      
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      noise.start();
+      
+      // Metal ping
+      const osc = audioCtx.createOscillator();
+      const oscGain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 800 + Math.random() * 400;
+      oscGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      oscGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+      osc.connect(oscGain);
+      oscGain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+    } catch(e) {}
+  }
+  
+  function playComboSound(combo) {
+    if (!audioCtx) return;
+    
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 200 + combo * 100;
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    } catch(e) {}
+  }
+  
+  // ============================================
+  // VISUAL EFFECTS
+  // ============================================
+  function screenFlash() {
+    flashOverlay.classList.add('flash');
+    setTimeout(() => flashOverlay.classList.remove('flash'), 50);
+  }
+  
+  function screenShakeEffect() {
+    screenShake.classList.add('shaking');
+    setTimeout(() => screenShake.classList.remove('shaking'), 300);
+  }
+  
+  function glitchEffect() {
+    glitchOverlay.classList.add('active');
+    setTimeout(() => glitchOverlay.classList.remove('active'), 300);
+  }
+  
+  function updateSpeakerBars() {
+    for (let i = 1; i <= 5; i++) {
+      const bar = $('sp' + i);
+      const h = 4 + Math.random() * 12;
+      bar.style.height = h + 'px';
+    }
+  }
+  
+  // ============================================
+  // GAME LOGIC
+  // ============================================
+  function calculateScore() {
+    const baseScore = 100;
+    const comboBonus = GameState.combo * 10;
+    const multiplier = Math.pow(1.5, GameState.multiplier - 1);
+    return Math.floor((baseScore + comboBonus) * multiplier);
+  }
+  
+  function performSmash(e) {
+    if (!GameState.isPlaying) return;
+    
+    const now = Date.now();
+    if (now - GameState.lastSmashTime < 200) return;
+    GameState.lastSmashTime = now;
+    
+    GameState.smashes++;
+    GameState.combo++;
+    GameState.damageLevel = Math.min(GameState.damageLevel + 1, 100);
+    
+    // Combo timer
+    GameState.comboTimer = 2000;
+    
+    // Calculate multiplier every 5 combos
+    if (GameState.combo > 0 && GameState.combo % 3 === 0) {
+      GameState.multiplier = Math.min(GameState.multiplier + 0.1, 3);
+    }
+    
+    const points = calculateScore();
+    GameState.score += points;
+    
+    // Update UI
+    scoreValue.textContent = GameState.score.toLocaleString();
+    smashesValue.textContent = GameState.smashes;
+    
+    // Progress bar (damage)
+    progressBar.style.width = GameState.damageLevel + '%';
+    
+    // Combo display
+    if (GameState.combo > 1) {
+      comboValue.textContent = 'x' + GameState.combo;
+      comboValue.classList.add('visible');
+      multValue.textContent = 'x' + GameState.multiplier.toFixed(1) + ' MULTIPLIER';
+      multValue.classList.add('visible');
+      
+      if (GameState.combo > GameState.maxCombo) {
+        GameState.maxCombo = GameState.combo;
+      }
+      
+      playComboSound(GameState.combo);
+    }
+    
+    // Show combo pop-up
+    if (GameState.combo > 2) {
+      comboText.textContent = GameState.combo + 'x COMBO!';
+      comboText.classList.add('show');
+      setTimeout(() => comboText.classList.remove('show'), 800);
+    }
+    
+    // Visual effects
+    screenFlash();
+    
+    if (GameState.combo > 5) {
+      screenShakeEffect();
+    }
+    
+    if (GameState.combo > 10) {
+      glitchEffect();
+    }
+    
+    // Impact ring
+    impactRing.classList.remove('active');
+    void impactRing.offsetWidth; // Trigger reflow
+    impactRing.classList.add('active');
+    
+    // Guitar shake animation
+    guitarSprite.classList.add('broken');
+    setTimeout(() => guitarSprite.classList.remove('broken'), 600);
+    
+    // Floating text
+    const rect = smashZone.getBoundingClientRect();
+    createFloatingText(
+      rect.left + rect.width / 2 + (Math.random() - 0.5) * 100,
+      rect.top + rect.height / 2,
+      '+' + points.toLocaleString(),
+      GameState.combo > 5 ? '#00d4ff' : '#ffcc00'
+    );
+    
+    // Particles at smash location
+    createSparks(rect.left + rect.width / 2, rect.top + rect.height / 2, 30);
+    createSmoke(rect.left + rect.width / 2, rect.top + rect.height / 2, 15);
+    createDebris(rect.left + rect.width / 2, rect.top + rect.height / 2, 10);
+    
+    // Audio
+    playSmashSound();
+    
+    // Break animation
+    if (GameState.damageLevel > 30 && GameState.damageLevel % 20 === 0) {
+      addCrack();
+    }
+    
+    // Add dramatic flair for huge combos
+    if (GameState.combo % 10 === 0 && GameState.combo > 0) {
+      massiveExplosion();
+    }
+  }
+  
+  function addCrack() {
+    const cracksOnGuitar = document.querySelectorAll('.guitar-crack');
+    if (cracksOnGuitar.length >= 5) return;
+    
+    // Add visual crack to guitar SVG
+    const crack = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const x = 60 + Math.random() * 80;
+    const y = 50 + Math.random() * 60;
+    crack.setAttribute('d', 
+      `M${x},${y} ` +
+      `Q${x+10+Math.random()*10},${y+10+Math.random()*10} ${x+20+Math.random()*10},${y+5+Math.random()*10} ` +
+      `Q${x+30+Math.random()*10},${y+15+Math.random()*10} ${x+25+Math.random()*10},${y+30+Math.random()*10}`
+    );
+    crack.setAttribute('fill', 'none');
+    crack.setAttribute('stroke', '#333333');
+    crack.setAttribute('stroke-width', '2');
+    crack.setAttribute('stroke-linecap', 'round');
+    crack.classList.add('guitar-crack');
+    
+    const svg = guitarSprite.querySelector('svg');
+    svg.appendChild(crack);
+  }
+  
+  function massiveExplosion() {
+    const rect = smashZone.getBoundingClientRect();
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => {
+        createSparks(
+          rect.left + rect.width / 2 + (Math.random() - 0.5) * 200,
+          rect.top + rect.height / 2 + (Math.random() - 0.5) * 200,
+          50
+        );
+        createDebris(
+          rect.left + rect.width / 2 + (Math.random() - 0.5) * 200,
+          rect.top + rect.height / 2 + (Math.random() - 0.5) * 200,
+          20
+        );
+        screenFlash();
+      }, i * 100);
+    }
+  }
+  
+  function resetCombo() {
+    GameState.combo = 0;
+    GameState.combo = 0;
+    GameState.multiplier = 1;
+    comboValue.classList.remove('visible');
+    multValue.classList.remove('visible');
+    GameState.lastSmashTime = 0;
+  }
+  
+  // ============================================
+  // TIMER
+  // ============================================
+  function startTimer() {
+    const timerInterval = setInterval(() => {
+      if (!GameState.isPlaying) {
+        clearInterval(timerInterval);
+        return;
+      }
+      
+      GameState.timeLeft--;
+      GameState.gameTime++;
+      
+      timeValue.textContent = GameState.timeLeft;
+      
+      // Energy bar animation
+      GameState.energy = (GameState.energy + 1) % 100;
+      energyFill.style.width = GameState.energy + '%';
+      
+      // Reset combo slowly
+      if (GameState.comboTimer > 0) {
+        GameState.comboTimer -= 1000;
+      } else if (GameState.combo > 0) {
+        resetCombo();
+      }
+      
+      // Update speaker bars
+      if (GameState.gameTime % 5 === 0) {
+        updateSpeakerBars();
+      }
+      
+      if (GameState.timeLeft <= 0) {
+        clearInterval(timerInterval);
+        endGame();
+      }
+    }, 1000);
+  }
+  
+  // ============================================
+  // GAME FLOW
+  // ============================================
+  function startGame() {
+    // Reset state
+    GameState.score = 0;
+    GameState.timeLeft = 60;
+    GameState.smashes = 0;
+    GameState.combo = 0;
+    GameState.maxCombo = 0;
+    GameState.damageLevel = 0;
+    GameState.energy = 0;
+    GameState.multiplier = 1;
+    GameState.isPlaying = true;
+    
+    // Reset UI
+    scoreValue.textContent = '0';
+    timeValue.textContent = '60';
+    smashesValue.textContent = '0';
+    progressBar.style.width = '0%';
+    comboValue.textContent = 'x1';
+    comboValue.classList.remove('visible');
+    multValue.classList.remove('visible');
+    energyFill.style.width = '0%';
+    
+    // Clear particles
+    sparks = [];
+    debris = [];
+    smokeParticles = [];
+    
+    // Remove cracks from guitar
+    document.querySelectorAll('.guitar-crack').forEach(c => c.remove());
+    
+    // Hide screens
+    startScreen.style.display = 'none';
+    gameOverScreen.classList.remove('show');
+    
+    // Start audio context on first interaction
+    if (!audioCtx) {
+      initAudio();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    
+    // Start timer
+    startTimer();
+    
+    // Start 3D animation
+    lastTime = performance.now();
+    animate3D(lastTime);
+    animateParticles();
+  }
+  
+  function endGame() {
+    GameState.isPlaying = false;
+    
+    // Show game over
+    finalScore.textContent = GameState.score.toLocaleString();
+    gameOverScreen.classList.add('show');
+    
+    // Final explosion
+    const rect = smashZone.getBoundingClientRect();
+    createSparks(rect.left + rect.width / 2, rect.top + rect.height / 2, 100);
+    createDebris(rect.left + rect.width / 2, rect.top + rect.height / 2, 50);
+    createSmoke(rect.left + rect.width / 2, rect.top + rect.height / 2, 30);
+    screenShakeEffect();
+    
+    // Fade guitar
+    guitarSprite.style.opacity = '0.3';
+  }
+  
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+  function handleSmash(e) {
+    e.preventDefault();
+    performSmash(e);
+  }
+  
+  function handleMouseMove(e) {
+    if (!GameState.isPlaying) return;
+    
+    // Parallax effect on guitar
+    const x = (e.clientX / window.innerWidth - 0.5) * 10;
+    const y = (e.clientY / window.innerHeight - 0.5) * 5;
+    if (THREE_SCENE.guitarMesh) {
+      THREE_SCENE.guitarMesh.position.x = x * 0.1;
+      THREE_SCENE.guitarMesh.position.y = 0.5 + y * 0.05;
+    }
+  }
+  
+  function handleDeviceOrientation(e) {
+    if (!GameState.isPlaying || !e.gamma || !e.beta) return;
+    
+    // Tilt-based smash
+    const tiltX = e.gamma / 90; // -1 to 1
+    const tiltY = e.beta / 90;   // -1 to 1
+    
+    if (Math.abs(tiltX) > 0.5 || Math.abs(tiltY) > 0.5) {
+      // Don't trigger too fast
+      const now = Date.now();
+      if (now - GameState.lastSmashTime > 500) {
+        performSmash({ preventDefault: () => {} });
+      }
+    }
+  }
+  
+  // ============================================
+  // INITIALIZATION
+  // ============================================
+  function init() {
+    resize();
+    window.addEventListener('resize', resize);
+    
+    // Bind events
+    smashBtn.addEventListener('click', handleSmash);
+    smashZone.addEventListener('click', handleSmash);
+    smashZone.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      handleSmash(e);
     }, { passive: false });
-
-    document.addEventListener('gesturestart', (e) => e.preventDefault());
-  </script>
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    
+    // Device orientation for tilt controls
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleDeviceOrientation);
+    }
+    
+    // Start button
+    startBtn.addEventListener('click', function() {
+      startGame();
+    });
+    
+    // Restart button
+    restartBtn.addEventListener('click', function() {
+      startGame();
+    });
+    
+    // Initial state
+    guitarSprite.style.opacity = '1';
+  }
+  
+  // Start everything
+  init();
+  
+  // Initial 3D setup
+  init3DScene();
+  
+  // Initial particles animation (demo)
+  animateParticles();
+  
+  // Demo speaker animation
+  updateSpeakerBars();
+  setInterval(updateSpeakerBars, 200);
+  
+})();
+</script>
 </body>
 </html>
