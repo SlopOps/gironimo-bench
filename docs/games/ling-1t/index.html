@@ -27,6 +27,8 @@
   --wood-dark: #5D2906;
   --metal: #4a4a4a;
   --metal-shine: #7a7a7a;
+  --cyber-purple: #9d00ff;
+  --laser-green: #00ff88;
 }
 
 html, body {
@@ -66,6 +68,17 @@ html, body {
   pointer-events: none;
 }
 
+#canvas-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
 #ui-layer {
   position: absolute;
   top: 0;
@@ -83,7 +96,7 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
   pointer-events: none;
 }
 
@@ -93,16 +106,16 @@ html, body {
   border-radius: 8px;
   padding: 6px 14px;
   color: var(--gold);
-  font-size: 18px;
+  font-size: 16px;
   text-shadow: 0 0 10px var(--blood);
   letter-spacing: 2px;
-  min-width: 80px;
+  min-width: 70px;
   text-align: center;
 }
 
 #top-bar .stat-box .label {
   display: block;
-  font-size: 10px;
+  font-size: 9px;
   color: var(--electric-blue);
   text-transform: uppercase;
   letter-spacing: 3px;
@@ -110,7 +123,7 @@ html, body {
 
 #top-bar .stat-box .value {
   display: block;
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1.2;
 }
 
@@ -121,12 +134,12 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 10px;
 }
 
 #smash-zone {
-  width: 280px;
-  height: 280px;
+  width: 260px;
+  height: 260px;
   position: relative;
   display: flex;
   align-items: center;
@@ -134,22 +147,23 @@ html, body {
   cursor: pointer;
   pointer-events: auto;
   perspective: 800px;
+  margin: 20px 0;
 }
 
-#smash-zone .guitar-sprite {
-  width: 180px;
-  height: 180px;
+#smash-zone .instrument-sprite {
+  width: 160px;
+  height: 160px;
   position: relative;
   transition: transform 0.1s ease;
   filter: drop-shadow(0 0 20px rgba(255, 51, 51, 0.5));
 }
 
-#smash-zone .guitar-sprite svg {
+#smash-zone .instrument-sprite svg {
   width: 100%;
   height: 100%;
 }
 
-#smash-zone .guitar-sprite.broken {
+#smash-zone .instrument-sprite.broken {
   animation: breakAnim 0.6s ease-out forwards;
 }
 
@@ -207,7 +221,7 @@ html, body {
 }
 
 #controls-area {
-  padding: 20px;
+  padding: 15px;
   text-align: center;
   pointer-events: auto;
 }
@@ -216,10 +230,10 @@ html, body {
   background: linear-gradient(180deg, var(--blood) 0%, var(--blood-dark) 100%);
   border: 3px solid var(--gold);
   border-radius: 50%;
-  width: 140px;
-  height: 140px;
+  width: 130px;
+  height: 130px;
   color: var(--gold);
-  font-size: 24px;
+  font-size: 20px;
   font-family: inherit;
   font-weight: bold;
   letter-spacing: 3px;
@@ -263,26 +277,26 @@ html, body {
 }
 
 #smash-btn .btn-icon {
-  font-size: 36px;
+  font-size: 32px;
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 #instruction {
   color: var(--electric-blue);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  margin-top: 12px;
+  margin-top: 10px;
   text-shadow: 0 0 10px var(--electric-blue);
 }
 
 #progress-container {
   width: 90%;
-  height: 8px;
+  height: 6px;
   background: rgba(255,255,255,0.1);
-  border-radius: 4px;
-  margin: 10px auto;
+  border-radius: 3px;
+  margin: 8px auto;
   overflow: hidden;
   border: 1px solid var(--blood);
 }
@@ -290,7 +304,7 @@ html, body {
 #progress-bar {
   height: 100%;
   background: linear-gradient(90deg, var(--blood), var(--neon-pink), var(--electric-blue));
-  border-radius: 4px;
+  border-radius: 3px;
   transition: width 0.3s;
   box-shadow: 0 0 10px var(--blood);
 }
@@ -338,11 +352,11 @@ html, body {
 }
 
 #start-screen .title {
-  font-size: 48px;
+  font-size: 42px;
   color: var(--gold);
   text-shadow: 0 0 30px var(--blood), 0 0 60px var(--blood), 0 0 100px var(--neon-pink);
   letter-spacing: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   text-transform: uppercase;
   animation: titlePulse 2s ease-in-out infinite;
 }
@@ -353,10 +367,10 @@ html, body {
 }
 
 #start-screen .subtitle {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--electric-blue);
   letter-spacing: 4px;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   text-transform: uppercase;
 }
 
@@ -364,9 +378,9 @@ html, body {
   background: linear-gradient(180deg, var(--blood) 0%, var(--blood-dark) 100%);
   border: 3px solid var(--gold);
   border-radius: 50px;
-  padding: 16px 48px;
+  padding: 16px 40px;
   color: var(--gold);
-  font-size: 20px;
+  font-size: 18px;
   font-family: inherit;
   font-weight: bold;
   letter-spacing: 4px;
@@ -400,19 +414,19 @@ html, body {
 }
 
 #game-over-screen .game-over-title {
-  font-size: 42px;
+  font-size: 36px;
   color: var(--blood);
   text-shadow: 0 0 20px var(--blood);
   letter-spacing: 6px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   text-transform: uppercase;
 }
 
 #game-over-screen .final-score {
-  font-size: 64px;
+  font-size: 56px;
   color: var(--gold);
   text-shadow: 0 0 30px var(--gold);
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 #game-over-screen .restart-btn {
@@ -442,7 +456,7 @@ html, body {
 .float-point {
   position: absolute;
   color: var(--gold);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: bold;
   text-shadow: 0 0 10px var(--gold);
   pointer-events: none;
@@ -465,20 +479,20 @@ html, body {
 }
 
 #screen-shake.shaking {
-  animation: shake 0.3s ease-out;
+  animation: shake 0.4s ease-out;
 }
 
 @keyframes shake {
   0% { transform: translate(0, 0) rotate(0deg); }
-  10% { transform: translate(-5px, -5px) rotate(-1deg); }
-  20% { transform: translate(5px, -3px) rotate(1deg); }
-  30% { transform: translate(-4px, 2px) rotate(0deg); }
-  40% { transform: translate(3px, 4px) rotate(-0.5deg); }
-  50% { transform: translate(-2px, -2px) rotate(0.5deg); }
-  60% { transform: translate(2px, 1px) rotate(0deg); }
-  70% { transform: translate(-1px, -1px) rotate(-0.2deg); }
-  80% { transform: translate(1px, 1px) rotate(0.2deg); }
-  90% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-8px, -8px) rotate(-2deg); }
+  20% { transform: translate(8px, -4px) rotate(2deg); }
+  30% { transform: translate(-6px, 4px) rotate(0deg); }
+  40% { transform: translate(6px, 6px) rotate(-1deg); }
+  50% { transform: translate(-4px, -4px) rotate(1deg); }
+  60% { transform: translate(4px, 2px) rotate(0deg); }
+  70% { transform: translate(-2px, -2px) rotate(-0.5deg); }
+  80% { transform: translate(2px, 2px) rotate(0.5deg); }
+  90% { transform: translate(-1px, -1px) rotate(0deg); }
   100% { transform: translate(0, 0) rotate(0deg); }
 }
 
@@ -488,17 +502,17 @@ html, body {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 4px;
+  gap: 3px;
   pointer-events: none;
   z-index: 5;
 }
 
 .speaker-bar {
-  width: 6px;
+  width: 5px;
   background: var(--electric-blue);
-  border-radius: 3px;
+  border-radius: 2px;
   height: 4px;
-  transition: height 0.15s;
+  transition: height 0.1s;
   box-shadow: 0 0 5px var(--electric-blue);
 }
 
@@ -510,7 +524,7 @@ html, body {
   height: 100%;
   z-index: 5;
   pointer-events: none;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.8) 100%);
 }
 
 #flash-overlay {
@@ -527,24 +541,9 @@ html, body {
 }
 
 #flash-overlay.flash {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
-/* Stage spotlight beams */
-.spotlight {
-  position: absolute;
-  bottom: 0;
-  width: 300px;
-  height: 400px;
-  background: radial-gradient(ellipse at top center, rgba(255,51,51,0.15) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.spotlight.left { left: -50px; }
-.spotlight.right { right: -50px; }
-
-/* CRT scanline effect */
 #scanlines {
   position: absolute;
   top: 0;
@@ -557,12 +556,11 @@ html, body {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0,0,0,0.03) 2px,
-    rgba(0,0,0,0.03) 4px
+    rgba(0,0,0,0.04) 2px,
+    rgba(0,0,0,0.04) 4px
   );
 }
 
-/* Glitch overlay */
 #glitch-overlay {
   position: absolute;
   top: 0;
@@ -576,28 +574,27 @@ html, body {
     90deg,
     transparent 0px,
     transparent 2px,
-    rgba(255,0,102,0.03) 2px,
-    rgba(255,0,102,0.03) 4px
+    rgba(255,0,102,0.04) 2px,
+    rgba(255,0,102,0.04) 4px
   );
 }
 
 #glitch-overlay.active {
-  animation: glitchAnim 0.3s ease-out;
+  animation: glitchAnim 0.4s ease-out;
 }
 
 @keyframes glitchAnim {
-  0% { transform: translateX(0); opacity: 0.1; }
-  20% { transform: translateX(-3px); }
-  40% { transform: translateX(3px); opacity: 0.15; }
-  60% { transform: translateX(-2px); }
-  80% { transform: translateX(2px); }
+  0% { transform: translateX(0); opacity: 0.15; }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); opacity: 0.2; }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
   100% { transform: translateX(0); opacity: 0; }
 }
 
-/* Combo meter */
 #combo-meter {
   position: absolute;
-  top: 80px;
+  top: 75px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
@@ -606,14 +603,14 @@ html, body {
 }
 
 #combo-meter .combo-label {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--electric-blue);
   letter-spacing: 4px;
   text-transform: uppercase;
 }
 
 #combo-meter .combo-value {
-  font-size: 36px;
+  font-size: 32px;
   color: var(--gold);
   text-shadow: 0 0 20px var(--gold);
   opacity: 0;
@@ -624,10 +621,9 @@ html, body {
   opacity: 1;
 }
 
-/* Combo multiplier */
 #multiplier {
   position: absolute;
-  top: 130px;
+  top: 115px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
@@ -635,7 +631,7 @@ html, body {
 }
 
 #multiplier .mult-value {
-  font-size: 18px;
+  font-size: 14px;
   color: var(--neon-pink);
   text-shadow: 0 0 10px var(--neon-pink);
   opacity: 0;
@@ -646,12 +642,11 @@ html, body {
   opacity: 1;
 }
 
-/* Energy bar decorative */
 #energy-bar {
   position: absolute;
-  top: 10px;
-  width: 200px;
-  height: 4px;
+  top: 8px;
+  width: 180px;
+  height: 3px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(255,255,255,0.05);
@@ -665,21 +660,45 @@ html, body {
   background: linear-gradient(90deg, var(--blood), var(--neon-pink));
   width: 0%;
   transition: width 0.15s;
-  box-shadow: 0 0 10px var(--blood);
+  box-shadow: 0 0 8px var(--blood);
 }
 
-/* Responsive */
+#instrument-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.instrument-btn {
+  background: rgba(0,0,0,0.6);
+  border: 2px solid var(--metal);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: #aaa;
+  font-size: 10px;
+  font-family: inherit;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.instrument-btn.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(255,204,0,0.1);
+}
+
 @media (max-width: 400px) {
   #smash-btn {
-    width: 120px;
-    height: 120px;
-    font-size: 18px;
+    width: 110px;
+    height: 110px;
+    font-size: 16px;
   }
   #smash-btn .btn-icon {
-    font-size: 28px;
+    font-size: 24px;
   }
   .title {
-    font-size: 36px !important;
+    font-size: 32px !important;
   }
 }
 </style>
@@ -689,9 +708,10 @@ html, body {
 <div id="stage-container">
   <canvas id="canvas-3d"></canvas>
   <canvas id="canvas-particles"></canvas>
+  <canvas id="canvas-grid"></canvas>
   
-  <div class="spotlight left"></div>
-  <div class="spotlight right"></div>
+  <div class="spotlight left" style="background: radial-gradient(ellipse at top center, rgba(255,51,51,0.2) 0%, transparent 70%);"></div>
+  <div class="spotlight right" style="background: radial-gradient(ellipse at top center, rgba(0,212,255,0.15) 0%, transparent 70%);"></div>
   
   <div id="scanlines"></div>
   <div id="vignette"></div>
@@ -711,15 +731,25 @@ html, body {
       </div>
       <div class="stat-box">
         <span class="label">TIME</span>
-        <span class="value" id="time-value">60</span>
+        <span class="value" id="time-value">30</span>
       </div>
       <div class="stat-box">
-        <span class="label">SMASHES</span>
+        <span class="label">SMASH</span>
         <span class="value" id="smashes-value">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="label">MULTI</span>
+        <span class="value" id="multi-value">1.0x</span>
       </div>
     </div>
     
     <div id="game-area">
+      <div id="instrument-selector">
+        <button class="instrument-btn active" data-instrument="guitar">GUITAR</button>
+        <button class="instrument-btn" data-instrument="drums">DRUMS</button>
+        <button class="instrument-btn" data-instrument="amp">AMP</button>
+      </div>
+      
       <div id="combo-meter">
         <div class="combo-label">COMBO</div>
         <div class="combo-value" id="combo-value">x1</div>
@@ -732,8 +762,8 @@ html, body {
       <div id="smash-zone">
         <div class="impact-ring" id="impact-ring"></div>
         <div class="combo-text" id="combo-text">COMBO!</div>
-        <div class="guitar-sprite" id="guitar-sprite">
-          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <div class="instrument-sprite" id="instrument-sprite">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="guitar-svg">
             <defs>
               <linearGradient id="neckGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" style="stop-color:#8B4513"/>
@@ -834,59 +864,245 @@ html, body {
             <circle cx="125" cy="155" r="2" fill="#555"/>
             <circle cx="75" cy="155" r="2" fill="#555"/>
             
-            <!-- Wood grain effect -->
+            <!-- Wood grain -->
             <path d="M55,60 Q65,75 50,85 Q45,70 55,60" fill="none" stroke="#654321" stroke-width="1" opacity="0.3"/>
             <path d="M145,80 Q155,95 140,105 Q135,90 145,80" fill="none" stroke="#654321" stroke-width="1" opacity="0.3"/>
           </svg>
+          
+          <!-- Drums SVG -->
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="drums-svg" style="display:none;">
+            <defs>
+              <linearGradient id="drumGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#ff0066"/>
+                <stop offset="50%" style="stop-color:#cc0000"/>
+                <stop offset="100%" style="stop-color:#8a0000"/>
+              </linearGradient>
+              <radialGradient id="cymbalGrad" cx="50%" cy="50%" r="70%">
+                <stop offset="0%" style="stop-color:#fff"/>
+                <stop offset="80%" style="stop-color:#ddd"/>
+                <stop offset="100%" style="stop-color:#888"/>
+              </radialGradient>
+            </defs>
+            
+            <!-- Bass drum -->
+            <rect x="40" y="80" width="100" height="60" rx="5" fill="url(#drumGrad)" stroke="#ff3333" stroke-width="3"/>
+            <line x1="45" y1="100" x2="135" y2="100" stroke="#8a0000" stroke-width="2"/>
+            <line x1="45" y1="115" x2="135" y2="115" stroke="#8a0000" stroke-width="2"/>
+            
+            <!-- Bass drum hole -->
+            <ellipse cx="70" cy="108" rx="15" ry="10" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+            
+            <!-- Floor tom -->
+            <ellipse cx="145" cy="135" rx="35" ry="25" fill="url(#drumGrad)" stroke="#ff3333" stroke-width="3"/>
+            <line x1="115" y1="135" x2="175" y2="135" stroke="#8a0000" stroke-width="2"/>
+            
+            <!-- Snare -->
+            <rect x="45" y="135" width="70" height="35" rx="3" fill="#333" stroke="#555" stroke-width="2"/>
+            <line x1="50" y1="152" x2="110" y2="152" stroke="#777" stroke-width="1"/>
+            <line x1="50" y1="145" x2="110" y2="145" stroke="#777" stroke-width="1"/>
+            
+            <!-- Snare wires -->
+            <line x1="55" y1="148" x2="105" y2="148" stroke="#999" stroke-width="0.5"/>
+            <line x1="55" y1="150" x2="105" y2="150" stroke="#999" stroke-width="0.5"/>
+            <line x1="55" y1="152" x2="105" y2="152" stroke="#999" stroke-width="0.5"/>
+            
+            <!-- Hi-hat stand -->
+            <rect x="120" y="100" width="3" height="40" fill="#555"/>
+            <line x1="103" y1="105" x2="135" y2="105" stroke="#555" stroke-width="3"/>
+            
+            <!-- Hi-hats (open) -->
+            <ellipse cx="120" cy="70" rx="25" ry="4" fill="url(#cymbalGrad)" stroke="#aaa" stroke-width="1"/>
+            <ellipse cx="120" cy="78" rx="25" ry="4" fill="url(#cymbalGrad)" stroke="#888" stroke-width="1"/>
+            <line x1="95" y1="70" x2="145" y2="70" stroke="#999" stroke-width="0.5"/>
+            <line x1="95" y1="78" x2="145" y2="78" stroke="#777" stroke-width="0.5"/>
+            
+            <!-- Crash cymbal -->
+            <ellipse cx="30" cy="50" rx="30" ry="5" fill="url(#cymbalGrad)" stroke="#ccc" stroke-width="1"/>
+            <line x1="5" y1="50" x2="55" y2="50" stroke="#999" stroke-width="0.5"/>
+            <ellipse cx="30" cy="52" rx="25" ry="3" fill="#bbb" opacity="0.5"/>
+            
+            <!-- Ride cymbal -->
+            <ellipse cx="160" cy="55" rx="28" ry="4" fill="url(#cymbalGrad)" stroke="#ccc" stroke-width="1"/>
+            <line x1="135" y1="55" x2="185" y2="55" stroke="#999" stroke-width="0.5"/>
+            <circle cx="160" cy="55" r="4" fill="#444"/>
+            
+            <!-- Tom-toms -->
+            <circle cx="85" cy="100" r="22" fill="url(#drumGrad)" stroke="#ff3333" stroke-width="2"/>
+            <line x1="63" y1="100" x2="107" y2="100" stroke="#8a0000" stroke-width="2"/>
+            
+            <!-- Drumsticks -->
+            <line x1="60" y1="80" x2="35" y2="20" stroke="#d4a76a" stroke-width="3" stroke-linecap="round"/>
+            <line x1="65" y1="78" x2="45" y2="15" stroke="#d4a76a" stroke-width="2" stroke-linecap="round"/>
+            <!-- Tip -->
+            <ellipse cx="35" cy="20" rx="4" ry="6" fill="#333" transform="rotate(-30 35 20)"/>
+            <ellipse cx="45" cy="15" rx="3" ry="5" fill="#333" transform="rotate(-20 45 15)"/>
+            
+            <!-- Cracks on drums -->
+            <path d="M60,90 L65,95 L60,100" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M150,125 L153,130 L148,133" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          
+          <!-- Amp SVG -->
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="amp-svg" style="display:none;">
+            <defs>
+              <linearGradient id="ampBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#4a4a4a"/>
+                <stop offset="50%" style="stop-color:#2a2a2a"/>
+                <stop offset="100%" style="stop-color:#111111"/>
+              </linearGradient>
+              <linearGradient id="ampGrillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#ff0066"/>
+                <stop offset="100%" style="stop-color:#cc0000"/>
+              </linearGradient>
+              <filter id="ampGlow">
+                <feGaussianBlur stdDeviation="5" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            
+            <!-- Main cabinet -->
+            <rect x="30" y="45" width="140" height="120" rx="8" fill="url(#ampBodyGrad)" stroke="#555" stroke-width="2"/>
+            
+            <!-- Front grill - mesh pattern -->
+            <rect x="38" y="53" width="124" height="104" rx="4" fill="url(#ampGrillGrad)" stroke="#ff3333" stroke-width="2"/>
+            
+            <!-- Grill holes pattern -->
+            <g fill="#1a0000">
+              <circle cx="55" cy="70" r="3"/>
+              <circle cx="75" cy="70" r="3"/>
+              <circle cx="95" cy="70" r="3"/>
+              <circle cx="115" cy="70" r="3"/>
+              <circle cx="135" cy="70" r="3"/>
+              <circle cx="55" cy="88" r="3"/>
+              <circle cx="75" cy="88" r="3"/>
+              <circle cx="95" cy="88" r="3"/>
+              <circle cx="115" cy="88" r="3"/>
+              <circle cx="135" cy="88" r="3"/>
+              <circle cx="55" cy="106" r="3"/>
+              <circle cx="75" cy="106" r="3"/>
+              <circle cx="95" cy="106" r="3"/>
+              <circle cx="115" cy="106" r="3"/>
+              <circle cx="135" cy="106" r="3"/>
+              <circle cx="55" cy="124" r="3"/>
+              <circle cx="75" cy="124" r="3"/>
+              <circle cx="95" cy="124" r="3"/>
+              <circle cx="115" cy="124" r="3"/>
+              <circle cx="135" cy="124" r="3"/>
+            </g>
+            
+            <!-- Speaker cone -->
+            <ellipse cx="100" cy="100" rx="45" ry="35" fill="#0a0a0a" stroke="#333" stroke-width="1"/>
+            
+            <!-- Speaker dust cap -->
+            <ellipse cx="100" cy="100" rx="15" ry="12" fill="#2a2a2a"/>
+            <ellipse cx="100" cy="100" rx="8" ry="6" fill="#4a4a4a"/>
+            
+            <!-- Speaker label -->
+            <text x="100" y="98" text-anchor="middle" fill="#666" font-size="8" font-family="Arial">BLAST</text>
+            <text x="100" y="108" text-anchor="middle" fill="#555" font-size="8" font-family="Arial">SPEAKER</text>
+            
+            <!-- Power light -->
+            <circle cx="50" cy="60" r="6" fill="#333" stroke="#555" stroke-width="1"/>
+            <circle cx="50" cy="60" r="3" fill="#ff3333" filter="url(#ampGlow)"/>
+            
+            <!-- Control knobs -->
+            <circle cx="70" cy="60" r="8" fill="#2a2a2a" stroke="#666" stroke-width="1"/>
+            <circle cx="70" cy="60" r="5" fill="#3a3a3a"/>
+            <line x1="70" y1="52" x2="70" y2="56" stroke="#666" stroke-width="2" stroke-linecap="round"/>
+            
+            <circle cx="95" cy="60" r="8" fill="#2a2a2a" stroke="#666" stroke-width="1"/>
+            <circle cx="95" cy="60" r="5" fill="#3a3a3a"/>
+            <line x1="95" y1="52" x2="95" y2="56" stroke="#666" stroke-width="2" stroke-linecap="round"/>
+            
+            <circle cx="120" cy="60" r="8" fill="#2a2a2a" stroke="#666" stroke-width="1"/>
+            <circle cx="120" cy="60" r="5" fill="#3a3a3a"/>
+            <line x1="120" y1="52" x2="120" y2="56" stroke="#666" stroke-width="2" stroke-linecap="round"/>
+            
+            <!-- Volume label -->
+            <text x="120" y="48" text-anchor="middle" fill="#555" font-size="6" font-family="Arial">VOL</text>
+            
+            <!-- Handle -->
+            <rect x="80" y="42" width="40" height="8" rx="3" fill="#333" stroke="#555" stroke-width="1"/>
+            <rect x="83" y="44" width="34" height="4" rx="2" fill="#4a4a4a"/>
+            
+            <!-- Input jacks -->
+            <circle cx="40" cy="125" r="5" fill="#222" stroke="#444" stroke-width="1"/>
+            <circle cx="40" cy="125" r="2" fill="#333"/>
+            <text x="40" y="140" text-anchor="middle" fill="#555" font-size="5" font-family="Arial">IN</text>
+            
+            <!-- Foot corners -->
+            <circle cx="35" cy="160" r="4" fill="#111"/>
+            <circle cx="165" cy="160" r="4" fill="#111"/>
+            
+            <!-- Screws -->
+            <circle cx="38" cy="48" r="1.5" fill="#444"/>
+            <circle cx="162" cy="48" r="1.5" fill="#444"/>
+            <circle cx="38" cy="157" r="1.5" fill="#444"/>
+            <circle cx="162" cy="157" r="1.5" fill="#444"/>
+            
+            <!-- Cracks -->
+            <path d="M70,110 L75,115 L70,120" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M130,95 L133,100 L128,103" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
+            
+            <!-- Smoke vent -->
+            <rect x="60" y="160" width="80" height="4" rx="2" fill="#0a0a0a" stroke="#222" stroke-width="1"/>
+            <line x1="70" y1="162" x2="70" y2="162" stroke="#333" stroke-width="0.5"/>
+            <line x1="85" y1="162" x2="85" y2="162" stroke="#333" stroke-width="0.5"/>
+            <line x1="100" y1="162" x2="100" y2="162" stroke="#333" stroke-width="0.5"/>
+            <line x1="115" y1="162" x2="115" y2="162" stroke="#333" stroke-width="0.5"/>
+            <line x1="130" y1="162" x2="130" y2="162" stroke="#333" stroke-width="0.5"/>
+          </svg>
+        </div>
+        
+        <div id="progress-container">
+          <div id="progress-bar"></div>
+        </div>
+        
+        <div id="controls-area">
+          <button id="smash-btn">
+            <div class="btn-inner">
+              <span class="btn-icon">💥</span>
+              SMASH!
+            </div>
+          </button>
+          <div id="instruction">TAP TO DESTROY</div>
         </div>
       </div>
       
-      <div id="progress-container">
-        <div id="progress-bar"></div>
-      </div>
-      
-      <div id="controls-area">
-        <button id="smash-btn">
-          <div class="btn-inner">
-            <span class="btn-icon">🎸</span>
-            SMASH!
-          </div>
-        </button>
-        <div id="instruction">TAP THE GUITAR TO SMASH IT</div>
-      </div>
+      <div id="stage-floor"></div>
     </div>
     
-    <div id="stage-floor"></div>
-  </div>
-  
-  <div id="floating-points"></div>
-  
-  <div id="speaker-indicator">
-    <div class="speaker-bar" id="sp1"></div>
-    <div class="speaker-bar" id="sp2"></div>
-    <div class="speaker-bar" id="sp3"></div>
-    <div class="speaker-bar" id="sp4"></div>
-    <div class="speaker-bar" id="sp5"></div>
+    <div id="floating-points"></div>
+    
+    <div id="speaker-indicator">
+      <div class="speaker-bar" id="sp1"></div>
+      <div class="speaker-bar" id="sp2"></div>
+      <div class="speaker-bar" id="sp3"></div>
+      <div class="speaker-bar" id="sp4"></div>
+      <div class="speaker-bar" id="sp5"></div>
+    </div>
   </div>
   
   <div id="start-screen">
     <div class="title">SMASH STAGE</div>
-    <div class="subtitle">Destroy everything</div>
-    <button class="start-btn" id="start-btn">START THE WAR</button>
+    <div class="subtitle">Total Destruction</div>
+    <button class="start-btn" id="start-btn">START WAR</button>
   </div>
   
   <div id="game-over-screen">
-    <div class="game-over-title">GUITAR DESTROYED</div>
+    <div class="game-over-title">STAGE DESTROYED</div>
     <div class="final-score" id="final-score">0</div>
-    <button class="restart-btn" id="restart-btn">SMASH AGAIN</button>
+    <button class="restart-btn" id="restart-btn">SMAHS AGAIN</button>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ============================================
-// ROCK & ROLL GUITAR SMASHING GAME
-// Pure destruction theme - nothing but the carnage
+// ROCK & ROLL DESTRUCTION - ENHANCED
 // ============================================
 
 (function() {
@@ -897,7 +1113,7 @@ html, body {
   // ============================================
   const GameState = {
     score: 0,
-    timeLeft: 60,
+    timeLeft: 30,
     smashes: 0,
     combo: 0,
     maxCombo: 0,
@@ -906,17 +1122,19 @@ html, body {
     energy: 0,
     multiplier: 1,
     lastSmashTime: 0,
-    damageLevel: 0,
-    cracks: []
+    comboTimer: 0,
+    currentInstrument: 'guitar',
+    totalDamage: 0
   };
   
-  // DOM Elements - must be cached
+  // DOM Elements
   const $ = id => document.getElementById(id);
   const scoreValue = $('score-value');
   const timeValue = $('time-value');
   const smashesValue = $('smashes-value');
+  const multiValue = $('multi-value');
   const progressBar = $('progress-bar');
-  const guitarSprite = $('guitar-sprite');
+  const instrumentSprite = $('instrument-sprite');
   const smashBtn = $('smash-btn');
   const smashZone = $('smash-zone');
   const impactRing = $('impact-ring');
@@ -933,26 +1151,35 @@ html, body {
   const glitchOverlay = $('glitch-overlay');
   const finalScore = $('final-score');
   const floatingPoints = $('floating-points');
+  const instrumentBtns = document.querySelectorAll('.instrument-btn');
+  const canvas3D = $('canvas-3d');
+  const canvasParticles = $('canvas-particles');
+  const canvasGrid = $('canvas-grid');
   
   // Canvas contexts
-  const canvas3D = $('canvas-3d');
   const ctx3D = canvas3D.getContext('2d');
-  const canvasParticles = $('canvas-particles');
   const ctxParticles = canvasParticles.getContext('2d');
+  const ctxGrid = canvasGrid.getContext('2d');
+  
+  // SVG elements
+  const guitarSvg = $('guitar-svg');
+  const drumsSvg = $('drums-svg');
+  const ampSvg = $('amp-svg');
   
   // Three.js globals
   let scene, camera, renderer;
-  let guitarMesh, stageMesh, lightMesh;
+  let objects3D = [];
   let particles = [];
-  let debris = [];
   let sparks = [];
+  let debris = [];
   let smokeParticles = [];
+  let laserBeams = [];
   
-  // Audio context for feedback (Web Audio API)
+  // Audio context
   let audioCtx;
   
   // ============================================
-  // RESIZE HANDLER
+  // RESIZE
   // ============================================
   function resize() {
     const w = window.innerWidth;
@@ -961,6 +1188,9 @@ html, body {
     canvas3D.height = h;
     canvasParticles.width = w;
     canvasParticles.height = h;
+    canvasGrid.width = w;
+    canvasGrid.height = h;
+    drawGrid();
     
     if (renderer) {
       renderer.setSize(w, h);
@@ -969,20 +1199,37 @@ html, body {
     }
   }
   
+  function drawGrid() {
+    const ctx = ctxGrid;
+    ctx.clearRect(0, 0, canvasGrid.width, canvasGrid.height);
+    ctx.strokeStyle = 'rgba(255, 0, 102, 0.08)';
+    ctx.lineWidth = 1;
+    
+    const gridSize = 50;
+    for (let x = 0; x < canvasGrid.width; x += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvasGrid.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < canvasGrid.height; y += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvasGrid.width, y);
+      ctx.stroke();
+    }
+  }
+  
   // ============================================
-  // 3D SCENE SETUP
+  // 3D SCENE
   // ============================================
   function init3DScene() {
-    // Scene
     scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x0d0d0d, 5, 30);
+    scene.fog = new THREE.Fog(0x050505, 8, 40);
     
-    // Camera
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 4, 8);
-    camera.lookAt(0, 0, 0);
+    camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 5, 10);
     
-    // Renderer
     renderer = new THREE.WebGLRenderer({
       canvas: canvas3D,
       alpha: true,
@@ -992,166 +1239,151 @@ html, body {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setClearColor(0x0d0d0d, 0);
+    renderer.setClearColor(0x050505, 0);
     
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xff4444, 0.3);
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xff6666, 0.2);
     scene.add(ambientLight);
     
-    const mainLight = new THREE.SpotLight(0xff3333, 2, 20, Math.PI / 4, 0.5);
-    mainLight.position.set(3, 8, 5);
+    const mainLight = new THREE.SpotLight(0xff3333, 2.5, 25, Math.PI / 5, 0.5, 1.5);
+    mainLight.position.set(5, 10, 5);
     mainLight.castShadow = true;
     mainLight.shadow.mapSize.width = 512;
     mainLight.shadow.mapSize.height = 512;
     scene.add(mainLight);
     
-    const backLight = new THREE.PointLight(0x00d4ff, 0.5, 15);
-    backLight.position.set(-3, 3, -3);
+    const backLight = new THREE.PointLight(0x00d4ff, 1, 20);
+    backLight.position.set(-5, 7, -5);
     scene.add(backLight);
     
-    const rimLight = new THREE.PointLight(0xff0066, 0.8, 10);
-    rimLight.position.set(0, 5, -5);
+    const rimLight = new THREE.PointLight(0xff0066, 0.8, 15);
+    rimLight.position.set(0, 10, -8);
     scene.add(rimLight);
     
-    // Create guitar mesh (custom geometry)
-    const guitarGroup = new THREE.Group();
-    
-    // Body
-    const bodyShape = new THREE.Shape();
-    bodyShape.moveTo(0, -1);
-    bodyShape.quadraticCurveTo(1.5, -1.5, 2, -0.5);
-    bodyShape.quadraticCurveTo(2, 1, 1, 2);
-    bodyShape.quadraticCurveTo(-1, 2, -2, 1);
-    bodyShape.quadraticCurveTo(-2, -0.5, -1, -1.5);
-    bodyShape.quadraticCurveTo(0, -1, 0, -1);
-    
-    const extrudeSettings = { depth: 0.3, bevelEnabled: true, bevelSegments: 10, steps: 2, bevelSize: 0.1, bevelThickness: 0.1 };
-    const bodyGeom = new THREE.ExtrudeGeometry(bodyShape, extrudeSettings);
-    const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0xcc0000,
-      metalness: 0.3,
-      roughness: 0.4,
-      emissive: 0x330000,
-      emissiveIntensity: 0.2
-    });
-    const bodyMesh = new THREE.Mesh(bodyGeom, bodyMat);
-    bodyMesh.position.z = 0.15;
-    bodyMesh.castShadow = true;
-    bodyMesh.receiveShadow = true;
-    guitarGroup.add(bodyMesh);
-    
-    // Body detail (shine)
-    const shineGeom = new THREE.CircleGeometry(0.8, 32);
-    const shineMat = new THREE.MeshStandardMaterial({
-      color: 0xff8888,
-      metalness: 0.8,
-      roughness: 0.2,
-      transparent: true,
-      opacity: 0.5
-    });
-    const shineMesh = new THREE.Mesh(shineGeom, shineMat);
-    shineMesh.position.set(0.3, 0.2, 0.35);
-    shineMesh.rotation.x = -Math.PI / 6;
-    guitarGroup.add(shineMesh);
-    
-    // Neck
-    const neckGeom = new THREE.BoxGeometry(0.15, 1.2, 0.3);
-    const neckMat = new THREE.MeshStandardMaterial({ color: 0xd2b48c, metalness: 0.1, roughness: 0.5 });
-    const neckMesh = new THREE.Mesh(neckGeom, neckMat);
-    neckMesh.position.set(0, 0.6, 0);
-    neckMesh.castShadow = true;
-    guitarGroup.add(neckMesh);
-    
-    // Fretboard
-    const fretboardGeom = new THREE.BoxGeometry(0.13, 1.1, 0.2);
-    const fretboardMat = new THREE.MeshStandardMaterial({ color: 0x3d2817, metalness: 0.1, roughness: 0.6 });
-    const fretboardMesh = new THREE.Mesh(fretboardGeom, fretboardMat);
-    fretboardMesh.position.set(0, 0.6, 0);
-    guitarGroup.add(fretboardMesh);
-    
-    // Frets
-    for (let i = 0; i < 5; i++) {
-      const fretGeom = new THREE.BoxGeometry(0.16, 0.02, 0.22);
-      const fretMat = new THREE.MeshStandardMaterial({ color: 0xd4b87a, metalness: 0.6, roughness: 0.3 });
-      const fretMesh = new THREE.Mesh(fretGeom, fretMat);
-      fretMesh.position.set(0, 0.4 + i * 0.22, 0);
-      guitarGroup.add(fretMesh);
-    }
-    
-    // Headstock
-    const headGeom = new THREE.BoxGeometry(0.2, 0.3, 0.3);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0x654321, metalness: 0.2, roughness: 0.5 });
-    const headMesh = new THREE.Mesh(headGeom, headMat);
-    headMesh.position.set(0, 1.25, 0);
-    guitarGroup.add(headMesh);
-    
-    // Strings
-    const stringMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.1 });
-    for (let i = 0; i < 6; i++) {
-      const stringGeom = new THREE.CylinderGeometry(0.005, 0.005, 1.8, 8);
-      const stringMesh = new THREE.Mesh(stringGeom, stringMat);
-      const offset = -0.05 + i * 0.02;
-      stringMesh.position.set(offset, 0, 0.15);
-      stringMesh.rotation.z = Math.PI / 2;
-      stringMesh.castShadow = true;
-      guitarGroup.add(stringMesh);
-    }
-    
-    // Bridge
-    const bridgeGeom = new THREE.BoxGeometry(0.2, 0.03, 0.15);
-    const bridgeMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5, roughness: 0.3 });
-    const bridgeMesh = new THREE.Mesh(bridgeGeom, bridgeMat);
-    bridgeMesh.position.set(0, -0.05, 0.1);
-    guitarGroup.add(bridgeMesh);
-    
-    // Position guitar
-    guitarMesh = guitarGroup;
-    guitarMesh.position.y = 0.5;
-    guitarMesh.castShadow = true;
-    guitarMesh.receiveShadow = true;
-    scene.add(guitarMesh);
+    const laserLight = new THREE.PointLight(0x00ff88, 0.5, 20);
+    laserLight.position.set(3, 5, 0);
+    scene.add(laserLight);
     
     // Stage floor
-    const stageGeom = new THREE.PlaneGeometry(20, 20);
-    const stageMat = new THREE.MeshStandardMaterial({
-      color: 0x1a1a1a,
-      metalness: 0.2,
-      roughness: 0.8
+    const floorGeo = new THREE.PlaneGeometry(30, 30);
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0a0a,
+      metalness: 0.4,
+      roughness: 0.7
     });
-    stageMesh = new THREE.Mesh(stageGeom, stageMat);
-    stageMesh.rotation.x = -Math.PI / 2;
-    stageMesh.position.y = -0.1;
-    stageMesh.receiveShadow = true;
-    scene.add(stageMesh);
+    const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.position.y = -0.1;
+    floorMesh.receiveShadow = true;
+    scene.add(floorMesh);
     
-    // Stage light mesh (visual only)
-    const lightGeom = new THREE.ConeGeometry(0.5, 2, 32);
-    const lightMat = new THREE.MeshBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.5 });
-    lightMesh = new THREE.Mesh(lightGeom, lightMat);
-    lightMesh.position.set(3, 5, 5);
-    lightMesh.rotation.x = -Math.PI / 2;
-    scene.add(lightMesh);
+    // Stage elements
+    createStageElements();
     
-    // Store references for animation
-    THREE_SCENE = { scene, camera, renderer, mainLight, guitarMesh, stageMesh, lightMesh };
+    // Store references
+    THREE_SCENE.objs = { scene, camera, renderer, mainLight, floorMesh, laserLight };
+  }
+  
+  function createStageElements() {
+    const group = new THREE.Group();
+    
+    // Guitar stand
+    const standMat = new THREE.MeshStandardMaterial({ color: 0x333, metalness: 0.6, roughness: 0.4 });
+    const standGeo = new THREE.CylinderGeometry(0.2, 0.2, 3, 16);
+    const stand = new THREE.Mesh(standGeo, standMat);
+    stand.position.set(-2, 1, 0);
+    stand.castShadow = true;
+    group.add(stand);
+    
+    // Microphone stand
+    const micStand = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 4, 0.15),
+      standMat
+    );
+    micStand.position.set(2, 2, 0.5);
+    micStand.castShadow = true;
+    group.add(micStand);
+    
+    // Microphone
+    const mic = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.08, 0.6, 16),
+      new THREE.MeshStandardMaterial({ color: 0x222, metalness: 0.8, roughness: 0.3 })
+    );
+    mic.position.set(2, 4.3, 0.5);
+    mic.castShadow = true;
+    group.add(mic);
+    
+    // Monitor speaker
+    const monitor = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5, 1, 0.8),
+      new THREE.MeshStandardMaterial({ color: 0x111, metalness: 0.3, roughness: 0.5 })
+    );
+    monitor.position.set(-3, 0.5, -1);
+    monitor.castShadow = true;
+    group.add(monitor);
+    
+    // Speaker boxes
+    const speakerGeo = new THREE.BoxGeometry(1.2, 2, 0.8);
+    const speakerMat = new THREE.MeshStandardMaterial({ color: 0x222, metalness: 0.4, roughness: 0.4 });
+    
+    const sp1 = new THREE.Mesh(speakerGeo, speakerMat);
+    sp1.position.set(4, 1, -2);
+    sp1.castShadow = true;
+    group.add(sp1);
+    
+    const sp2 = new THREE.Mesh(speakerGeo, speakerMat);
+    sp2.position.set(-4, 1, -2);
+    sp2.castShadow = true;
+    group.add(sp2);
+    
+    scene.add(group);
+    objects3D.push(group);
   }
   
   const THREE_SCENE = {};
   
   // ============================================
-  // PARTICLE SYSTEM
+  // INSTRUMENT SWITCHING
   // ============================================
-  function createSparks(x, y, count) {
+  function switchInstrument(instrument) {
+    GameState.currentInstrument = instrument;
+    guitarSvg.style.display = 'none';
+    drumsSvg.style.display = 'none';
+    ampSvg.style.display = 'none';
+    
+    if (instrument === 'guitar') {
+      guitarSvg.style.display = 'block';
+    } else if (instrument === 'drums') {
+      drumsSvg.style.display = 'block';
+    } else if (instrument === 'amp') {
+      ampSvg.style.display = 'block';
+    }
+    
+    // Update buttons
+    instrumentBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.instrument === instrument);
+    });
+  }
+  
+  // ============================================
+  // PARTICLE & VISUAL EFFECTS
+  // ============================================
+  function createSparks(x, y, count, type) {
+    const colors = type === 'metal' ? ['#00d4ff', '#aaa', '#fff'] : 
+                    type === 'wood' ? ['#8B4513', '#d4a76a', '#ffcc00'] :
+                    ['#ff3333', '#ffcc00', '#00d4ff', '#ff0066'];
+    
     for (let i = 0; i < count; i++) {
       sparks.push({
-        x: x + (Math.random() - 0.5) * 40,
-        y: y + (Math.random() - 0.5) * 40,
-        vx: (Math.random() - 0.5) * 10,
-        vy: (Math.random() - 0.5) * 10 - 5,
+        x: x + (Math.random() - 0.5) * 50,
+        y: y + (Math.random() - 0.5) * 50,
+        vx: (Math.random() - 0.5) * 12,
+        vy: (Math.random() - 0.5) * 12 - 4,
         life: 1,
-        decay: 0.02 + Math.random() * 0.03,
-        size: 2 + Math.random() * 4,
-        color: Math.random() > 0.5 ? '#ffcc00' : '#ff3333'
+        decay: 0.015 + Math.random() * 0.025,
+        size: 2 + Math.random() * 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        trail: []
       });
     }
   }
@@ -1159,76 +1391,123 @@ html, body {
   function createSmoke(x, y, count) {
     for (let i = 0; i < count; i++) {
       smokeParticles.push({
-        x: x + (Math.random() - 0.5) * 60,
-        y: y + (Math.random() - 0.5) * 60,
-        vx: (Math.random() - 0.5) * 2,
-        vy: -Math.random() * 2 - 1,
+        x: x + (Math.random() - 0.5) * 80,
+        y: y + (Math.random() - 0.5) * 80,
+        vx: (Math.random() - 0.5) * 3,
+        vy: -Math.random() * 3 - 1,
         life: 1,
-        decay: 0.005 + Math.random() * 0.01,
-        size: 10 + Math.random() * 30,
-        color: '#333'
+        decay: 0.008 + Math.random() * 0.015,
+        size: 15 + Math.random() * 40,
+        color: Math.random() > 0.5 ? '#333' : '#444'
       });
     }
   }
   
-  function createDebris(x, y, count) {
+  function createDebris(x, y, count, type) {
+    const colors = type === 'guitar' ? ['#8B4513', '#cc0000', '#D2B48C'] :
+                    type === 'drums' ? ['#cc0000', '#ff6666', '#333'] :
+                    type === 'amp' ? ['#2a2a2a', '#444', '#ff0066'] :
+                    ['#8B4513', '#cc0000', '#444'];
+    
     for (let i = 0; i < count; i++) {
       debris.push({
         x: x,
         y: y,
-        vx: (Math.random() - 0.5) * 15,
-        vy: -Math.random() * 12 - 5,
+        vx: (Math.random() - 0.5) * 18,
+        vy: -Math.random() * 15 - 8,
         life: 1,
-        decay: 0.01 + Math.random() * 0.02,
-        size: 3 + Math.random() * 8,
+        decay: 0.012 + Math.random() * 0.02,
+        size: 4 + Math.random() * 12,
         rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.3,
-        color: Math.random() > 0.5 ? '#8B4513' : '#cc0000',
-        type: Math.random() > 0.5 ? 'wood' : 'metal'
+        rotSpeed: (Math.random() - 0.5) * 0.4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        type: type || 'wood',
+        shape: Math.random() > 0.5 ? 'rect' : 'tri'
       });
     }
+  }
+  
+  function createLaserBeam(x, y) {
+    laserBeams.push({
+      x: x,
+      y: y,
+      length: 0,
+      maxLength: 200 + Math.random() * 200,
+      life: 1,
+      decay: 0.03,
+      color: Math.random() > 0.5 ? '#00ff88' : '#00d4ff',
+      width: 3 + Math.random() * 4
+    });
   }
   
   function createFloatingText(x, y, text, color) {
     const div = document.createElement('div');
     div.className = 'float-point';
     div.textContent = text;
-    div.style.left = x + 'px';
-    div.style.top = y + 'px';
+    div.style.left = (x - 20) + 'px';
+    div.style.top = (y - 10) + 'px';
     div.style.color = color || '#ffcc00';
     floatingPoints.appendChild(div);
     setTimeout(() => {
       if (div.parentNode) div.parentNode.removeChild(div);
-    }, 1200);
+    }, 1000);
+  }
+  
+  function createShockwave(cx, cy) {
+    // Visual shockwave rings
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        const ring = document.createElement('div');
+        ring.style.position = 'absolute';
+        ring.style.left = (cx - 50) + 'px';
+        ring.style.top = (cy - 50) + 'px';
+        ring.style.width = '100px';
+        ring.style.height = '100px';
+        ring.style.border = '3px solid var(--electric-blue)';
+        ring.style.borderRadius = '50%';
+        ring.style.pointerEvents = 'none';
+        ring.style.zIndex = '15';
+        ring.style.transform = 'scale(0)';
+        ring.style.opacity = '0.8';
+        document.body.appendChild(ring);
+        
+        ring.animate([
+          { transform: 'scale(0)', opacity: 0.8 },
+          { transform: 'scale(4)', opacity: 0 }
+        ], { duration: 800, easing: 'ease-out' }).onfinish = () => ring.remove();
+      }, i * 150);
+    }
   }
   
   // ============================================
   // ANIMATION LOOPS
   // ============================================
-  let lastTime = 0;
-  let frameCount = 0;
+  let lastTime3D = 0;
   
   function animate3D(timestamp) {
     if (!GameState.isPlaying) return;
     
-    const delta = (timestamp - lastTime) / 1000;
-    lastTime = timestamp;
+    const delta = (timestamp - lastTime3D) / 1000;
+    lastTime3D = timestamp;
     
-    // Rotate guitar slowly
-    THREE_SCENE.guitarMesh.rotation.y += 0.005;
-    THREE_SCENE.guitarMesh.rotation.x = Math.sin(timestamp * 0.001) * 0.05;
+    // Animate 3D objects
+    objects3D.forEach(obj => {
+      obj.rotation.y += 0.003;
+      obj.position.x = Math.sin(timestamp * 0.001) * 0.3;
+    });
     
-    // Animate light
-    THREE_SCENE.lightMesh.rotation.z += 0.02;
-    THREE_SCENE.lightMesh.material.opacity = 0.3 + Math.sin(timestamp * 0.003) * 0.2;
+    // Animate lights
+    THREE_SCENE.objs.mainLight.position.x = Math.sin(timestamp * 0.002) * 3;
+    THREE_SCENE.objs.laserLight.position.y = 5 + Math.sin(timestamp * 0.003) * 2;
     
-    // Move camera slightly
-    THREE_SCENE.camera.position.x = Math.sin(timestamp * 0.0005) * 0.5;
-    THREE_SCENE.camera.lookAt(0, 0, 0);
+    // Camera subtle movement
+    camera.position.x = Math.sin(timestamp * 0.0008) * 0.8;
+    camera.position.y = 5 + Math.cos(timestamp * 0.0005) * 0.5;
+    camera.lookAt(0, 0, 0);
     
     // Render
     try {
-      THREE_SCENE.renderer.render(THREE_SCENE.scene, THREE_SCENE.camera);
+      THREE_SCENE.objs.renderer.render(THREE_SCENE.objs.scene, THREE_SCENE.objs.camera);
     } catch(e) {}
     
     requestAnimationFrame(animate3D);
@@ -1238,12 +1517,13 @@ html, body {
     const ctx = ctxParticles;
     ctx.clearRect(0, 0, canvasParticles.width, canvasParticles.height);
     
-    // Update and draw sparks
+    // Sparks
     for (let i = sparks.length - 1; i >= 0; i--) {
       const s = sparks[i];
       s.x += s.vx;
       s.y += s.vy;
-      s.vy += 0.3; // gravity
+      s.vy += 0.4;
+      s.vx *= 0.97;
       s.life -= s.decay;
       
       if (s.life <= 0) {
@@ -1252,27 +1532,38 @@ html, body {
       }
       
       ctx.globalAlpha = s.life;
-      ctx.fillStyle = s.color;
+      
+      // Trail
+      if (s.trail.length > 0) {
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = s.size * 0.5 * s.life;
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        for (let t = 0; t < Math.min(s.trail.length, 5); t++) {
+          ctx.lineTo(s.trail[t].x, s.trail[t].y);
+        }
+        ctx.stroke();
+      }
+      
+      s.trail.unshift({ x: s.x, y: s.y });
+      if (s.trail.length > 10) s.trail.pop();
+      
+      // Spark
+      const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * s.life);
+      grad.addColorStop(0, s.color);
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI * 2);
       ctx.fill();
-      
-      // Trail
-      ctx.globalAlpha = s.life * 0.3;
-      ctx.beginPath();
-      ctx.moveTo(s.x, s.y);
-      ctx.lineTo(s.x - s.vx * 2, s.y - s.vy * 2);
-      ctx.strokeStyle = s.color;
-      ctx.lineWidth = s.size * 0.5;
-      ctx.stroke();
     }
     
-    // Update and draw debris
+    // Debris
     for (let i = debris.length - 1; i >= 0; i--) {
       const d = debris[i];
       d.x += d.vx;
       d.y += d.vy;
-      d.vy += 0.4;
+      d.vy += 0.5;
       d.vx *= 0.98;
       d.rotation += d.rotSpeed;
       d.life -= d.decay;
@@ -1288,7 +1579,7 @@ html, body {
       ctx.translate(d.x, d.y);
       ctx.rotate(d.rotation);
       
-      if (d.type === 'wood') {
+      if (d.shape === 'rect') {
         ctx.fillRect(-d.size/2, -d.size/4, d.size, d.size/2);
       } else {
         ctx.beginPath();
@@ -1300,9 +1591,16 @@ html, body {
       }
       
       ctx.restore();
+      
+      // Shadow
+      ctx.globalAlpha = d.life * 0.2;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(d.x, canvasParticles.height - 10, d.size * 0.5, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
     
-    // Update and draw smoke
+    // Smoke
     for (let i = smokeParticles.length - 1; i >= 0; i--) {
       const s = smokeParticles[i];
       s.x += s.vx;
@@ -1310,18 +1608,18 @@ html, body {
       s.vx *= 0.98;
       s.vy -= 0.1;
       s.life -= s.decay;
-      s.size += 0.3;
+      s.size += 0.5;
       
       if (s.life <= 0) {
         smokeParticles.splice(i, 1);
         continue;
       }
       
-      const alpha = s.life * 0.4;
+      const alpha = s.life * 0.3;
       const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size);
-      grad.addColorStop(0, `rgba(60, 60, 60, ${alpha})`);
-      grad.addColorStop(0.5, `rgba(40, 40, 40, ${alpha * 0.5})`);
-      grad.addColorStop(1, 'rgba(20, 20, 20, 0)');
+      grad.addColorStop(0, `rgba(40, 40, 40, ${alpha})`);
+      grad.addColorStop(0.5, `rgba(30, 30, 30, ${alpha * 0.5})`);
+      grad.addColorStop(1, 'rgba(15, 15, 15, 0)');
       
       ctx.globalAlpha = 1;
       ctx.fillStyle = grad;
@@ -1330,12 +1628,47 @@ html, body {
       ctx.fill();
     }
     
+    // Laser beams
+    for (let i = laserBeams.length - 1; i >= 0; i--) {
+      const l = laserBeams[i];
+      l.length += 15;
+      l.life -= l.decay;
+      
+      if (l.life <= 0) {
+        laserBeams.splice(i, 1);
+        continue;
+      }
+      
+      ctx.globalAlpha = l.life * 0.6;
+      
+      // Glow
+      const glowGrad = ctx.createLinearGradient(l.x, l.y - l.width/2, l.x, l.y + l.width/2);
+      glowGrad.addColorStop(0, 'transparent');
+      glowGrad.addColorStop(0.5, l.color);
+      glowGrad.addColorStop(1, 'transparent');
+      ctx.strokeStyle = glowGrad;
+      ctx.lineWidth = l.width * 3;
+      ctx.beginPath();
+      ctx.moveTo(l.x, l.y);
+      ctx.lineTo(l.x + l.length * 0.3, l.y - l.length * 0.5);
+      ctx.stroke();
+      
+      // Core
+      ctx.globalAlpha = l.life;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = l.width * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(l.x, l.y);
+      ctx.lineTo(l.x + l.length * 0.3, l.y - l.length * 0.5);
+      ctx.stroke();
+    }
+    
     ctx.globalAlpha = 1;
     requestAnimationFrame(animateParticles);
   }
   
   // ============================================
-  // AUDIO FEEDBACK
+  // AUDIO
   // ============================================
   function initAudio() {
     try {
@@ -1345,17 +1678,19 @@ html, body {
     }
   }
   
-  function playSmashSound() {
+  function playSmashSound(type) {
     if (!audioCtx) return;
     
     try {
-      // Noise burst for breaking sound
-      const bufferSize = audioCtx.sampleRate * 0.2;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
+      // Noise burst
+      const bufferSize = audioCtx.sampleRate * 0.15;
+      const buffer = audioCtx.createBuffer(2, bufferSize, audioCtx.sampleRate);
       
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+      for (let ch = 0; ch < 2; ch++) {
+        const data = buffer.getChannelData(ch);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+        }
       }
       
       const noise = audioCtx.createBufferSource();
@@ -1363,12 +1698,12 @@ html, body {
       
       const filter = audioCtx.createBiquadFilter();
       filter.type = 'bandpass';
-      filter.frequency.value = 200 + Math.random() * 400;
+      filter.frequency.value = type === 'drums' ? 150 : type === 'amp' ? 100 : 250;
       filter.Q.value = 1;
       
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
       
       noise.connect(filter);
       filter.connect(gain);
@@ -1376,16 +1711,33 @@ html, body {
       noise.start();
       
       // Metal ping
-      const osc = audioCtx.createOscillator();
-      const oscGain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 800 + Math.random() * 400;
-      oscGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      oscGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-      osc.connect(oscGain);
-      oscGain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.1);
+      if (type !== 'drums') {
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+        osc.type = 'sine';
+        const freq = type === 'amp' ? 400 : 600;
+        osc.frequency.value = freq + Math.random() * 200;
+        oscGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(oscGain);
+        oscGain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+      }
+      
+      // Low thud for drums
+      if (type === 'drums') {
+        const osc = audioCtx.createOscillator();
+        const oscGain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 80;
+        oscGain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(oscGain);
+        oscGain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+      }
     } catch(e) {}
   }
   
@@ -1395,14 +1747,14 @@ html, body {
     try {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 200 + combo * 100;
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      osc.type = 'sawtooth';
+      osc.frequency.value = 150 + combo * 80;
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.3);
+      osc.stop(audioCtx.currentTime + 0.25);
     } catch(e) {}
   }
   
@@ -1416,18 +1768,18 @@ html, body {
   
   function screenShakeEffect() {
     screenShake.classList.add('shaking');
-    setTimeout(() => screenShake.classList.remove('shaking'), 300);
+    setTimeout(() => screenShake.classList.remove('shaking'), 400);
   }
   
   function glitchEffect() {
     glitchOverlay.classList.add('active');
-    setTimeout(() => glitchOverlay.classList.remove('active'), 300);
+    setTimeout(() => glitchOverlay.classList.remove('active'), 400);
   }
   
   function updateSpeakerBars() {
     for (let i = 1; i <= 5; i++) {
       const bar = $('sp' + i);
-      const h = 4 + Math.random() * 12;
+      const h = 4 + Math.random() * 10;
       bar.style.height = h + 'px';
     }
   }
@@ -1436,8 +1788,8 @@ html, body {
   // GAME LOGIC
   // ============================================
   function calculateScore() {
-    const baseScore = 100;
-    const comboBonus = GameState.combo * 10;
+    const baseScore = 150;
+    const comboBonus = GameState.combo * 15;
     const multiplier = Math.pow(1.5, GameState.multiplier - 1);
     return Math.floor((baseScore + comboBonus) * multiplier);
   }
@@ -1446,32 +1798,36 @@ html, body {
     if (!GameState.isPlaying) return;
     
     const now = Date.now();
-    if (now - GameState.lastSmashTime < 200) return;
+    if (now - GameState.lastSmashTime < 180) return;
     GameState.lastSmashTime = now;
     
     GameState.smashes++;
     GameState.combo++;
-    GameState.damageLevel = Math.min(GameState.damageLevel + 1, 100);
+    GameState.totalDamage++;
     
-    // Combo timer
-    GameState.comboTimer = 2000;
+    if (GameState.comboTimer) {
+      clearTimeout(GameState.comboTimer);
+    }
+    GameState.comboTimer = setTimeout(() => {
+      if (GameState.isPlaying && GameState.combo > 0) {
+        resetCombo();
+      }
+    }, 2500);
     
-    // Calculate multiplier every 5 combos
-    if (GameState.combo > 0 && GameState.combo % 3 === 0) {
-      GameState.multiplier = Math.min(GameState.multiplier + 0.1, 3);
+    if (GameState.combo > 0 && GameState.combo % 2 === 0) {
+      GameState.multiplier = Math.min(GameState.multiplier + 0.15, 4);
     }
     
     const points = calculateScore();
     GameState.score += points;
     
-    // Update UI
     scoreValue.textContent = GameState.score.toLocaleString();
     smashesValue.textContent = GameState.smashes;
+    multiValue.textContent = GameState.multiplier.toFixed(1) + 'x';
     
-    // Progress bar (damage)
-    progressBar.style.width = GameState.damageLevel + '%';
+    const damagePercent = Math.min((GameState.totalDamage / 150) * 100, 100);
+    progressBar.style.width = damagePercent + '%';
     
-    // Combo display
     if (GameState.combo > 1) {
       comboValue.textContent = 'x' + GameState.combo;
       comboValue.classList.add('visible');
@@ -1485,110 +1841,110 @@ html, body {
       playComboSound(GameState.combo);
     }
     
-    // Show combo pop-up
     if (GameState.combo > 2) {
       comboText.textContent = GameState.combo + 'x COMBO!';
       comboText.classList.add('show');
       setTimeout(() => comboText.classList.remove('show'), 800);
     }
     
-    // Visual effects
-    screenFlash();
+    instrumentSprite.classList.add('broken');
+    setTimeout(() => instrumentSprite.classList.remove('broken'), 600);
+    
+    impactRing.classList.remove('active');
+    void impactRing.offsetWidth;
+    impactRing.classList.add('active');
+    
+    const rect = smashZone.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    
+    if (GameState.combo > 3) {
+      createShockwave(cx, cy);
+    }
+    
+    createFloatingText(
+      cx + (Math.random() - 0.5) * 80,
+      cy + (Math.random() - 0.5) * 60,
+      '+' + points.toLocaleString(),
+      GameState.combo > 3 ? '#00ff88' : GameState.combo > 1 ? '#ffcc00' : '#ff3333'
+    );
+    
+    const type = GameState.currentInstrument;
+    let particleCount, debrisCount;
+    
+    if (type === 'drums') {
+      particleCount = 40;
+      debrisCount = 15;
+    } else if (type === 'amp') {
+      particleCount = 50;
+      debrisCount = 20;
+    } else {
+      particleCount = 30;
+      debrisCount = 10;
+    }
+    
+    createSparks(cx, cy, particleCount);
+    createSmoke(cx, cy, 12);
+    createDebris(cx, cy, debrisCount, type);
+    
+    if (GameState.combo % 5 === 0 && GameState.combo > 0) {
+      createLaserBeam(cx, cy);
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          createSparks(cx + (Math.random() - 0.5) * 200, cy + (Math.random() - 0.5) * 200, 25);
+        }, i * 50);
+      }
+    }
     
     if (GameState.combo > 5) {
       screenShakeEffect();
     }
     
-    if (GameState.combo > 10) {
+    if (GameState.combo > 8) {
       glitchEffect();
     }
     
-    // Impact ring
-    impactRing.classList.remove('active');
-    void impactRing.offsetWidth; // Trigger reflow
-    impactRing.classList.add('active');
+    screenFlash();
+    playSmashSound(type);
     
-    // Guitar shake animation
-    guitarSprite.classList.add('broken');
-    setTimeout(() => guitarSprite.classList.remove('broken'), 600);
-    
-    // Floating text
-    const rect = smashZone.getBoundingClientRect();
-    createFloatingText(
-      rect.left + rect.width / 2 + (Math.random() - 0.5) * 100,
-      rect.top + rect.height / 2,
-      '+' + points.toLocaleString(),
-      GameState.combo > 5 ? '#00d4ff' : '#ffcc00'
-    );
-    
-    // Particles at smash location
-    createSparks(rect.left + rect.width / 2, rect.top + rect.height / 2, 30);
-    createSmoke(rect.left + rect.width / 2, rect.top + rect.height / 2, 15);
-    createDebris(rect.left + rect.width / 2, rect.top + rect.height / 2, 10);
-    
-    // Audio
-    playSmashSound();
-    
-    // Break animation
-    if (GameState.damageLevel > 30 && GameState.damageLevel % 20 === 0) {
-      addCrack();
+    const crackCount = Math.floor(GameState.totalDamage / 8);
+    for (let i = GameState.cracks || 0; i < crackCount; i++) {
+      addRandomCrack();
     }
-    
-    // Add dramatic flair for huge combos
-    if (GameState.combo % 10 === 0 && GameState.combo > 0) {
-      massiveExplosion();
-    }
+    GameState.cracks = crackCount;
   }
   
-  function addCrack() {
-    const cracksOnGuitar = document.querySelectorAll('.guitar-crack');
-    if (cracksOnGuitar.length >= 5) return;
+  function addRandomCrack() {
+    const currentSvg = document.querySelector('#instrument-sprite svg');
+    if (!currentSvg) return;
     
-    // Add visual crack to guitar SVG
+    const existingCracks = currentSvg.querySelectorAll('.damage-crack');
+    if (existingCracks.length >= 8) return;
+    
     const crack = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const x = 60 + Math.random() * 80;
-    const y = 50 + Math.random() * 60;
+    const x = 20 + Math.random() * 160;
+    const y = 20 + Math.random() * 160;
+    const len = 10 + Math.random() * 20;
+    const angle = Math.random() * Math.PI * 2;
+    
     crack.setAttribute('d', 
       `M${x},${y} ` +
-      `Q${x+10+Math.random()*10},${y+10+Math.random()*10} ${x+20+Math.random()*10},${y+5+Math.random()*10} ` +
-      `Q${x+30+Math.random()*10},${y+15+Math.random()*10} ${x+25+Math.random()*10},${y+30+Math.random()*10}`
+      `Q${x+Math.cos(angle)*len/2+Math.random()*10-5},${y+Math.sin(angle)*len/2+Math.random()*10-5} ` +
+      `${x+Math.cos(angle)*len},${y+Math.sin(angle)*len}`
     );
     crack.setAttribute('fill', 'none');
-    crack.setAttribute('stroke', '#333333');
-    crack.setAttribute('stroke-width', '2');
+    crack.setAttribute('stroke', '#111');
+    crack.setAttribute('stroke-width', '1.5');
     crack.setAttribute('stroke-linecap', 'round');
-    crack.classList.add('guitar-crack');
-    
-    const svg = guitarSprite.querySelector('svg');
-    svg.appendChild(crack);
-  }
-  
-  function massiveExplosion() {
-    const rect = smashZone.getBoundingClientRect();
-    for (let i = 0; i < 5; i++) {
-      setTimeout(() => {
-        createSparks(
-          rect.left + rect.width / 2 + (Math.random() - 0.5) * 200,
-          rect.top + rect.height / 2 + (Math.random() - 0.5) * 200,
-          50
-        );
-        createDebris(
-          rect.left + rect.width / 2 + (Math.random() - 0.5) * 200,
-          rect.top + rect.height / 2 + (Math.random() - 0.5) * 200,
-          20
-        );
-        screenFlash();
-      }, i * 100);
-    }
+    crack.classList.add('damage-crack');
+    currentSvg.appendChild(crack);
   }
   
   function resetCombo() {
     GameState.combo = 0;
-    GameState.combo = 0;
     GameState.multiplier = 1;
     comboValue.classList.remove('visible');
     multValue.classList.remove('visible');
-    GameState.lastSmashTime = 0;
   }
   
   // ============================================
@@ -1603,23 +1959,18 @@ html, body {
       
       GameState.timeLeft--;
       GameState.gameTime++;
-      
       timeValue.textContent = GameState.timeLeft;
       
-      // Energy bar animation
-      GameState.energy = (GameState.energy + 1) % 100;
+      GameState.energy = (GameState.energy + 2) % 100;
       energyFill.style.width = GameState.energy + '%';
       
-      // Reset combo slowly
-      if (GameState.comboTimer > 0) {
-        GameState.comboTimer -= 1000;
-      } else if (GameState.combo > 0) {
-        resetCombo();
+      if (GameState.gameTime % 10 === 0) {
+        updateSpeakerBars();
       }
       
-      // Update speaker bars
-      if (GameState.gameTime % 5 === 0) {
-        updateSpeakerBars();
+      if (GameState.timeLeft <= 10) {
+        timeValue.style.color = '#ff3333';
+        timeValue.style.textShadow = '0 0 10px #ff3333';
       }
       
       if (GameState.timeLeft <= 0) {
@@ -1633,40 +1984,41 @@ html, body {
   // GAME FLOW
   // ============================================
   function startGame() {
-    // Reset state
     GameState.score = 0;
-    GameState.timeLeft = 60;
+    GameState.timeLeft = 30;
     GameState.smashes = 0;
     GameState.combo = 0;
     GameState.maxCombo = 0;
-    GameState.damageLevel = 0;
+    GameState.totalDamage = 0;
     GameState.energy = 0;
     GameState.multiplier = 1;
     GameState.isPlaying = true;
     
-    // Reset UI
     scoreValue.textContent = '0';
-    timeValue.textContent = '60';
+    timeValue.textContent = '30';
     smashesValue.textContent = '0';
+    multiValue.textContent = '1.0x';
     progressBar.style.width = '0%';
     comboValue.textContent = 'x1';
     comboValue.classList.remove('visible');
     multValue.classList.remove('visible');
+    timeValue.style.color = '';
+    timeValue.style.textShadow = '';
     energyFill.style.width = '0%';
     
-    // Clear particles
     sparks = [];
     debris = [];
     smokeParticles = [];
+    laserBeams = [];
     
-    // Remove cracks from guitar
-    document.querySelectorAll('.guitar-crack').forEach(c => c.remove());
+    document.querySelectorAll('.damage-crack').forEach(c => c.remove());
+    GameState.cracks = 0;
     
-    // Hide screens
+    instrumentSprite.style.opacity = '1';
+    
     startScreen.style.display = 'none';
     gameOverScreen.classList.remove('show');
     
-    // Start audio context on first interaction
     if (!audioCtx) {
       initAudio();
     }
@@ -1674,31 +2026,32 @@ html, body {
       audioCtx.resume();
     }
     
-    // Start timer
     startTimer();
-    
-    // Start 3D animation
-    lastTime = performance.now();
-    animate3D(lastTime);
+    lastTime3D = performance.now();
+    animate3D(lastTime3D);
     animateParticles();
   }
   
   function endGame() {
     GameState.isPlaying = false;
     
-    // Show game over
     finalScore.textContent = GameState.score.toLocaleString();
     gameOverScreen.classList.add('show');
     
-    // Final explosion
     const rect = smashZone.getBoundingClientRect();
-    createSparks(rect.left + rect.width / 2, rect.top + rect.height / 2, 100);
-    createDebris(rect.left + rect.width / 2, rect.top + rect.height / 2, 50);
-    createSmoke(rect.left + rect.width / 2, rect.top + rect.height / 2, 30);
-    screenShakeEffect();
+    createSparks(rect.left + rect.width/2, rect.top + rect.height/2, 100);
+    createDebris(rect.left + rect.width/2, rect.top + rect.height/2, 50, GameState.currentInstrument);
+    createSmoke(rect.left + rect.width/2, rect.top + rect.height/2, 30);
     
-    // Fade guitar
-    guitarSprite.style.opacity = '0.3';
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => {
+        screenFlash();
+        createLaserBeam(rect.left + Math.random() * 300, rect.top + Math.random() * 300);
+      }, i * 200);
+    }
+    
+    screenShakeEffect();
+    instrumentSprite.style.opacity = '0.2';
   }
   
   // ============================================
@@ -1711,29 +2064,12 @@ html, body {
   
   function handleMouseMove(e) {
     if (!GameState.isPlaying) return;
-    
-    // Parallax effect on guitar
     const x = (e.clientX / window.innerWidth - 0.5) * 10;
     const y = (e.clientY / window.innerHeight - 0.5) * 5;
-    if (THREE_SCENE.guitarMesh) {
-      THREE_SCENE.guitarMesh.position.x = x * 0.1;
-      THREE_SCENE.guitarMesh.position.y = 0.5 + y * 0.05;
-    }
-  }
-  
-  function handleDeviceOrientation(e) {
-    if (!GameState.isPlaying || !e.gamma || !e.beta) return;
-    
-    // Tilt-based smash
-    const tiltX = e.gamma / 90; // -1 to 1
-    const tiltY = e.beta / 90;   // -1 to 1
-    
-    if (Math.abs(tiltX) > 0.5 || Math.abs(tiltY) > 0.5) {
-      // Don't trigger too fast
-      const now = Date.now();
-      if (now - GameState.lastSmashTime > 500) {
-        performSmash({ preventDefault: () => {} });
-      }
+    if (THREE_SCENE.objs && THREE_SCENE.objs.objects3D) {
+      objects3D.forEach(obj => {
+        obj.position.x = x * 0.2;
+      });
     }
   }
   
@@ -1744,7 +2080,6 @@ html, body {
     resize();
     window.addEventListener('resize', resize);
     
-    // Bind events
     smashBtn.addEventListener('click', handleSmash);
     smashZone.addEventListener('click', handleSmash);
     smashZone.addEventListener('touchstart', function(e) {
@@ -1754,37 +2089,30 @@ html, body {
     
     document.addEventListener('mousemove', handleMouseMove);
     
-    // Device orientation for tilt controls
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', handleDeviceOrientation);
-    }
-    
-    // Start button
-    startBtn.addEventListener('click', function() {
-      startGame();
+    instrumentBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        if (!GameState.isPlaying) {
+          switchInstrument(this.dataset.instrument);
+        }
+      });
     });
     
-    // Restart button
-    restartBtn.addEventListener('click', function() {
-      startGame();
-    });
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
     
-    // Initial state
-    guitarSprite.style.opacity = '1';
+    guitarSvg.style.display = 'block';
+    drumsSvg.style.display = 'none';
+    ampSvg.style.display = 'none';
+    
+    switchInstrument('guitar');
+    drawGrid();
   }
   
-  // Start everything
   init();
-  
-  // Initial 3D setup
   init3DScene();
-  
-  // Initial particles animation (demo)
   animateParticles();
-  
-  // Demo speaker animation
   updateSpeakerBars();
-  setInterval(updateSpeakerBars, 200);
+  setInterval(updateSpeakerBars, 150);
   
 })();
 </script>
