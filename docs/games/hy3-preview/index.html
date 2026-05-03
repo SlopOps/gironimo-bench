@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Riff Master</title>
+    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Metal Mania', cursive;
+        }
+
+        #game-container {
+            position: relative;
+            margin: 0 auto;
+            background: #000;
+            overflow: hidden;
+        }
+
+        #three-canvas, #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #three-canvas {
+            z-index: 1;
+        }
+
+        #game-canvas {
+            z-index: 2;
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        #score, #combo, #timer {
+            position: absolute;
+            color: #fff;
+            font-size: 24px;
+            padding: 15px;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+            pointer-events: none;
+        }
+
+        #score {
+            top: 0;
+            left: 0;
+        }
+
+        #combo {
+            top: 0;
+            right: 0;
+        }
+
+        #timer {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 36px;
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00;
+        }
+
+        #start-screen, #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            text-align: center;
+            pointer-events: auto;
+            z-index: 4;
+        }
+
+        #start-screen h1, #game-over-screen h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ff0000;
+            text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+        }
+
+        #start-screen p, #game-over-screen p {
+            font-size: 24px;
+            margin: 10px 0;
+            color: #fff;
+            text-shadow: 0 0 10px #fff;
+        }
+
+        #start-screen .sub {
+            font-size: 18px;
+            color: #cccccc;
+            margin-top: 20px;
+        }
+
+        #game-over-screen {
+            display: none;
+        }
+
+        #final-score {
+            font-size: 36px;
+            color: #ffff00;
+            margin: 20px 0;
+            text-shadow: 0 0 10px #ffff00;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="three-canvas"></canvas>
+        <canvas id="game-canvas"></canvas>
+        <div id="ui">
+            <div id="score">SCORE: 0</div>
+            <div id="combo">COMBO: x1</div>
+            <div id="timer">60</div>
+            <div id="start-screen">
+                <h1>RIFF MASTER</h1>
+                <p>TAP TO START</p>
+                <p class="sub">HIT NOTES WITH BUTTONS BELOW</p>
+            </div>
+            <div id="game-over-screen">
+                <h1>GAME OVER</h1>
+                <div id="final-score">SCORE: 0</div>
+                <p>TAP TO RESTART</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================
+        // CONSTANTS & VARIABLES
+        // ========================
+        const container = document.getElementById('game-container');
+        const threeCanvas = document.getElementById('three-canvas');
+        const gameCanvas = document.getElementById('game-canvas');
+        const ctx = gameCanvas.getContext('2d');
+
+        // Game config
+        const LANE_COUNT = 4;
+        const LANE_COLORS = ['#FF0000', '#FFFF00', '#00FF00', '#0066FF'];
+        const HIT_THRESHOLDS = { PERFECT: 20, GOOD: 40, OKAY: 60 };
+        const BASE_SCORES = { PERFECT: 300, GOOD: 200, OKAY: 100 };
+
+        // Game state
+        let gameState = 'start';
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let timer = 60;
+        let lastNoteSpawn = 0;
+        let noteSpawnInterval = 1000;
+        let notes = [];
+        let particles = [];
+        let laneWidth = 0;
+        let hitZoneY = 0;
+        let buttonHeight = 0;
+
+        // Three.js variables
+        let threeScene, threeCamera, threeRenderer, guitar, spotLights = [];
+
+        // ========================
+        // 9:16 ASPECT RATIO HANDLER
+        // ========================
+        function resizeContainer() {
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            let width = vw;
+            let height = vw * 16 / 9;
+
+            if (height > vh) {
+                height = vh;
+                width = vh * 9 / 16;
+            }
+
+            container.style.width = `${width}px`;
+            container.style.height = `${height}px`;
+
+            // Resize canvases
+            threeCanvas.width = width;
+            threeCanvas.height = height;
+            gameCanvas.width = width;
+            gameCanvas.height = height;
+
+            // Update lane dimensions
+            laneWidth = width / LANE_COUNT;
+            hitZoneY = height * 0.8;
+            buttonHeight = height * 0.1;
+
+            // Update Three.js renderer
+            if (threeRenderer) {
+                threeRenderer.setSize(width, height);
+                threeCamera.aspect = width / height;
+                threeCamera.updateProjectionMatrix();
+            }
+        }
+        window.addEventListener('resize', resizeContainer);
+
+        // ========================
+        // THREE.JS 3D SCENE (EXTRA FEATURE)
+        // ========================
+        function initThreeScene() {
+            threeScene = new THREE.Scene();
+            threeScene.background = new THREE.Color(0x000000);
+
+            // Camera setup
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            threeCamera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            threeCamera.position.set(0, 5, 10);
+            threeCamera.lookAt(0, 0, 0);
+
+            // Renderer setup
+            threeRenderer = new THREE.WebGLRenderer({ canvas: threeCanvas, alpha: true });
+            threeRenderer.setSize(width, height);
+            threeRenderer.setPixelRatio(window.devicePixelRatio);
+
+            // Stage floor
+            const floorGeometry = new THREE.PlaneGeometry(20, 20);
+            const floorMaterial = new THREE.MeshBasicMaterial({ color: 0x1a1a1a, side: THREE.DoubleSide });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = Math.PI / 2;
+            floor.position.y = -2;
+            threeScene.add(floor);
+
+            // Guitar model (primitive shapes)
+            guitar = new THREE.Group();
+
+            // Body
+            const bodyGeometry = new THREE.BoxGeometry(3, 0.2, 1);
+            const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            guitar.add(body);
+
+            // Neck
+            const neckGeometry = new THREE.CylinderGeometry(0.1, 0.1, 5, 8);
+            const neckMaterial = new THREE.MeshBasicMaterial({ color: 0x654321 });
+            const neck = new THREE.Mesh(neckGeometry, neckMaterial);
+            neck.position.y = 2.5;
+            guitar.add(neck);
+
+            // Headstock
+            const headGeometry = new THREE.BoxGeometry(0.5, 0.2, 0.3);
+            const headMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 5;
+            guitar.add(head);
+
+            // Strings
+            for (let i = -0.3; i <= 0.3; i += 0.2) {
+                const stringGeometry = new THREE.CylinderGeometry(0.02, 0.02, 5, 4);
+                const stringMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const string = new THREE.Mesh(stringGeometry, stringMaterial);
+                string.position.x = i;
+                string.position.y = 2.5;
+                guitar.add(string);
+            }
+
+            // Tuning pegs
+            for (let i = -0.2; i <= 0.2; i += 0.2) {
+                const pegGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.3, 4);
+                const pegMaterial = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+                const peg = new THREE.Mesh(pegGeometry, pegMaterial);
+                peg.position.set(i, 5.1, 0.2);
+                guitar.add(peg);
+                const peg2 = peg.clone();
+                peg2.position.z = -0.2;
+                guitar.add(peg2);
+            }
+
+            guitar.position.y = -1;
+            threeScene.add(guitar);
+
+            // Dynamic stage lights
+            const lightColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
+            for (let i = 0; i < 4; i++) {
+                const light = new THREE.SpotLight(lightColors[i], 1);
+                light.position.set(Math.cos(i * Math.PI / 2) * 10, 5, Math.sin(i * Math.PI / 2) * 10);
+                light.angle = Math.PI / 4;
+                light.penumbra = 0.1;
+                threeScene.add(light);
+                spotLights.push(light);
+            }
+
+            // Ambient light
+            threeScene.add(new THREE.AmbientLight(0x333333));
+        }
+
+        function animateThreeScene() {
+            requestAnimationFrame(animateThreeScene);
+
+            // Rotate guitar slowly
+            if (guitar) guitar.rotation.y += 0.01;
+
+            // Animate lights in circular patterns
+            const time = Date.now() * 0.001;
+            spotLights.forEach((light, i) => {
+                light.position.x = Math.cos(time + i * Math.PI / 2) * 10;
+                light.position.z = Math.sin(time + i * Math.PI / 2) * 10;
+                light.position.y = 5 + Math.sin(time * 2 + i) * 2;
+            });
+
+            threeRenderer.render(threeScene, threeCamera);
+        }
+
+        // ========================
+        // GAME CLASSES
+        // ========================
+        class Note {
+            constructor(lane) {
+                this.lane = lane;
+                this.color = LANE_COLORS[lane];
+                this.width = laneWidth * 0.8;
+                this.height = 20;
+                this.x = lane * laneWidth + (laneWidth - this.width) / 2;
+                this.y = -this.height;
+                this.speed = 2 + Math.random() * 1.5;
+                this.active = true;
+            }
+
+            update() {
+                this.y += this.speed;
+                if (this.y > hitZoneY + HIT_THRESHOLDS.OKAY) {
+                    this.active = false;
+                    combo = 0;
+                    document.getElementById('combo').textContent = `COMBO: x${combo}`;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = 2 + Math.random() * 3;
+                this.speedX = (Math.random() - 0.5) * 8;
+                this.speedY = (Math.random() - 0.5) * 8;
+                this.gravity = 0.2;
+                this.life = 1;
+                this.decay = 0.02 + Math.random() * 0.03;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.speedY += this.gravity;
+                this.life -= this.decay;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // ========================
+        // INPUT HANDLING
+        // ========================
+        gameCanvas.addEventListener('touchstart', handleInput);
+        gameCanvas.addEventListener('click', handleInput);
+        gameCanvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+        function handleInput(e) {
+            e.preventDefault();
+
+            if (gameState === 'start') {
+                startGame();
+                return;
+            }
+            if (gameState === 'gameOver') {
+                resetGame();
+                return;
+            }
+
+            // Get input position
+            let clientX, clientY;
+            if (e.type === 'touchstart') {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            // Adjust for container position
+            const containerRect = container.getBoundingClientRect();
+            const x = clientX - containerRect.left;
+            const y = clientY - containerRect.top;
+
+            // Check if tap is in button area
+            if (y > gameCanvas.height - buttonHeight) {
+                const lane = Math.floor(x / laneWidth);
+                if (lane >= 0 && lane < LANE_COUNT) checkHit(lane);
+            }
+        }
+
+        function checkHit(lane) {
+            for (let note of notes) {
+                if (note.lane === lane && note.active) {
+                    const distance = Math.abs(note.y + note.height / 2 - hitZoneY);
+                    if (distance < HIT_THRESHOLDS.OKAY) {
+                        let points = 0;
+                        if (distance < HIT_THRESHOLDS.PERFECT) points = BASE_SCORES.PERFECT;
+                        else if (distance < HIT_THRESHOLDS.GOOD) points = BASE_SCORES.GOOD;
+                        else points = BASE_SCORES.OKAY;
+
+                        points *= (combo + 1);
+                        score += points;
+                        combo++;
+                        if (combo > maxCombo) maxCombo = combo;
+
+                        // Spawn particles (EXTRA FEATURE)
+                        const particleX = note.x + note.width / 2;
+                        const particleY = hitZoneY;
+                        for (let i = 0; i < 15; i++) {
+                            particles.push(new Particle(particleX, particleY, note.color));
+                        }
+
+                        note.active = false;
+                        document.getElementById('score').textContent = `SCORE: ${score}`;
+                        document.getElementById('combo').textContent = `COMBO: x${combo}`;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // ========================
+        // GAME STATE MANAGEMENT
+        // ========================
+        function startGame() {
+            gameState = 'playing';
+            document.getElementById('start-screen').style.display = 'none';
+            score = 0;
+            combo = 0;
+            timer = 60;
+            notes = [];
+            particles = [];
+            lastNoteSpawn = Date.now();
+            document.getElementById('score').textContent = 'SCORE: 0';
+            document.getElementById('combo').textContent = 'COMBO: x1';
+            document.getElementById('timer').textContent = '60';
+
+            // Timer countdown
+            const timerInterval = setInterval(() => {
+                if (gameState !== 'playing') clearInterval(timerInterval);
+                timer--;
+                document.getElementById('timer').textContent = timer;
+                if (timer <= 0) {
+                    gameOver();
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+        }
+
+        function gameOver() {
+            gameState = 'gameOver';
+            document.getElementById('final-score').textContent = `SCORE: ${score}`;
+            document.getElementById('game-over-screen').style.display = 'flex';
+        }
+
+        function resetGame() {
+            gameState = 'start';
+            document.getElementById('game-over-screen').style.display = 'none';
+        }
+
+        // ========================
+        // GAME LOOP
+        // ========================
+        let lastFrameTime = 0;
+        function gameLoop(timestamp) {
+            if (!lastFrameTime) lastFrameTime = timestamp;
+            lastFrameTime = timestamp;
+
+            // Clear 2D canvas (transparent to show 3D background)
+            ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+            if (gameState === 'playing') {
+                // Spawn notes
+                const now = Date.now();
+                if (now - lastNoteSpawn > noteSpawnInterval) {
+                    notes.push(new Note(Math.floor(Math.random() * LANE_COUNT)));
+                    lastNoteSpawn = now;
+                    // Increase difficulty over time
+                    noteSpawnInterval = Math.max(300, 1000 - (60 - timer) * 10);
+                }
+
+                // Update/draw notes
+                notes = notes.filter(note => note.active);
+                notes.forEach(note => { note.update(); note.draw(); });
+
+                // Update/draw particles
+                particles = particles.filter(p => p.life > 0);
+                particles.forEach(p => { p.update(); p.draw(); });
+
+                // Draw hit zone
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.moveTo(0, hitZoneY);
+                ctx.lineTo(gameCanvas.width, hitZoneY);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // Draw lane dividers
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                ctx.lineWidth = 1;
+                for (let i = 1; i < LANE_COUNT; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(i * laneWidth, 0);
+                    ctx.lineTo(i * laneWidth, gameCanvas.height);
+                    ctx.stroke();
+                }
+
+                // Draw bottom buttons
+                for (let i = 0; i < LANE_COUNT; i++) {
+                    ctx.fillStyle = LANE_COLORS[i] + '80';
+                    ctx.fillRect(i * laneWidth, gameCanvas.height - buttonHeight, laneWidth, buttonHeight);
+                    ctx.strokeStyle = LANE_COLORS[i];
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(i * laneWidth, gameCanvas.height - buttonHeight, laneWidth, buttonHeight);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ========================
+        // INITIALIZATION
+        // ========================
+        function init() {
+            resizeContainer();
+            initThreeScene();
+            animateThreeScene();
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
