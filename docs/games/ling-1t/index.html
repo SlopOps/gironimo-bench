@@ -667,6 +667,9 @@ html, body {
   display: flex;
   gap: 8px;
   margin-bottom: 10px;
+  pointer-events: auto;
+  z-index: 15;
+  position: relative;
 }
 
 .instrument-btn {
@@ -680,12 +683,20 @@ html, body {
   letter-spacing: 2px;
   cursor: pointer;
   transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.instrument-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 .instrument-btn.active {
   border-color: var(--gold);
   color: var(--gold);
-  background: rgba(255,204,0,0.1);
+  background: rgba(255,204,0,0.15);
+  box-shadow: 0 0 15px rgba(255,204,0,0.3);
+  text-shadow: 0 0 5px var(--gold);
 }
 
 @media (max-width: 400px) {
@@ -779,39 +790,14 @@ html, body {
                 <stop offset="0%" style="stop-color:rgba(255,200,200,0.6)"/>
                 <stop offset="100%" style="stop-color:rgba(255,0,0,0)"/>
               </radialGradient>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
             </defs>
-            
-            <!-- Guitar body -->
-            <path d="M100,40 
-                     C130,40 150,65 150,100 
-                     C150,135 130,160 100,160 
-                     C70,160 50,135 50,100 
-                     C50,65 70,40 100,40 Z" 
-                  fill="url(#bodyGrad)" stroke="#ff6666" stroke-width="3"/>
-            
-            <!-- Body shine -->
+            <path d="M100,40 C130,40 150,65 150,100 C150,135 130,160 100,160 C70,160 50,135 50,100 C50,65 70,40 100,40 Z" fill="url(#bodyGrad)" stroke="#ff6666" stroke-width="3"/>
             <ellipse cx="85" cy="80" rx="35" ry="25" fill="url(#bodyShine)"/>
-            
-            <!-- Scratch marks -->
             <line x1="75" y1="55" x2="85" y2="50" stroke="#ff9999" stroke-width="2" stroke-linecap="round"/>
             <line x1="130" y1="85" x2="120" y2="95" stroke="#8a0000" stroke-width="3" stroke-linecap="round"/>
             <line x1="90" y1="140" x2="100" y2="135" stroke="#ff9999" stroke-width="2" stroke-linecap="round"/>
-            
-            <!-- Cracks -->
-            <path d="M80,70 L85,75 L80,85" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M125,110 L130,118 L122,120" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            
-            <!-- Strings hole -->
+            <path d="M80,70 L85,75 L80,85" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"/>
             <ellipse cx="100" cy="100" rx="22" ry="30" fill="#222" stroke="#444" stroke-width="1"/>
-            
-            <!-- Strings -->
             <line x1="100" y1="72" x2="100" y2="50" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/>
             <line x1="95" y1="72" x2="95" y2="50" stroke="#ddd" stroke-width="1.5" stroke-linecap="round"/>
             <line x1="105" y1="72" x2="105" y2="50" stroke="#ddd" stroke-width="1.5" stroke-linecap="round"/>
@@ -819,57 +805,31 @@ html, body {
             <line x1="110" y1="72" x2="110" y2="50" stroke="#eee" stroke-width="1.5" stroke-linecap="round"/>
             <line x1="85" y1="72" x2="85" y2="50" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
             <line x1="115" y1="72" x2="115" y2="50" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
-            
-            <!-- Bridge lines -->
             <line x1="88" y1="125" x2="90" y2="72" stroke="#aaa" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
             <line x1="100" y1="125" x2="100" y2="72" stroke="#aaa" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
             <line x1="112" y1="125" x2="110" y2="72" stroke="#aaa" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
-            
-            <!-- Bridge -->
             <rect x="85" y="122" width="30" height="4" fill="#333" rx="1"/>
-            
-            <!-- Input jack -->
             <circle cx="85" cy="155" r="5" fill="#555" stroke="#777" stroke-width="1"/>
             <circle cx="85" cy="155" r="2" fill="#999"/>
-            
-            <!-- Neck -->
             <rect x="94" y="0" width="12" height="48" fill="url(#neckGrad)" stroke="#5a3a1a" stroke-width="1"/>
-            
-            <!-- Fretboard -->
             <rect x="95" y="0" width="10" height="48" fill="#3d2817"/>
-            
-            <!-- Frets -->
             <rect x="95" y="8" width="10" height="1" fill="#d4b87a"/>
             <rect x="95" y="16" width="10" height="1" fill="#d4b87a"/>
             <rect x="95" y="24" width="10" height="1" fill="#d4b87a"/>
             <rect x="95" y="32" width="10" height="1" fill="#d4b87a"/>
             <rect x="95" y="40" width="10" height="1" fill="#d4b87a"/>
-            
-            <!-- Nut -->
             <rect x="94" y="46" width="12" height="3" fill="#ddd"/>
-            
-            <!-- Pickguard -->
             <path d="M115,35 L140,20 L135,55 L115,50 Z" fill="#fff" opacity="0.7"/>
-            
-            <!-- Volume knob -->
             <circle cx="140" cy="45" r="6" fill="#333" stroke="#555" stroke-width="1"/>
             <circle cx="140" cy="45" r="3" fill="#666"/>
             <line x1="140" y1="42" x2="140" y2="39" stroke="#aaa" stroke-width="1" stroke-linecap="round"/>
-            
-            <!-- Tone knob -->
             <circle cx="155" cy="50" r="6" fill="#333" stroke="#555" stroke-width="1"/>
             <circle cx="155" cy="50" r="3" fill="#666"/>
-            
-            <!-- Screws -->
             <circle cx="125" cy="155" r="2" fill="#555"/>
             <circle cx="75" cy="155" r="2" fill="#555"/>
-            
-            <!-- Wood grain -->
             <path d="M55,60 Q65,75 50,85 Q45,70 55,60" fill="none" stroke="#654321" stroke-width="1" opacity="0.3"/>
-            <path d="M145,80 Q155,95 140,105 Q135,90 145,80" fill="none" stroke="#654321" stroke-width="1" opacity="0.3"/>
           </svg>
           
-          <!-- Drums SVG -->
           <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="drums-svg" style="display:none;">
             <defs>
               <linearGradient id="drumGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -883,66 +843,39 @@ html, body {
                 <stop offset="100%" style="stop-color:#888"/>
               </radialGradient>
             </defs>
-            
-            <!-- Bass drum -->
             <rect x="40" y="80" width="100" height="60" rx="5" fill="url(#drumGrad)" stroke="#ff3333" stroke-width="3"/>
             <line x1="45" y1="100" x2="135" y2="100" stroke="#8a0000" stroke-width="2"/>
             <line x1="45" y1="115" x2="135" y2="115" stroke="#8a0000" stroke-width="2"/>
-            
-            <!-- Bass drum hole -->
-            <ellipse cx="70" cy="108" rx="15" ry="10" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
-            
-            <!-- Floor tom -->
             <ellipse cx="145" cy="135" rx="35" ry="25" fill="url(#drumGrad)" stroke="#ff3333" stroke-width="3"/>
             <line x1="115" y1="135" x2="175" y2="135" stroke="#8a0000" stroke-width="2"/>
-            
-            <!-- Snare -->
             <rect x="45" y="135" width="70" height="35" rx="3" fill="#333" stroke="#555" stroke-width="2"/>
             <line x1="50" y1="152" x2="110" y2="152" stroke="#777" stroke-width="1"/>
             <line x1="50" y1="145" x2="110" y2="145" stroke="#777" stroke-width="1"/>
-            
-            <!-- Snare wires -->
             <line x1="55" y1="148" x2="105" y2="148" stroke="#999" stroke-width="0.5"/>
             <line x1="55" y1="150" x2="105" y2="150" stroke="#999" stroke-width="0.5"/>
             <line x1="55" y1="152" x2="105" y2="152" stroke="#999" stroke-width="0.5"/>
-            
-            <!-- Hi-hat stand -->
             <rect x="120" y="100" width="3" height="40" fill="#555"/>
             <line x1="103" y1="105" x2="135" y2="105" stroke="#555" stroke-width="3"/>
-            
-            <!-- Hi-hats (open) -->
             <ellipse cx="120" cy="70" rx="25" ry="4" fill="url(#cymbalGrad)" stroke="#aaa" stroke-width="1"/>
             <ellipse cx="120" cy="78" rx="25" ry="4" fill="url(#cymbalGrad)" stroke="#888" stroke-width="1"/>
             <line x1="95" y1="70" x2="145" y2="70" stroke="#999" stroke-width="0.5"/>
             <line x1="95" y1="78" x2="145" y2="78" stroke="#777" stroke-width="0.5"/>
-            
-            <!-- Crash cymbal -->
             <ellipse cx="30" cy="50" rx="30" ry="5" fill="url(#cymbalGrad)" stroke="#ccc" stroke-width="1"/>
             <line x1="5" y1="50" x2="55" y2="50" stroke="#999" stroke-width="0.5"/>
-            <ellipse cx="30" cy="52" rx="25" ry="3" fill="#bbb" opacity="0.5"/>
-            
-            <!-- Ride cymbal -->
+            <line x1="5" y1="48" x2="55" y2="48" stroke="#bbb" stroke-width="0.5"/>
             <ellipse cx="160" cy="55" rx="28" ry="4" fill="url(#cymbalGrad)" stroke="#ccc" stroke-width="1"/>
             <line x1="135" y1="55" x2="185" y2="55" stroke="#999" stroke-width="0.5"/>
             <circle cx="160" cy="55" r="4" fill="#444"/>
-            
-            <!-- Tom-toms -->
             <circle cx="85" cy="100" r="22" fill="url(#drumGrad)" stroke="#ff3333" stroke-width="2"/>
             <line x1="63" y1="100" x2="107" y2="100" stroke="#8a0000" stroke-width="2"/>
-            
-            <!-- Drumsticks -->
             <line x1="60" y1="80" x2="35" y2="20" stroke="#d4a76a" stroke-width="3" stroke-linecap="round"/>
             <line x1="65" y1="78" x2="45" y2="15" stroke="#d4a76a" stroke-width="2" stroke-linecap="round"/>
-            <!-- Tip -->
             <ellipse cx="35" cy="20" rx="4" ry="6" fill="#333" transform="rotate(-30 35 20)"/>
             <ellipse cx="45" cy="15" rx="3" ry="5" fill="#333" transform="rotate(-20 45 15)"/>
-            
-            <!-- Cracks on drums -->
             <path d="M60,90 L65,95 L60,100" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round"/>
             <path d="M150,125 L153,130 L148,133" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
           
-          <!-- Amp SVG -->
           <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="amp-svg" style="display:none;">
             <defs>
               <linearGradient id="ampBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -962,14 +895,8 @@ html, body {
                 </feMerge>
               </filter>
             </defs>
-            
-            <!-- Main cabinet -->
             <rect x="30" y="45" width="140" height="120" rx="8" fill="url(#ampBodyGrad)" stroke="#555" stroke-width="2"/>
-            
-            <!-- Front grill - mesh pattern -->
             <rect x="38" y="53" width="124" height="104" rx="4" fill="url(#ampGrillGrad)" stroke="#ff3333" stroke-width="2"/>
-            
-            <!-- Grill holes pattern -->
             <g fill="#1a0000">
               <circle cx="55" cy="70" r="3"/>
               <circle cx="75" cy="70" r="3"/>
@@ -992,62 +919,36 @@ html, body {
               <circle cx="115" cy="124" r="3"/>
               <circle cx="135" cy="124" r="3"/>
             </g>
-            
-            <!-- Speaker cone -->
             <ellipse cx="100" cy="100" rx="45" ry="35" fill="#0a0a0a" stroke="#333" stroke-width="1"/>
-            
-            <!-- Speaker dust cap -->
             <ellipse cx="100" cy="100" rx="15" ry="12" fill="#2a2a2a"/>
             <ellipse cx="100" cy="100" rx="8" ry="6" fill="#4a4a4a"/>
-            
-            <!-- Speaker label -->
             <text x="100" y="98" text-anchor="middle" fill="#666" font-size="8" font-family="Arial">BLAST</text>
             <text x="100" y="108" text-anchor="middle" fill="#555" font-size="8" font-family="Arial">SPEAKER</text>
-            
-            <!-- Power light -->
             <circle cx="50" cy="60" r="6" fill="#333" stroke="#555" stroke-width="1"/>
             <circle cx="50" cy="60" r="3" fill="#ff3333" filter="url(#ampGlow)"/>
-            
-            <!-- Control knobs -->
             <circle cx="70" cy="60" r="8" fill="#2a2a2a" stroke="#666" stroke-width="1"/>
             <circle cx="70" cy="60" r="5" fill="#3a3a3a"/>
             <line x1="70" y1="52" x2="70" y2="56" stroke="#666" stroke-width="2" stroke-linecap="round"/>
-            
             <circle cx="95" cy="60" r="8" fill="#2a2a2a" stroke="#666" stroke-width="1"/>
             <circle cx="95" cy="60" r="5" fill="#3a3a3a"/>
             <line x1="95" y1="52" x2="95" y2="56" stroke="#666" stroke-width="2" stroke-linecap="round"/>
-            
             <circle cx="120" cy="60" r="8" fill="#2a2a2a" stroke="#666" stroke-width="1"/>
             <circle cx="120" cy="60" r="5" fill="#3a3a3a"/>
             <line x1="120" y1="52" x2="120" y2="56" stroke="#666" stroke-width="2" stroke-linecap="round"/>
-            
-            <!-- Volume label -->
             <text x="120" y="48" text-anchor="middle" fill="#555" font-size="6" font-family="Arial">VOL</text>
-            
-            <!-- Handle -->
             <rect x="80" y="42" width="40" height="8" rx="3" fill="#333" stroke="#555" stroke-width="1"/>
             <rect x="83" y="44" width="34" height="4" rx="2" fill="#4a4a4a"/>
-            
-            <!-- Input jacks -->
             <circle cx="40" cy="125" r="5" fill="#222" stroke="#444" stroke-width="1"/>
             <circle cx="40" cy="125" r="2" fill="#333"/>
             <text x="40" y="140" text-anchor="middle" fill="#555" font-size="5" font-family="Arial">IN</text>
-            
-            <!-- Foot corners -->
             <circle cx="35" cy="160" r="4" fill="#111"/>
             <circle cx="165" cy="160" r="4" fill="#111"/>
-            
-            <!-- Screws -->
             <circle cx="38" cy="48" r="1.5" fill="#444"/>
             <circle cx="162" cy="48" r="1.5" fill="#444"/>
             <circle cx="38" cy="157" r="1.5" fill="#444"/>
             <circle cx="162" cy="157" r="1.5" fill="#444"/>
-            
-            <!-- Cracks -->
             <path d="M70,110 L75,115 L70,120" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
             <path d="M130,95 L133,100 L128,103" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
-            
-            <!-- Smoke vent -->
             <rect x="60" y="160" width="80" height="4" rx="2" fill="#0a0a0a" stroke="#222" stroke-width="1"/>
             <line x1="70" y1="162" x2="70" y2="162" stroke="#333" stroke-width="0.5"/>
             <line x1="85" y1="162" x2="85" y2="162" stroke="#333" stroke-width="0.5"/>
@@ -1102,7 +1003,7 @@ html, body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ============================================
-// ROCK & ROLL DESTRUCTION - ENHANCED
+// ROCK & ROLL DESTRUCTION - ENHANCED v2
 // ============================================
 
 (function() {
@@ -1122,7 +1023,7 @@ html, body {
     energy: 0,
     multiplier: 1,
     lastSmashTime: 0,
-    comboTimer: 0,
+    comboTimer: null,
     currentInstrument: 'guitar',
     totalDamage: 0
   };
@@ -1359,7 +1260,6 @@ html, body {
       ampSvg.style.display = 'block';
     }
     
-    // Update buttons
     instrumentBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.instrument === instrument);
     });
@@ -1454,7 +1354,6 @@ html, body {
   }
   
   function createShockwave(cx, cy) {
-    // Visual shockwave rings
     for (let i = 0; i < 3; i++) {
       setTimeout(() => {
         const ring = document.createElement('div');
@@ -1490,22 +1389,18 @@ html, body {
     const delta = (timestamp - lastTime3D) / 1000;
     lastTime3D = timestamp;
     
-    // Animate 3D objects
     objects3D.forEach(obj => {
       obj.rotation.y += 0.003;
       obj.position.x = Math.sin(timestamp * 0.001) * 0.3;
     });
     
-    // Animate lights
     THREE_SCENE.objs.mainLight.position.x = Math.sin(timestamp * 0.002) * 3;
     THREE_SCENE.objs.laserLight.position.y = 5 + Math.sin(timestamp * 0.003) * 2;
     
-    // Camera subtle movement
     camera.position.x = Math.sin(timestamp * 0.0008) * 0.8;
     camera.position.y = 5 + Math.cos(timestamp * 0.0005) * 0.5;
     camera.lookAt(0, 0, 0);
     
-    // Render
     try {
       THREE_SCENE.objs.renderer.render(THREE_SCENE.objs.scene, THREE_SCENE.objs.camera);
     } catch(e) {}
@@ -1517,7 +1412,6 @@ html, body {
     const ctx = ctxParticles;
     ctx.clearRect(0, 0, canvasParticles.width, canvasParticles.height);
     
-    // Sparks
     for (let i = sparks.length - 1; i >= 0; i--) {
       const s = sparks[i];
       s.x += s.vx;
@@ -1533,7 +1427,6 @@ html, body {
       
       ctx.globalAlpha = s.life;
       
-      // Trail
       if (s.trail.length > 0) {
         ctx.strokeStyle = s.color;
         ctx.lineWidth = s.size * 0.5 * s.life;
@@ -1548,7 +1441,6 @@ html, body {
       s.trail.unshift({ x: s.x, y: s.y });
       if (s.trail.length > 10) s.trail.pop();
       
-      // Spark
       const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * s.life);
       grad.addColorStop(0, s.color);
       grad.addColorStop(1, 'transparent');
@@ -1558,7 +1450,6 @@ html, body {
       ctx.fill();
     }
     
-    // Debris
     for (let i = debris.length - 1; i >= 0; i--) {
       const d = debris[i];
       d.x += d.vx;
@@ -1592,7 +1483,6 @@ html, body {
       
       ctx.restore();
       
-      // Shadow
       ctx.globalAlpha = d.life * 0.2;
       ctx.fillStyle = '#000';
       ctx.beginPath();
@@ -1600,7 +1490,6 @@ html, body {
       ctx.fill();
     }
     
-    // Smoke
     for (let i = smokeParticles.length - 1; i >= 0; i--) {
       const s = smokeParticles[i];
       s.x += s.vx;
@@ -1628,7 +1517,6 @@ html, body {
       ctx.fill();
     }
     
-    // Laser beams
     for (let i = laserBeams.length - 1; i >= 0; i--) {
       const l = laserBeams[i];
       l.length += 15;
@@ -1641,7 +1529,6 @@ html, body {
       
       ctx.globalAlpha = l.life * 0.6;
       
-      // Glow
       const glowGrad = ctx.createLinearGradient(l.x, l.y - l.width/2, l.x, l.y + l.width/2);
       glowGrad.addColorStop(0, 'transparent');
       glowGrad.addColorStop(0.5, l.color);
@@ -1653,7 +1540,6 @@ html, body {
       ctx.lineTo(l.x + l.length * 0.3, l.y - l.length * 0.5);
       ctx.stroke();
       
-      // Core
       ctx.globalAlpha = l.life;
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = l.width * 0.5;
@@ -1682,7 +1568,6 @@ html, body {
     if (!audioCtx) return;
     
     try {
-      // Noise burst
       const bufferSize = audioCtx.sampleRate * 0.15;
       const buffer = audioCtx.createBuffer(2, bufferSize, audioCtx.sampleRate);
       
@@ -1710,7 +1595,6 @@ html, body {
       gain.connect(audioCtx.destination);
       noise.start();
       
-      // Metal ping
       if (type !== 'drums') {
         const osc = audioCtx.createOscillator();
         const oscGain = audioCtx.createGain();
@@ -1725,7 +1609,6 @@ html, body {
         osc.stop(audioCtx.currentTime + 0.1);
       }
       
-      // Low thud for drums
       if (type === 'drums') {
         const osc = audioCtx.createOscillator();
         const oscGain = audioCtx.createGain();
@@ -1785,11 +1668,11 @@ html, body {
   }
   
   // ============================================
-  // GAME LOGIC
+  // GAME LOGIC - REBALANCED
   // ============================================
   function calculateScore() {
-    const baseScore = 150;
-    const comboBonus = GameState.combo * 15;
+    const baseScore = 250;
+    const comboBonus = GameState.combo * 20;
     const multiplier = Math.pow(1.5, GameState.multiplier - 1);
     return Math.floor((baseScore + comboBonus) * multiplier);
   }
@@ -1814,7 +1697,7 @@ html, body {
       }
     }, 2500);
     
-    if (GameState.combo > 0 && GameState.combo % 2 === 0) {
+    if (GameState.combo > 0) {
       GameState.multiplier = Math.min(GameState.multiplier + 0.15, 4);
     }
     
@@ -1825,7 +1708,7 @@ html, body {
     smashesValue.textContent = GameState.smashes;
     multiValue.textContent = GameState.multiplier.toFixed(1) + 'x';
     
-    const damagePercent = Math.min((GameState.totalDamage / 150) * 100, 100);
+    const damagePercent = Math.min((GameState.totalDamage / 50) * 100, 100);
     progressBar.style.width = damagePercent + '%';
     
     if (GameState.combo > 1) {
@@ -1907,7 +1790,7 @@ html, body {
     screenFlash();
     playSmashSound(type);
     
-    const crackCount = Math.floor(GameState.totalDamage / 8);
+    const crackCount = Math.floor(GameState.totalDamage / 6);
     for (let i = GameState.cracks || 0; i < crackCount; i++) {
       addRandomCrack();
     }
@@ -2066,11 +1949,9 @@ html, body {
     if (!GameState.isPlaying) return;
     const x = (e.clientX / window.innerWidth - 0.5) * 10;
     const y = (e.clientY / window.innerHeight - 0.5) * 5;
-    if (THREE_SCENE.objs && THREE_SCENE.objs.objects3D) {
-      objects3D.forEach(obj => {
-        obj.position.x = x * 0.2;
-      });
-    }
+    objects3D.forEach(obj => {
+      obj.position.x = x * 0.2;
+    });
   }
   
   // ============================================
@@ -2091,9 +1972,7 @@ html, body {
     
     instrumentBtns.forEach(btn => {
       btn.addEventListener('click', function() {
-        if (!GameState.isPlaying) {
-          switchInstrument(this.dataset.instrument);
-        }
+        switchInstrument(this.dataset.instrument);
       });
     });
     
