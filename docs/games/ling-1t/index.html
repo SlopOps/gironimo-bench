@@ -715,8 +715,54 @@ html, body {
 </style>
 </head>
 <body>
-
- ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+<!-- ===== GAME MODEL BANNER ===== -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q5R5LECE2Y"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-Q5R5LECE2Y');
+</script>
+<style>
+  .model-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 9999;
+    background: rgba(8, 12, 22, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  .banner-inner {
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .banner-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .banner-game-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: #f0f2ff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+  }
+  .banner-model-slug {
+    font-size: 11px;
+    color: rgba(224,228,255,0.45);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     letter-spacing: 0.02em;
     white-space: nowrap;
   }
