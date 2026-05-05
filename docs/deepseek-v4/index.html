@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gironimo - AI Model Evaluation Platform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <div class="header-content">
+                <h1>🦒 Gironimo</h1>
+                <div class="header-controls">
+                    <button id="themeToggle" class="btn btn-icon" aria-label="Toggle theme">
+                        <span class="theme-icon">🌓</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <main class="app-main">
+            <div class="mascot-container" id="mascotContainer">
+                <!-- Mascot will be rendered here -->
+            </div>
+            
+            <div class="content-grid">
+                <aside class="sidebar">
+                    <section id="philosophyExplorer" class="card">
+                        <!-- Philosophy Explorer will be rendered here -->
+                    </section>
+                </aside>
+                
+                <div class="main-content">
+                    <section id="workflowSystem" class="card">
+                        <!-- Workflow System will be rendered here -->
+                    </section>
+                    
+                    <section id="leaderboard" class="card">
+                        <!-- Leaderboard will be rendered here -->
+                    </section>
+                </div>
+            </div>
+        </main>
+        
+        <div id="modalContainer" class="modal-container" aria-hidden="true">
+            <!-- Modals will be rendered here -->
+        </div>
+        
+        <div id="notificationContainer" class="notification-container" aria-live="polite">
+            <!-- Notifications will be rendered here -->
+        </div>
+    </div>
+    
+    <script src="store.js"></script>
+    <script src="components.js"></script>
+    <script src="mascot.js"></script>
+    <script src="philosophy.js"></script>
+    <script src="workflow.js"></script>
+    <script src="leaderboard.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
