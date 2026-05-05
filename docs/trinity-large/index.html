@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gironimo - AI Quality Benchmark</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app" class="app">
+        <!-- Header -->
+        <header class="header" role="banner">
+            <div class="header-content">
+                <h1 class="logo">
+                    <span class="logo-icon">🦒</span>
+                    Gironimo
+                </h1>
+                <div class="header-controls">
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+                        <span class="theme-icon">☀</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content" role="main">
+            <!-- Philosophy Explorer -->
+            <section class="philosophy-section" aria-labelledby="philosophy-heading">
+                <h2 id="philosophy-heading" class="section-title">Philosophy Explorer</h2>
+                <div class="philosophy-grid">
+                    <div class="philosophy-filters">
+                        <h3 class="filter-title">Categories</h3>
+                        <div class="category-filters">
+                            <label class="category-label">
+                                <input type="checkbox" class="category-checkbox" data-category="all" checked>
+                                All
+                            </label>
+                            <label class="category-label">
+                                <input type="checkbox" class="category-checkbox" data-category="Practical">
+                                Practical
+                            </label>
+                            <label class="category-label">
+                                <input type="checkbox" class="category-checkbox" data-category="Philosophical">
+                                Philosophical
+                            </label>
+                            <label class="category-label">
+                                <input type="checkbox" class="category-checkbox" data-category="Technical">
+                                Technical
+                            </label>
+                        </div>
+                    </div>
+                    <div class="philosophy-statements">
+                        <h3 class="statements-title">Statements</h3>
+                        <div id="philosophy-list" class="philosophy-list" role="group" aria-label="Philosophy statements">
+                            <!-- Statements will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mascot & Leaderboard -->
+            <div class="mascot-leaderboard-container">
+                <!-- Interactive Mascot -->
+                <div class="mascot-container" aria-live="polite">
+                    <div id="mascot" class="mascot" role="img" aria-label="Interactive giraffe mascot">
+                        <!-- SVG Giraffe will be rendered here -->
+                    </div>
+                    <div class="mascot-tooltip" id="mascot-tooltip" role="tooltip" aria-hidden="true">
+                        <span id="mascot-tooltip-text"></span>
+                    </div>
+                </div>
+
+                <!-- Leaderboard -->
+                <section class="leaderboard-section" aria-labelledby="leaderboard-heading">
+                    <div class="leaderboard-header">
+                        <h2 id="leaderboard-heading" class="section-title">Leaderboard</h2>
+                        <div class="leaderboard-controls">
+                            <select id="sort-select" class="sort-select" aria-label="Sort leaderboard">
+                                <option value="overall_score">Sort by: Overall Score</option>
+                                <option value="model">Sort by: Model Name</option>
+                                <option value="date">Sort by: Date</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="leaderboard-table-container">
+                        <table class="leaderboard-table" aria-label="Leaderboard rankings">
+                            <thead>
+                                <tr>
+                                    <th class="table-column-rank">Rank</th>
+                                    <th class="table-column-model">Model</th>
+                                    <th class="table-column-score">Overall Score</th>
+                                    <th class="table-column-date">Date</th>
+                                    <th class="table-column-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body">
+                                <!-- Leaderboard rows will be rendered here -->
+                            </tbody>
+                        </table>
+                        <div id="leaderboard-loading" class="loading" aria-live="polite">
+                            Loading leaderboard data...
+                        </div>
+                        <div id="leaderboard-error" class="error" aria-live="polite" style="display: none;">
+                            Failed to load leaderboard data. Please try again later.
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Workflow System -->
+            <section class="workflow-section" aria-labelledby="workflow-heading">
+                <h2 id="workflow-heading" class="section-title">Workflow</h2>
+                <div class="workflow-container">
+                    <div class="workflow-stages" role="application" aria-label="Workflow stages">
+                        <div class="workflow-stage" data-stage="spec">
+                            <div class="stage-icon">📋</div>
+                            <div class="stage-label">Spec</div>
+                            <div class="stage-status"></div>
+                        </div>
+                        <div class="workflow-stage" data-stage="gate1">
+                            <div class="stage-icon">🚦</div>
+                            <div class="stage-label">Gate</div>
+                            <div class="stage-status"></div>
+                        </div>
+                        <div class="workflow-stage" data-stage="architecture">
+                            <div class="stage-icon">🏗️</div>
+                            <div class="stage-label">Architecture</div>
+                            <div class="stage-status"></div>
+                        </div>
+                        <div class="workflow-stage" data-stage="gate2">
+                            <div class="stage-icon">🚦</div>
+                            <div class="stage-label">Gate</div>
+                            <div class="stage-status"></div>
+                        </div>
+                        <div class="workflow-stage" data-stage="implementation">
+                            <div class="stage-icon">🛠️</div>
+                            <div class="stage-label">Implementation</div>
+                            <div class="stage-status"></div>
+                        </div>
+                        <div class="workflow-stage" data-stage="review">
+                            <div class="stage-icon">🔍</div>
+                            <div class="stage-label">Review</div>
+                            <div class="stage-status"></div>
+                        </div>
+                        <div class="workflow-stage" data-stage="adr">
+                            <div class="stage-icon">📄</div>
+                            <div class="stage-label">ADR</div>
+                            <div class="stage-status"></div>
+                        </div>
+                    </div>
+                    <div class="workflow-info">
+                        <p id="workflow-status-text" class="workflow-status-text" aria-live="polite"></p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer" role="contentinfo">
+            <div class="footer-content">
+                <p class="footer-text">🦒 Gironimo - AI Quality Benchmark</p>
+                <p class="footer-text">Deployed on GitHub Pages • Static Site</p>
+            </div>
+        </footer>
+
+        <!-- Modal -->
+        <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+            <div class="modal-overlay" data-modal-close></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title" class="modal-title"></h3>
+                    <button class="modal-close" data-modal-close aria-label="Close modal">&times;</button>
+                </div>
+                <div id="modal-body" class="modal-body">
+                    <!-- Modal content will be rendered here -->
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-action-button" data-modal-close>Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification -->
+        <div id="notification" class="notification" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
