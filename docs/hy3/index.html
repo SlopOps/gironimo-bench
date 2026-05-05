@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gironimo Bench</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦒</text></svg>">
+</head>
+<body>
+  <div id="app">
+    <div id="theme-provider"></div>
+    <div id="mascot-container"></div>
+    <div id="notification-container"></div>
+    
+    <main class="container">
+      <header class="main-header">
+        <h1>Gironimo Leaderboard</h1>
+        <div id="theme-toggle-container"></div>
+      </header>
+      
+      <section id="philosophy-explorer-container" class="section"></section>
+      <section id="workflow-container" class="section"></section>
+      <section id="leaderboard-container" class="section"></section>
+    </main>
+    
+    <div id="modal-container"></div>
+  </div>
+
+  <!-- Load scripts in dependency order -->
+  <script src="js/store.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/features/philosophy-explorer.js"></script>
+  <script src="js/features/mascot.js"></script>
+  <script src="js/features/workflow.js"></script>
+  <script src="js/features/leaderboard.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
