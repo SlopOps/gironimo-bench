@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="description" content="Gironimo - AI Model Leaderboard and Philosophy Explorer">
+    <title>Gironimo | Model Leaderboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header with theme toggle -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="logo">
+                    <span class="logo-icon">🦒</span>
+                    <span class="logo-text">Gironimo</span>
+                </h1>
+                <button id="theme-toggle" class="btn btn-icon" aria-label="Toggle theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="app-layout">
+            <!-- Sidebar: Philosophy Explorer -->
+            <aside class="sidebar">
+                <div class="philosophy-section">
+                    <h2>Philosophy Explorer</h2>
+                    <div class="philosophy-filters">
+                        <button data-category="all" class="filter-chip active">All</button>
+                        <button data-category="Practical" class="filter-chip">Practical</button>
+                        <button data-category="Philosophical" class="filter-chip">Philosophical</button>
+                        <button data-category="Technical" class="filter-chip">Technical</button>
+                    </div>
+                    <div class="philosophy-list" id="philosophy-list"></div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Mascot Section -->
+                <div class="mascot-container">
+                    <div id="mascot" class="mascot" role="img" aria-label="Giraffe mascot">
+                        <svg viewBox="0 0 200 200" class="giraffe-svg">
+                            <!-- Body -->
+                            <ellipse cx="100" cy="130" rx="40" ry="25" fill="#F4A460" class="giraffe-body"/>
+                            <!-- Neck -->
+                            <rect x="110" y="50" width="18" height="85" rx="5" fill="#F4A460" class="giraffe-neck"/>
+                            <!-- Head -->
+                            <ellipse cx="119" cy="45" rx="20" ry="15" fill="#F4A460" class="giraffe-head"/>
+                            <!-- Ossicones -->
+                            <line x1="112" y1="32" x2="108" y2="22" stroke="#8B4513" stroke-width="3"/>
+                            <line x1="126" y1="32" x2="130" y2="22" stroke="#8B4513" stroke-width="3"/>
+                            <circle cx="108" cy="22" r="3" fill="#8B4513"/>
+                            <circle cx="130" cy="22" r="3" fill="#8B4513"/>
+                            <!-- Eyes -->
+                            <circle cx="125" cy="42" r="3" fill="#333"/>
+                            <circle cx="113" cy="42" r="3" fill="#333"/>
+                            <!-- Spots -->
+                            <circle cx="90" cy="125" r="5" fill="#D2691E"/>
+                            <circle cx="105" cy="135" r="4" fill="#D2691E"/>
+                            <circle cx="95" cy="140" r="3" fill="#D2691E"/>
+                            <!-- Tail -->
+                            <path d="M60 130 Q45 125 50 115" stroke="#F4A460" stroke-width="3" fill="none"/>
+                        </svg>
+                    </div>
+                    <div class="mascot-message" id="mascot-message"></div>
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="leaderboard-section">
+                    <div class="leaderboard-header">
+                        <h2>Model Leaderboard</h2>
+                        <div class="sort-controls">
+                            <button data-sort="overall_score" class="sort-btn active">Overall Score ↓</button>
+                            <button data-sort="date" class="sort-btn">Date</button>
+                            <button data-sort="model" class="sort-btn">Model Name</button>
+                        </div>
+                    </div>
+                    <div class="leaderboard-table-container">
+                        <table class="leaderboard-table" id="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Date</th>
+                                    <th>Overall</th>
+                                    <th>Design</th>
+                                    <th>Architecture</th>
+                                    <th>Code Quality</th>
+                                    <th>Best Practices</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="leaderboard-error" class="error-message" style="display:none"></div>
+                </div>
+
+                <!-- Workflow System -->
+                <div class="workflow-section">
+                    <h2>Development Workflow</h2>
+                    <div class="workflow-stages" id="workflow-stages"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Component -->
+    <div id="modal" class="modal" style="display:none">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
