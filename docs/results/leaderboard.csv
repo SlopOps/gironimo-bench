@@ -1,5 +1,5 @@
 model,date,video_url,result_url,speed,one_shot_attempts,design,architecture,code_quality,feature_complete,performance,accessibility,best_practices,value,overall_score
-Deepseek-3.2,2026-04-04,https://youtu.be/ls2BWSsr2HA?si=ze3ztSwWEb5LWuaK,/deepseek-v3-2/,5,10,6,10,9,8,8,9,9,10,84
+DeepSeek-3.2,2026-04-04,https://youtu.be/ls2BWSsr2HA?si=ze3ztSwWEb5LWuaK,/deepseek-v3-2/,5,10,6,10,9,8,8,9,9,10,84
 Gemma-4,2026-04-08,https://youtu.be/BVfDmL0tpzc?si=8_qK09cujhm5VTe2,/gemma-4/,4,10,3,9,8,5,8,9,10,8,74
 Opus-4.6,2026-04-20,https://www.youtube.com/@slopops,/opus-v4-6/,?,?,?,?,?,?,?,?,?,?,??
 Qwen-3.6-Plus,2026-04-09,https://www.youtube.com/@slopops,/qwen-v3-6-plus/,?,?,?,?,?,?,?,?,?,?,??
@@ -10,3 +10,5 @@ MiniMax-M2.7,2026-04-20,https://www.youtube.com/@slopops,/minimax-m2-7/,?,?,?,?,
 Mistral-Large-3,2026-04-20,https://www.youtube.com/@slopops,/mistral-large-3/,?,?,?,?,?,?,?,?,?,?,??
 Trinity-Large,2026-05-02,https://www.youtube.com/@slopops,/trinity-large/,?,?,?,?,?,?,?,?,?,?,??
 Step-3.5-Flash,2026-05-02,https://www.youtube.com/@slopops,/step-v3-5-flash/,?,?,?,?,?,?,?,?,?,?,??
+DeepSeek-v4-Flash,2026-05-02,https://www.youtube.com/@slopops,/deepseek-v4-flash/,?,?,?,?,?,?,?,?,?,?,??
+DeepSeek-v4,2026-05-02,https://www.youtube.com/@slopops,/deepseek-v4/,?,?,?,?,?,?,?,?,?,?,??
