@@ -10,3 +10,4 @@ MiniMax-M2.7,Cloud,Chat,on,https://agent.minimax.io,??,China,MiniMax
 Mistral-Large-3,Cloud,Chat,off,https://chat.mistral.ai,675B,France,Mistral
 Trinity-Large,Cloud,Chat,on,https://chat.arcee.ai/,400B,USA,Arcee
 Step-3.5-Flash,Cloud,Chat,on,https://stepfun.ai/,196B,China,StepFun
+Deepseek-v4-Flash,Cloud,Chat,off,https://chat.deepseek.com,284B,China,DeepSeek
