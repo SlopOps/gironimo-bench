@@ -111,7 +111,7 @@ class Store {
     try {
       const persisted = localStorage.getItem('gironimo-state');
       if (!persisted) return initialState;
-      
+
       const parsed = JSON.parse(persisted);
       // Validate persisted state structure
       if (
@@ -154,7 +154,7 @@ class Store {
   dispatch(action) {
     const prevState = this.state;
     this.state = reducer(prevState, action);
-    
+
     // Only persist and notify if state actually changed
     if (this.state !== prevState) {
       this.persistState();
@@ -180,8 +180,8 @@ class Store {
 // Global store instance
 const store = new Store();
 
-// Action creators (optional, for cleaner dispatch calls)
-export const actions = {
+// Action creators — attached to window for global access (no ES module export)
+window.actions = {
   setTheme: (theme) => store.dispatch({ type: 'SET_THEME', payload: theme }),
   togglePhilosophySelection: (statement) => store.dispatch({ type: 'TOGGLE_PHILOSOPHY_SELECTION', payload: statement }),
   selectModel: (model) => store.dispatch({ type: 'SELECT_MODEL', payload: model }),
