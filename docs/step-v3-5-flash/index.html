@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Gironimo Leaderboard & Workflow Explorer">
+  <title>Gironimo | AI Workflow Benchmark</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app" data-theme="light">
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <header class="site-header">
+      <div class="header-content">
+        <h1 class="site-title">🦒 Gironimo</h1>
+        <div id="theme-toggle"></div>
+      </div>
+    </header>
+
+    <main id="main-content" class="main-content">
+      <!-- Mascot Section -->
+      <section class="mascot-section" aria-label="Interactive mascot">
+        <div id="mascot-container"></div>
+      </section>
+
+      <!-- Philosophy Explorer -->
+      <section class="philosophy-section" aria-labelledby="philosophy-heading">
+        <h2 id="philosophy-heading">Philosophy Explorer</h2>
+        <div id="philosophy-filters"></div>
+        <div id="philosophy-statements"></div>
+      </section>
+
+      <!-- Workflow System -->
+      <section class="workflow-section" aria-labelledby="workflow-heading">
+        <h2 id="workflow-heading">Workflow Progress</h2>
+        <div id="workflow-stages"></div>
+      </section>
+
+      <!-- Leaderboard -->
+      <section class="leaderboard-section" aria-labelledby="leaderboard-heading">
+        <h2 id="leaderboard-heading">Model Leaderboard</h2>
+        <div id="leaderboard-controls"></div>
+        <div id="leaderboard-table"></div>
+      </section>
+    </main>
+
+    <!-- Modal Container -->
+    <div id="modal-container"></div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="js/store.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/mascot.js"></script>
+    <script src="js/app.js"></script>
+  </div>
+</body>
+</html>
