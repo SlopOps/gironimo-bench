@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Pirate's Plunder: Cutlass Catch</title>
+  <style>
+    /* RESET + GLOBAL */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #0a0f1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Courier New', 'Pirata One', 'Times New Roman', monospace;
+      overflow: hidden;
+      touch-action: pan-x pan-y; /* allow vertical scroll prevention but keep touch for game */
+    }
+
+    /* STRICT 9:16 PORTRAIT CONTAINER */
+    .game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      max-width: 450px;   /* comfortable on phones */
+      max-height: 800px;
+      aspect-ratio: 9 / 16;
+      background: radial-gradient(circle at 30% 20%, #1e2a2a, #03060b);
+      overflow: hidden;
+      box-shadow: 0 0 0 3px #c9a87b, 0 0 0 8px #2c1a0f;
+      border-radius: 32px;
+      margin: auto;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+
+    /* UI OVERLAY - PIRATE STYLE */
+    .ui {
+      position: absolute;
+      z-index: 20;
+      width: 100%;
+      pointer-events: none;
+      font-weight: bold;
+      text-shadow: 2px 2px 0 #1f1b0e;
+    }
+
+    .score-board {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      background: #1f1707c9;
+      backdrop-filter: blur(4px);
+      border-radius: 40px;
+      padding: 8px 16px;
+      border: 2px solid #e4b363;
+      box-shadow: 0 4px 12px black;
+      pointer-events: none;
+    }
+
+    .score-board span {
+      font-size: 2rem;
+      font-family: 'Pirata One', cursive;
+      letter-spacing: 2px;
+      color: #ffdf9c;
+    }
+
+    .score-board .label {
+      font-size: 0.7rem;
+      display: block;
+      color: #ccb280;
+      text-align: center;
+    }
+
+    .timer-box {
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      background: #140e05c9;
+      backdrop-filter: blur(4px);
+      border-radius: 40px;
+      padding: 6px 14px;
+      border: 2px solid #b8863b;
+      text-align: center;
+    }
+
+    .timer-box .time {
+      font-size: 1.8rem;
+      font-weight: bold;
+      font-family: monospace;
+      color: #f5bc70;
+    }
+
+    .goal-text {
+      position: absolute;
+      top: 90px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.8rem;
+      background: #00000099;
+      width: fit-content;
+      margin: 0 auto;
+      padding: 4px 12px;
+      border-radius: 40px;
+      backdrop-filter: blur(2px);
+      color: #ecd672;
+      pointer-events: none;
+      font-weight: bold;
+    }
+
+    .instruction {
+      position: absolute;
+      bottom: 28px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      background: #000000aa;
+      padding: 6px 12px;
+      font-size: 0.7rem;
+      width: 90%;
+      margin: 0 auto;
+      border-radius: 60px;
+      backdrop-filter: blur(8px);
+      color: #f8d9a3;
+      font-weight: bold;
+      pointer-events: none;
+      font-family: monospace;
+      letter-spacing: 1px;
+      border: 1px solid #c29a4a;
+    }
+
+    .restart-btn {
+      position: absolute;
+      bottom: 100px;
+      right: 20px;
+      background: #3a2a1ae0;
+      backdrop-filter: blur(8px);
+      border-radius: 60px;
+      padding: 8px 14px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #fad47c;
+      border: 1px solid #ffbf6e;
+      pointer-events: auto;
+      cursor: pointer;
+      font-family: 'Pirata One', monospace;
+      z-index: 30;
+      transition: 0.1s linear;
+    }
+
+    .restart-btn:active {
+      transform: scale(0.94);
+      background: #5f3f1f;
+    }
+
+    .game-over-panel {
+      position: absolute;
+      top: 40%;
+      left: 10%;
+      width: 80%;
+      background: #0c0702e6;
+      backdrop-filter: blur(12px);
+      border: 4px ridge #c9a142;
+      border-radius: 32px;
+      text-align: center;
+      padding: 24px 12px;
+      pointer-events: auto;
+      z-index: 40;
+      transition: all 0.2s;
+    }
+
+    .game-over-panel h2 {
+      color: #ffc857;
+      font-size: 2rem;
+      font-family: 'Pirata One', cursive;
+    }
+
+    .game-over-panel p {
+      color: #e9c891;
+      margin: 12px 0;
+    }
+
+    .game-over-panel button {
+      background: #b37b2e;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #221c0e;
+      border-radius: 80px;
+      margin-top: 12px;
+      font-family: monospace;
+    }
+
+    .hide {
+      display: none;
+    }
+
+    @keyframes rumble {
+      0% { transform: translate(0,0); }
+      25% { transform: translate(1px, -1px);}
+      100% { transform: translate(-1px, 0px);}
+    }
+
+    /* pirate cursor vibe */
+    @media (pointer: fine) {
+      .game-container {
+        cursor: crosshair;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="game-container" id="gameRoot">
+  <canvas id="gameCanvas"></canvas>
+  <div class="ui">
+    <div class="score-board">
+      <span id="scoreValue">0</span>
+      <div class="label">🦜 GOLD DUBLOONS</div>
+    </div>
+    <div class="timer-box">
+      <div class="time" id="timerDisplay">30</div>
+      <div class="label">⚡ PLUNDER TIME</div>
+    </div>
+    <div class="goal-text">⚔️ CUTLASS SLASH → TAP GOLD COINS & GEMS ⚔️</div>
+    <div class="instruction">👆 TAP or DRAG finger across glowing loot! Avoid cursed skulls 💀 (-2)</div>
+  </div>
+  <div class="restart-btn" id="restartButton">🏴‍☠️ NEW VOYAGE</div>
+  <div id="gameOverlay" class="game-over-panel hide">
+    <h2>🏴‍☠️ WALK THE PLANK!</h2>
+    <p>Ye gathered <span id="finalScoreSpan">0</span> dubloons</p>
+    <button id="playAgainBtn">SET SAIL AGAIN</button>
+  </div>
+</div>
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+    }
+  }
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+
+  // ------------------------------
+  // 1. SETUP THREE.JS SCENE (PIRATE 3D ATMOSPHERE)
+  // ------------------------------
+  const canvasEl = document.getElementById('gameCanvas');
+  const container = document.getElementById('gameRoot');
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x030712);
+  scene.fog = new THREE.FogExp2(0x030712, 0.008);
+
+  const camera = new THREE.PerspectiveCamera(45, width/height, 0.1, 1000);
+  camera.position.set(0, 2, 8);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, alpha: false, antialias: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(window.devicePixelRatio);
+
+  // LIGHTS: dramatic pirate lighting
+  const ambientLight = new THREE.AmbientLight(0x332211);
+  scene.add(ambientLight);
+  const mainLight = new THREE.DirectionalLight(0xffcc88, 1.2);
+  mainLight.position.set(5, 8, 3);
+  scene.add(mainLight);
+  const backLight = new THREE.PointLight(0xaa6644, 0.6);
+  backLight.position.set(-2, 1, -4);
+  scene.add(backLight);
+  const fillLight = new THREE.PointLight(0x77aacc, 0.4);
+  fillLight.position.set(2, 3, 2);
+  scene.add(fillLight);
+  
+  // Animated torches / particles: floating dust (particle system)
+  const particleCount = 400;
+  const particleGeometry = new THREE.BufferGeometry();
+  const particlePositions = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    particlePositions[i*3] = (Math.random() - 0.5) * 18;
+    particlePositions[i*3+1] = (Math.random() - 0.5) * 9 + 1;
+    particlePositions[i*3+2] = (Math.random() - 0.5) * 12 - 5;
+  }
+  particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+  const particleMaterial = new THREE.PointsMaterial({ color: 0xd6b575, size: 0.08, transparent: true, opacity: 0.5 });
+  const particles = new THREE.Points(particleGeometry, particleMaterial);
+  scene.add(particles);
+  
+  // Wooden deck platform
+  const deckMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.7, metalness: 0.1 });
+  const deckPlane = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 4), deckMat);
+  deckPlane.position.set(0, -1.2, 0);
+  scene.add(deckPlane);
+  // Chest model (simple cube)
+  const chestMat = new THREE.MeshStandardMaterial({ color: 0xc97e3a, roughness: 0.4 });
+  const chest = new THREE.Mesh(new THREE.BoxGeometry(1, 0.6, 0.9), chestMat);
+  chest.position.set(1.2, -0.9, 1);
+  scene.add(chest);
+  const lidMat = new THREE.MeshStandardMaterial({ color: 0xb56a2a });
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.15, 0.95), lidMat);
+  lid.position.set(1.2, -0.55, 1);
+  scene.add(lid);
+  
+  // Ocean waves effect ring (rotating)
+  const waterRing = new THREE.Mesh(
+    new THREE.RingGeometry(1.8, 2.5, 32),
+    new THREE.MeshStandardMaterial({ color: 0x2f6f6f, emissive: 0x104545, side: THREE.DoubleSide, transparent: true, opacity: 0.7 })
+  );
+  waterRing.rotation.x = -Math.PI / 2;
+  waterRing.position.y = -1.3;
+  scene.add(waterRing);
+  
+  // ----- GAME LOGIC (2D interactive over canvas)
+  // We'll handle tap detection on canvas overlay, but we convert to world coordinates relative to game elements
+  // Collectible items: coins (gold) and cursed skulls
+  // Since we need clean portrait touch, items rendered as HTML? no, better canvas 2D context overlay? BUT Three.js canvas is whole. Easiest: use raytracing for tap? 
+  // Alternate: performant sprite system: we'll manage an array of clickable zones using normalized coordinates (2D)
+  // Use canvas 2D API overlay on top of three? but we want harmony: three scene + 2D game entities using HTML absolutely positioned? Not consistent.
+  // BETTER: implement game using Three.js with Sprite or simple plane meshes + raycasting for tap. This provides real "3D objects" you can tap.
+  // Let's do dynamic object list: each coin / skull is a THREE.Mesh with box geometry, we raycast on touch/click.
+  
+  // ----- dynamic game objects
+  let gameObjects = []; // { mesh, type, value }
+  let score = 0;
+  let timeLeft = 30;
+  let gameActive = true;
+  let animationId = null;
+  let spawnInterval = null;
+  let moveInterval = null; // animate objects falling/moving towards pirate?
+  
+  // For floating motion & removal
+  const objectSpeed = 0.022;
+  
+  function updateUI() {
+    document.getElementById('scoreValue').innerText = score;
+    document.getElementById('timerDisplay').innerText = Math.floor(timeLeft);
+  }
+  
+  function spawnCollectible() {
+    if (!gameActive) return;
+    // 70% gold coin, 30% skull
+    const type = Math.random() < 0.7 ? 'coin' : 'skull';
+    const color = type === 'coin' ? 0xffcc44 : 0x884444;
+    const geometry = new THREE.CylinderGeometry(0.28, 0.28, 0.1, 16);
+    const material = new THREE.MeshStandardMaterial({ color: color, emissive: type === 'coin' ? 0x442200 : 0x331111, metalness: 0.7 });
+    const mesh = new THREE.Mesh(geometry, material);
+    // random X between -2.5 and 2.5, Y start high
+    const x = (Math.random() - 0.5) * 5.2;
+    const y = 2.2 + Math.random() * 1.5;
+    const z = (Math.random() - 0.5) * 3.5 - 0.5;
+    mesh.position.set(x, y, z);
+    mesh.userData = { type, value: type === 'coin' ? 10 : -20 };
+    scene.add(mesh);
+    gameObjects.push({ mesh, type, value: type === 'coin' ? 10 : -20, speedY: -0.008 - Math.random() * 0.012 });
+    // add sparkle particle effect for coins (optional)
+    if(type === 'coin') {
+      // little glow
+      const glowMat = new THREE.MeshBasicMaterial({ color: 0xffaa55, transparent: true, opacity: 0.5 });
+      const glowRing = new THREE.Mesh(new THREE.SphereGeometry(0.34, 6, 6), glowMat);
+      mesh.add(glowRing);
+    } else {
+      // skull -> add horns visual
+      const hornGeo = new THREE.ConeGeometry(0.12, 0.25, 6);
+      const hornMat = new THREE.MeshStandardMaterial({ color: 0xaa8866 });
+      const leftHorn = new THREE.Mesh(hornGeo, hornMat);
+      leftHorn.position.set(-0.2, 0.2, 0);
+      const rightHorn = new THREE.Mesh(hornGeo, hornMat);
+      rightHorn.position.set(0.2, 0.2, 0);
+      mesh.add(leftHorn);
+      mesh.add(rightHorn);
+    }
+  }
+  
+  function updateObjects() {
+    if (!gameActive) return;
+    for (let i = gameObjects.length-1; i >= 0; i--) {
+      const obj = gameObjects[i];
+      obj.mesh.position.y += obj.speedY;
+      // if below deck or too far, remove
+      if (obj.mesh.position.y < -1.5 || obj.mesh.position.y > 4) {
+        scene.remove(obj.mesh);
+        gameObjects.splice(i,1);
+      } else {
+        // slight rotation
+        obj.mesh.rotation.z += 0.02;
+        obj.mesh.rotation.x += 0.01;
+      }
+    }
+  }
+  
+  // raycasting for tap / drag
+  const raycaster = new THREE.Raycaster();
+  const mouseCoords = { x: 0, y: 0 };
+  
+  function handleTap(clientX, clientY) {
+    if (!gameActive) return;
+    const rect = renderer.domElement.getBoundingClientRect();
+    const scaleX = renderer.domElement.width / rect.width;
+    const scaleY = renderer.domElement.height / rect.height;
+    const canvasX = (clientX - rect.left) * scaleX;
+    const canvasY = (clientY - rect.top) * scaleY;
+    mouseCoords.x = (canvasX / renderer.domElement.width) * 2 - 1;
+    mouseCoords.y = -(canvasY / renderer.domElement.height) * 2 + 1;
+    
+    raycaster.setFromCamera(mouseCoords, camera);
+    const intersects = raycaster.intersectObjects(gameObjects.map(g => g.mesh));
+    if (intersects.length > 0) {
+      const hitMesh = intersects[0].object;
+      const hitEntry = gameObjects.find(g => g.mesh === hitMesh);
+      if (hitEntry) {
+        // apply score effect
+        if (hitEntry.type === 'coin') {
+          score += hitEntry.value;
+          // particle burst (simple FX)
+          createSimpleBurst(hitMesh.position.clone(), 0xffaa44);
+        } else {
+          score += hitEntry.value; // skull subtracts 20
+          createSimpleBurst(hitMesh.position.clone(), 0xaa3333);
+        }
+        updateUI();
+        // remove object
+        scene.remove(hitMesh);
+        const idx = gameObjects.indexOf(hitEntry);
+        if (idx !== -1) gameObjects.splice(idx,1);
+        // Add rumble effect to UI? minor.
+      }
+    }
+  }
+  
+  // particle burst generator (mini explosions - meets requirement)
+  function createSimpleBurst(position, colorHex) {
+    const particleCountBurst = 28;
+    const burstGeo = new THREE.BufferGeometry();
+    const positionsBurst = new Float32Array(particleCountBurst * 3);
+    for (let i = 0; i < particleCountBurst; i++) {
+      positionsBurst[i*3] = (Math.random() - 0.5) * 0.8;
+      positionsBurst[i*3+1] = (Math.random() - 0.5) * 0.8;
+      positionsBurst[i*3+2] = (Math.random() - 0.5) * 0.8;
+    }
+    burstGeo.setAttribute('position', new THREE.BufferAttribute(positionsBurst, 3));
+    const burstMat = new THREE.PointsMaterial({ color: colorHex, size: 0.05, transparent: true });
+    const burstPoints = new THREE.Points(burstGeo, burstMat);
+    burstPoints.position.copy(position);
+    scene.add(burstPoints);
+    // animate out quickly
+    let life = 1.0;
+    const interval = setInterval(() => {
+      life -= 0.1;
+      burstMat.opacity = life;
+      burstPoints.scale.setScalar(1 + (1-life)*2);
+      if (life <= 0) {
+        clearInterval(interval);
+        scene.remove(burstPoints);
+        burstPoints.geometry.dispose();
+      }
+    }, 50);
+  }
+  
+  // timer logic
+  let timerInterval;
+  function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (!gameActive) return;
+      if (timeLeft <= 0.1) {
+        endGame();
+      } else {
+        timeLeft -= 0.1;
+        document.getElementById('timerDisplay').innerText = Math.ceil(timeLeft);
+        if (timeLeft <= 0) endGame();
+      }
+    }, 100);
+  }
+  
+  function endGame() {
+    if (!gameActive) return;
+    gameActive = false;
+    if (spawnInterval) clearInterval(spawnInterval);
+    if (moveInterval) cancelAnimationFrame(moveInterval);
+    if (timerInterval) clearInterval(timerInterval);
+    // show game over panel
+    document.getElementById('finalScoreSpan').innerText = score;
+    document.getElementById('gameOverlay').classList.remove('hide');
+  }
+  
+  function resetGame() {
+    // clear objects
+    for (let obj of gameObjects) {
+      scene.remove(obj.mesh);
+    }
+    gameObjects = [];
+    score = 0;
+    timeLeft = 30;
+    gameActive = true;
+    updateUI();
+    document.getElementById('gameOverlay').classList.add('hide');
+    if (spawnInterval) clearInterval(spawnInterval);
+    if (timerInterval) clearInterval(timerInterval);
+    if (moveInterval) cancelAnimationFrame(moveInterval);
+    // restart spawn
+    spawnInterval = setInterval(() => {
+      if (gameActive) spawnCollectible();
+    }, 700);
+    startTimer();
+    // animation loop for object motion & particle system drift
+    function animateGameObjects() {
+      if (!gameActive && gameObjects.length === 0 && !document.getElementById('gameOverlay').classList.contains('hide')) {
+        // stop moving if needed but maintain three render
+      }
+      updateObjects();
+      moveInterval = requestAnimationFrame(animateGameObjects);
+    }
+    if (moveInterval) cancelAnimationFrame(moveInterval);
+    moveInterval = requestAnimationFrame(animateGameObjects);
+  }
+  
+  // touch/click events
+  function attachEvents() {
+    const canvas = renderer.domElement;
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      handleTap(touch.clientX, touch.clientY);
+    });
+    canvas.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      handleTap(e.clientX, e.clientY);
+    });
+    // drag / swipe also works – each move triggers (makes it responsive, like cutlass slash)
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      handleTap(touch.clientX, touch.clientY);
+    });
+    canvas.addEventListener('mousemove', (e) => {
+      if (e.buttons === 1) { // left click drag
+        e.preventDefault();
+        handleTap(e.clientX, e.clientY);
+      }
+    });
+  }
+  
+  // 3D Scene extra: rotating water ring & chest lid wobble & floating particles
+  let timeAnim = 0;
+  function animateScene() {
+    requestAnimationFrame(animateScene);
+    timeAnim += 0.016;
+    waterRing.rotation.z += 0.01;
+    waterRing.scale.setScalar(1 + Math.sin(timeAnim)*0.03);
+    particles.rotation.y += 0.002;
+    particles.rotation.x = Math.sin(timeAnim * 0.2) * 0.1;
+    lid.rotation.x = Math.sin(timeAnim * 2) * 0.07;
+    // camera slight sway
+    camera.position.x += (0 - camera.position.x) * 0.05;
+    camera.lookAt(0, 0.5, 0);
+    renderer.render(scene, camera);
+  }
+  
+  function initGame() {
+    resetGame();
+    attachEvents();
+    animateScene();
+    // initial spawns
+    for(let i=0; i<5; i++) setTimeout(() => { if (gameActive) spawnCollectible(); }, i*300);
+  }
+  
+  // Make restart button work
+  document.getElementById('restartButton').addEventListener('click', () => {
+    if (!gameActive) {
+      resetGame();
+    } else {
+      // force reset any active game
+      if (spawnInterval) clearInterval(spawnInterval);
+      if (timerInterval) clearInterval(timerInterval);
+      if (moveInterval) cancelAnimationFrame(moveInterval);
+      gameActive = false;
+      resetGame();
+    }
+  });
+  document.getElementById('playAgainBtn').addEventListener('click', () => {
+    resetGame();
+  });
+  
+  // Adjust canvas on resize (maintain 9:16 aspect)
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+  
+  initGame();
+  
+  // add extra FX: mouse trail spark? not needed but sure, small particle generator if score changes? Already explosion.
+  // Additional element: dynamic floating score text when tapping done through the burst.
+  
+  // final check: playable mini-game, pirate theme strongly via 3d chest, coins, skulls, music? not needed.
+  console.log("🏴‍☠️ Yo ho! Cutlass tap game ready!");
+</script>
+</body>
+</html>
