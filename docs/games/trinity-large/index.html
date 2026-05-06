@@ -123,6 +123,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             pointer-events: auto;
             max-width: 80%;
+            z-index: 100;
         }
 
         #instructions h1 {
@@ -140,13 +141,15 @@
         #instructions .btn {
             background: var(--ui-text);
             color: white;
-            padding: 15px 40px;
-            font-size: 28px;
+            padding: 18px 45px;
+            font-size: 26px;
             border: none;
             border-radius: 50px;
             cursor: pointer;
             box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
             transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            min-width: 200px;
         }
 
         #instructions .btn:active {
@@ -766,7 +769,9 @@
             
             // Event listeners
             startBtn.addEventListener('click', startGame);
+            startBtn.addEventListener('touchstart', startGame);
             restartBtn.addEventListener('click', restartGame);
+            restartBtn.addEventListener('touchstart', restartGame);
             
             // Touch/mouse controls
             gameContainer.addEventListener('touchmove', handleTouch, { passive: false });
@@ -776,21 +781,35 @@
             // Prevent context menu
             gameContainer.addEventListener('contextmenu', e => e.preventDefault());
             
+            // Also allow pressing any key to start
+            document.addEventListener('keydown', function startOnKey(e) {
+                if (!gameState.isRunning && !gameState.gameOver) {
+                    startGame();
+                    document.removeEventListener('keydown', startOnKey);
+                } else if (gameState.gameOver) {
+                    restartGame();
+                    document.removeEventListener('keydown', startOnKey);
+                }
+            });
+            
             // Start render loop
             render();
         }
 
         function startGame() {
+            if (gameState.isRunning) return;
             instructions.style.display = 'none';
             gameState.isRunning = true;
             gameLoop();
         }
 
         function restartGame() {
-            gameState.reset();
-            gameOverScreen.style.display = 'none';
-            gameState.isRunning = true;
-            gameLoop();
+            if (gameState.gameOver) {
+                gameState.reset();
+                gameOverScreen.style.display = 'none';
+                gameState.isRunning = true;
+                gameLoop();
+            }
         }
 
         function handleTouch(e) {
