@@ -1,5 +1,5 @@
 model,provider,interface,reasoning,link,quantization,country,company
-Deepseek-3.2,Cloud,Chat,off,https://chat.deepseek.com,685B,China,DeepSeek
+DeepSeek-3.2,Cloud,Chat,off,https://chat.deepseek.com,685B,China,DeepSeek
 Gemma-4,Local,Chat,off,https://huggingface.co/cyankiwi/gemma-4-26B-A4B-it-AWQ-4bit,26B-A4B,USA,Google
 Qwen-3.6-Plus,Cloud,Chat,on,https://chat.qwen.ai,??,China,Alibaba
 ChatGPT-5.3,Cloud,Chat,off,https://chatgpt.com,??,USA,OpenAI
