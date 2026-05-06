@@ -3,233 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Guardian - Superhero Game</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <title>Farm Catch - Harvest Time!</title>
     <style>
+        :root {
+            --sky-blue: #87CEEB;
+            --grass-green: #7CFC00;
+            --dirt-brown: #8B4513;
+            --cloud-white: #FFFFFF;
+            --sun-yellow: #FFD700;
+            --apple-red: #FF4444;
+            --egg-white: #FFFAF0;
+            --milk-white: #F5F5DC;
+            --rotten-purple: #8A2BE2;
+            --rock-gray: #696969;
+            --basket-color: #FFA500;
+            --ui-text: #2E8B57;
+        }
+
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
             touch-action: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        body {
-            font-family: 'Arial Black', 'Impact', sans-serif;
-            background: #000;
-            color: #fff;
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: var(--sky-blue);
+            font-family: 'Comic Sans MS', 'Marker Felt', cursive, sans-serif;
             user-select: none;
         }
 
+        /* Game container with fixed 9:16 aspect ratio */
         #game-container {
             position: relative;
             width: 100%;
-            max-width: 414px;
-            aspect-ratio: 9/16;
-            background: linear-gradient(180deg, #0a0a2a 0%, #1a1a3a 100%);
+            height: 100%;
+            max-width: 640px; /* Mobile max width */
+            max-height: 1136px; /* 9:16 ratio */
+            margin: 0 auto;
             overflow: hidden;
-            box-shadow: 0 0 50px rgba(0, 100, 255, 0.3);
-            border-radius: 20px;
-            border: 3px solid #0ff;
+            background: linear-gradient(to bottom, 
+                var(--sky-blue) 0%, 
+                var(--sky-blue) 60%, 
+                var(--grass-green) 60%, 
+                var(--grass-green) 85%, 
+                var(--dirt-brown) 85%, 
+                var(--dirt-brown) 100%);
         }
 
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .ui-element {
-            position: absolute;
-            pointer-events: auto;
-            background: rgba(0, 20, 40, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            padding: 10px 15px;
-            box-shadow: 0 4px 15px rgba(0, 100, 255, 0.4);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-        }
-
-        #score-display {
-            top: 20px;
-            left: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #0ff;
-            text-align: center;
-            min-width: 100px;
-        }
-
-        #high-score-display {
-            top: 20px;
-            right: 20px;
-            font-size: 18px;
-            color: #f0f;
-            text-align: center;
-            min-width: 100px;
-        }
-
-        #health-bar {
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            height: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 2px solid #0f0;
-        }
-
-        #health-fill {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #0f0, #0f0 70%, #ff0 70%, #ff0 100%);
-            transition: width 0.3s ease;
-        }
-
-        #power-up-indicator {
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 18px;
-            color: #ff0;
-            text-align: center;
-            opacity: 0;
-            transition: opacity 0.5s;
-            pointer-events: none;
-        }
-
-        #start-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 10, 30, 0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            backdrop-filter: blur(5px);
-            transition: opacity 0.5s;
-        }
-
-        #start-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .title {
-            font-size: 42px;
-            color: #0ff;
-            text-shadow: 4px 4px 0 #f0f, 8px 8px 20px #0ff;
-            margin-bottom: 30px;
-            text-align: center;
-            letter-spacing: 3px;
-        }
-
-        .subtitle {
-            font-size: 18px;
-            color: #fff;
-            margin-bottom: 50px;
-            text-align: center;
-            line-height: 1.4;
-        }
-
-        #start-button {
-            padding: 15px 40px;
-            font-size: 24px;
-            background: linear-gradient(90deg, #0ff, #f0f);
-            color: #000;
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 8px 20px rgba(0, 255, 255, 0.5);
-            transition: transform 0.2s, box-shadow 0.2s;
-            pointer-events: auto;
-        }
-
-        #start-button:active {
-            transform: scale(0.95);
-            box-shadow: 0 4px 10px rgba(0, 255, 255, 0.3);
-        }
-
-        #tutorial {
-            margin-top: 30px;
-            font-size: 16px;
-            color: #0f0;
-            text-align: center;
-            line-height: 1.5;
-        }
-
-        #game-over-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(30, 0, 10, 0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            backdrop-filter: blur(5px);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s;
-        }
-
-        #game-over-screen.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .game-over-title {
-            font-size: 42px;
-            color: #f00;
-            text-shadow: 4px 4px 0 #ff0, 8px 8px 20px #f00;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .final-score {
-            font-size: 28px;
-            color: #0ff;
-            margin-bottom: 20px;
-        }
-
-        #restart-button {
-            padding: 15px 40px;
-            font-size: 24px;
-            background: linear-gradient(90deg, #f00, #ff0);
-            color: #000;
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 8px 20px rgba(255, 0, 0, 0.5);
-            transition: transform 0.2s, box-shadow 0.2s;
-            pointer-events: auto;
-        }
-
-        #restart-button:active {
-            transform: scale(0.95);
-            box-shadow: 0 4px 10px rgba(255, 0, 0, 0.3);
-        }
-
-        #three-container {
+        /* Three.js background canvas */
+        #bg-canvas {
             position: absolute;
             top: 0;
             left: 0;
@@ -238,926 +65,861 @@
             z-index: 1;
         }
 
-        #particle-container {
+        /* Main game canvas */
+        #game-canvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 2;
-            pointer-events: none;
         }
 
-        #touch-indicator {
+        /* UI overlay */
+        #ui-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: 10;
             pointer-events: none;
-            z-index: 50;
-            background: radial-gradient(circle at touchX touchY, rgba(0, 255, 255, 0.1) 0%, transparent 50%);
-            opacity: 0;
-            transition: opacity 0.1s;
         }
 
-        #control-hint {
+        /* Score display */
+        #score-display {
             position: absolute;
-            top: 70px;
+            top: 20px;
+            left: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--ui-text);
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.8);
+            pointer-events: auto;
+        }
+
+        /* Timer display */
+        #timer-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--ui-text);
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.8);
+            pointer-events: auto;
+        }
+
+        /* Instructions overlay */
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            pointer-events: auto;
+            max-width: 80%;
+        }
+
+        #instructions h1 {
+            color: var(--ui-text);
+            margin-top: 0;
+            font-size: 36px;
+        }
+
+        #instructions p {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #instructions .btn {
+            background: var(--ui-text);
+            color: white;
+            padding: 15px 40px;
+            font-size: 28px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #instructions .btn:active {
+            transform: scale(0.95);
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+        }
+
+        /* Game over overlay */
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            pointer-events: auto;
+        }
+
+        #game-over h2 {
+            color: var(--ui-text);
+            font-size: 48px;
+            margin-bottom: 30px;
+        }
+
+        #game-over .final-score {
+            font-size: 36px;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        /* Particle container */
+        #particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* Touch indicator */
+        #touch-indicator {
+            position: absolute;
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 18px;
-            color: #0ff;
-            text-align: center;
-            padding: 5px 10px;
-            background: rgba(0, 20, 40, 0.8);
-            border-radius: 5px;
+            font-size: 24px;
+            color: var(--ui-text);
+            opacity: 0.7;
+            animation: pulse 2s infinite;
             pointer-events: none;
-            z-index: 20;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 0.3; }
         }
 
-        .power-up-icon {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 20px;
-            z-index: 5;
-            pointer-events: none;
-            transition: all: 0.3s ease;
-            box-shadow: 0 0 15px currentColor;
-        }
-
-        .power-up-icon::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 2px solid currentColor;
-            opacity: 0.5;
-            animation: expand 1.5s infinite;
-        }
-
-        @keyframes expand {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-
-        .obstacle {
-            position: absolute;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #500, #a00);
-            box-shadow: 0 0 20px rgba(200, 0, 0, 0.7);
-            z-index: 3;
-            pointer-events: none;
-        }
-
-        .collectible {
-            position: absolute;
-            border-radius: 50%;
-            background: radial-gradient(circle, #ff0, #f80);
-            box-shadow: 0 0 20px rgba(255, 200, 0, 0.8);
-            z-index: 4;
-            pointer-events: none;
-            animation: float 2s infinite ease-in-out;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .city-building {
-            position: absolute;
-            bottom: 0;
-            background: linear-gradient(180deg, #222, #444);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-            z-index: 2;
-        }
-
-        .city-building::after {
-            content: '';
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            right: 5px;
-            bottom: 5px;
-            background: repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);
-        }
-
-        .hero-glow {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            background: radial-gradient(circle at heroPosition.x heroPosition.y, rgba(0, 255, 255, 0.1) 0%, transparent 50%);
-            pointer-events: none;
-            opacity: 0;
-        }
-
-        .shockwave {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 3px solid #0ff;
-            transform: translate(-50%, -50%);
-            z-index: 6;
-            pointer-events: none;
-            animation: shockwave 0.5s ease-out;
-        }
-
-        @keyframes shockwave {
-            0% { width: 50px; height: 50px; opacity: 1; }
-            100% { width: 300px; height: 300px; opacity: 0; }
+        /* Responsive check */
+        @media (max-width: 640px) {
+            #game-container {
+                width: 100vw;
+                height: calc(100vw * 9 / 16);
+            }
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="three-container"></div>
-        <div id="particle-container"></div>
+        <!-- Three.js Background -->
+        <canvas id="bg-canvas"></canvas>
+        
+        <!-- Main Game Canvas -->
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- Particle System -->
+        <div id="particles"></div>
+        
+        <!-- UI Layer -->
         <div id="ui-layer">
-            <div id="score-display">SCORE: 0</div>
-            <div id="high-score-display">HI: 0</div>
-            <div id="health-bar">
-                <div id="health-fill"></div>
-            </div>
-            <div id="power-up-indicator">POWER MODE!</div>
-        </div>
-        <div id="touch-indicator"></div>
-        <div id="control-hint">TAP & HOLD TO FLY</div>
-        
-        <div id="start-screen">
-            <div class="title">NEON GUARDIAN</div>
-            <div class="subtitle">The city needs a hero! Fly through the neon skyline, dodge obstacles, and collect power orbs. Tap and hold to fly upward, release to descend.</div>
-            <div id="tutorial">TAP & HOLD TO FLY UP</div>
-            <button id="start-button">START GAME</button>
+            <div id="score-display">0</div>
+            <div id="timer-display">60</div>
+            <div id="touch-indicator">Drag to move basket</div>
         </div>
         
-        <div id="game-over-screen">
-            <div class="game-over-title">MISSION FAILED</div>
-            <div class="final-score">SCORE: <span id="final-score">0</span></div>
-            <button id="restart-button">TRY AGAIN</button>
+        <!-- Start Screen -->
+        <div id="instructions">
+            <h1>Farm Catch</h1>
+            <p>Harvest the falling goodies!</p>
+            <p>Catch apples, eggs & milk</p>
+            <p>Avoid rocks & rotten food</p>
+            <button class="btn" id="start-btn">Start Farming</button>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="game-over">
+            <h2>Time's Up!</h2>
+            <div class="final-score">Score: <span id="final-score">0</span></div>
+            <button class="btn" id="restart-btn">Farm Again</button>
         </div>
     </div>
 
+    <!-- Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
     <script>
-        // Game state
-        const state = {
-            isPlaying: false,
-            isGameOver: false,
-            score: 0,
-            highScore: localStorage.getItem('neonGuardianHighScore') || 0,
-            health: 100,
-            powerMode: false,
-            powerModeTimer: 0,
-            heroY: 0.5, // 0-1 normalized position
-            heroVelocity: 0,
-            heroAcceleration: 0.003, // Increased acceleration
-            gravity: 0.002, // Decreased gravity
-            obstacles: [],
-            collectibles: [],
-            particles: [],
-            shockwave: null,
-            gameSpeed: 0.0005,
-            lastTime: 0,
-            touchX: 0,
-            touchY: 0
+        // ============================================
+        // GAME CONFIGURATION
+        // ============================================
+        const CONFIG = {
+            GAME_DURATION: 60, // seconds
+            BASE_FALL_SPEED: 3,
+            SPEED_INCREMENT: 0.005, // speed increases over time
+            SPAWN_RATE: 0.05, // probability per frame
+            MAX_MISSES: 10,
+            BASKET_WIDTH: 100,
+            BASKET_HEIGHT: 60,
+            COLLECTIBLES: [
+                { type: 'apple', color: '#FF4444', points: 10, weight: 0.4 },
+                { type: 'egg', color: '#FFFAF0', points: 15, weight: 0.3 },
+                { type: 'milk', color: '#F5F5DC', points: 20, weight: 0.2 },
+                { type: 'golden', color: '#FFD700', points: 50, weight: 0.1 }
+            ],
+            OBSTACLES: [
+                { type: 'rock', color: '#696969', penalty: -20, weight: 0.6 },
+                { type: 'rotten', color: '#8A2BE2', penalty: -10, weight: 0.4 }
+            ]
         };
 
-        // DOM elements
-        const gameContainer = document.getElementById('game-container');
-        const scoreDisplay = document.getElementById('score-display');
-        const highScoreDisplay = document.getElementById('high-score-display');
-        const healthFill = document.getElementById('health-fill');
-        const powerUpIndicator = document.getElementById('power-up-indicator');
-        const startScreen = document.getElementById('start-screen');
-        const gameOverScreen = document.getElementById('game-over-screen');
-        const finalScoreDisplay = document.getElementById('final-score');
-        const startButton = document.getElementById('start-button');
-        const restartButton = document.getElementById('restart-button');
-        const touchIndicator = document.getElementById('touch-indicator');
-        const controlHint = document.getElementById('control-hint');
+        // ============================================
+        // GAME STATE MANAGEMENT
+        // ============================================
+        class GameState {
+            constructor() {
+                this.score = 0;
+                this.timeLeft = CONFIG.GAME_DURATION;
+                this.misses = 0;
+                this.gameOver = false;
+                this.isRunning = false;
+                this.frameCount = 0;
+                this.fallSpeed = CONFIG.BASE_FALL_SPEED;
+                this.collectibles = [];
+                this.particles = [];
+            }
 
-        // Three.js setup
-        let scene, camera, renderer, cityGroup, heroMesh, heroTrail;
-        let cityBuildings = [];
-        let starsParticleSystem;
+            reset() {
+                this.score = 0;
+                this.timeLeft = CONFIG.GAME_DURATION;
+                this.misses = 0;
+                this.gameOver = false;
+                this.isRunning = false;
+                this.frameCount = 0;
+                this.fallSpeed = CONFIG.BASE_FALL_SPEED;
+                this.collectibles = [];
+                this.particles = [];
+            }
 
-        console.log('Game script loaded');
+            update() {
+                if (!this.isRunning || this.gameOver) return;
 
-        function initThreeJS() {
-            scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x0a0a2a, 10, 60);
-
-            camera = new THREE.PerspectiveCamera(60, gameContainer.clientWidth / gameContainer.clientHeight, 0.1, 100);
-            camera.position.set(0, 5, 15);
-            camera.lookAt(0, 5, 0);
-
-            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            renderer.setSize(gameContainer.clientWidth, gameContainer.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.getElementById('three-container').appendChild(renderer.domElement);
-
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
-            scene.add(ambientLight);
-
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 20, 5);
-            scene.add(directionalLight);
-
-            // Create city
-            createCity();
-
-            // Create hero with fallback geometry
-            createHero();
-
-            // Create starfield
-            createStarfield();
-
-            // Handle resize
-            window.addEventListener('resize', onWindowResize);
-            
-            console.log('Three.js initialized');
-        }
-
-        function createCity() {
-            cityGroup = new THREE.Group();
-            scene.add(cityGroup);
-
-            // Create procedural buildings
-            const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
-            const buildingMat = new THREE.MeshPhongMaterial({ 
-                color: 0x1a1a3a,
-                flatShading: true
-            });
-
-            for (let i = 0; i < 40; i++) {
-                const building = new THREE.Mesh(buildingGeo, buildingMat);
+                this.frameCount++;
                 
-                // Random width, depth, height
-                const width = 1 + Math.random() * 2;
-                const depth = 1 + Math.random() * 2;
-                const height = 5 + Math.random() * 15;
-                
-                building.scale.set(width, height, depth);
-                building.position.x = (i - 20) * 3.5;
-                building.position.z = -10;
-                building.position.y = height / 2;
-                
-                // Add windows
-                const windowGeo = new THREE.PlaneGeometry(0.8, 0.8);
-                const windowMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-                
-                // Random windows on building
-                const numWindows = Math.floor(Math.random() * 5) + 2;
-                for (let j = 0; j < numWindows; j++) {
-                    const window = new THREE.Mesh(windowGeo, windowMat);
-                    const wx = (Math.random() - 0.5) * (width - 0.8);
-                    const wy = (Math.random() - 0.5) * (height - 0.8);
-                    window.position.set(wx, wy, depth / 2 + 0.01);
-                    building.add(window);
+                // Decrease time
+                if (this.frameCount % 60 === 0) {
+                    this.timeLeft--;
+                    if (this.timeLeft <= 0) {
+                        this.gameOver = true;
+                        endGame();
+                    }
                 }
 
-                cityGroup.add(building);
-                cityBuildings.push(building);
+                // Increase speed over time
+                this.fallSpeed += CONFIG.SPEED_INCREMENT;
+
+                // Spawn new items
+                if (Math.random() < CONFIG.SPAWN_RATE) {
+                    this.spawnItem();
+                }
+
+                // Update existing items
+                for (let i = this.collectibles.length - 1; i >= 0; i--) {
+                    const item = this.collectibles[i];
+                    item.y += this.fallSpeed;
+
+                    // Check if item missed the basket
+                    if (item.y > gameHeight + 50) {
+                        if (item.type !== 'golden') { // Golden apples are rare and shouldn't count as misses
+                            this.misses++;
+                            if (this.misses >= CONFIG.MAX_MISSES) {
+                                this.gameOver = true;
+                                endGame();
+                            }
+                        }
+                        this.collectibles.splice(i, 1);
+                    }
+                }
+
+                // Update particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.02;
+                    p.size *= 0.95;
+
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
             }
-            
-            console.log('City created with 40 buildings');
-        }
 
-        function createHero() {
-            // Use cylinder and sphere as fallback since CapsuleGeometry might not be available
-            const heroGroup = new THREE.Group();
+            spawnItem() {
+                // Choose between collectible or obstacle
+                const isCollectible = Math.random() < 0.7; // 70% chance collectible
+                
+                let item;
+                if (isCollectible) {
+                    // Weighted random selection
+                    const rand = Math.random();
+                    let cumulative = 0;
+                    for (const col of CONFIG.COLLECTIBLES) {
+                        cumulative += col.weight;
+                        if (rand < cumulative) {
+                            item = {
+                                type: col.type,
+                                color: col.color,
+                                points: col.points,
+                                x: Math.random() * (gameWidth - 40) + 20,
+                                y: -30,
+                                width: 30,
+                                height: 30,
+                                collected: false
+                            };
+                            break;
+                        }
+                    }
+                } else {
+                    // Obstacle
+                    const rand = Math.random();
+                    let cumulative = 0;
+                    for (const obs of CONFIG.OBSTACLES) {
+                        cumulative += obs.weight;
+                        if (rand < cumulative) {
+                            item = {
+                                type: obs.type,
+                                color: obs.color,
+                                penalty: obs.penalty,
+                                x: Math.random() * (gameWidth - 40) + 20,
+                                y: -30,
+                                width: 30,
+                                height: 30,
+                                collected: false
+                            };
+                            break;
+                        }
+                    }
+                }
 
-            // Body (cylinder)
-            const bodyGeo = new THREE.CylinderGeometry(0.3, 0.3, 1, 8);
-            const bodyMat = new THREE.MeshPhongMaterial({ 
-                color: 0x0000ff,
-                emissive: 0x0000aa,
-                shininess: 100
-            });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.rotation.z = Math.PI / 2;
-            heroGroup.add(body);
-
-            // Head (sphere)
-            const headGeo = new THREE.SphereGeometry(0.2, 8, 8);
-            const headMat = new THREE.MeshPhongMaterial({ color: 0xffff00 });
-            const head = new THREE.Mesh(headGeo, headMat);
-            head.position.x = 0.4; // Offset to right since body is rotated
-            head.position.y = 0.2;
-            heroGroup.add(head);
-
-            // Cape (cone or triangle mesh)
-            const capeGeo = new THREE.ConeGeometry(0.5, 1.5, 8, 1, true);
-            const capeMat = new THREE.MeshPhongMaterial({ 
-                color: 0xff0000,
-                emissive: 0xaa0000,
-                side: THREE.DoubleSide,
-                shininess: 50
-            });
-            const cape = new THREE.Mesh(capeGeo, capeMat);
-            cape.rotation.x = Math.PI / 2;
-            cape.rotation.z = Math.PI / 2;
-            cape.position.x = 0.4;
-            cape.position.y = 0.2;
-            heroGroup.add(cape);
-
-            // Symbol
-            const symbolGeo = new THREE.BoxGeometry(0.4, 0.5, 0.1);
-            const symbolMat = new THREE.MeshPhongMaterial({ color: 0xffff00 });
-            const symbol = new THREE.Mesh(symbolGeo, symbolMat);
-            symbol.position.x = 0;
-            symbol.position.y = 0.2;
-            heroGroup.add(symbol);
-
-            // Eyes (small spheres)
-            const eyeGeo = new THREE.SphereGeometry(0.05, 8, 8);
-            const eyeMat = new THREE.MeshPhongMaterial({ color: 0xffffff });
-            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-            leftEye.position.set(0.2, 0.3, 0.31);
-            heroGroup.add(leftEye);
-            
-            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-            rightEye.position.set(-0.2, 0.3, 0.31);
-            heroGroup.add(rightEye);
-
-            heroGroup.position.set(0, 5, 0);
-            scene.add(heroGroup);
-            heroMesh = heroGroup;
-
-            // Create trail effect
-            const trailGeo = new THREE.ConeGeometry(0.1, 1, 8, 1, true);
-            const trailMat = new THREE.MeshBasicMaterial({ 
-                color: 0x00ffff,
-                transparent: true,
-                opacity: 0.6
-            });
-            heroTrail = new THREE.Mesh(trailGeo, trailMat);
-            heroTrail.rotation.x = Math.PI / 2;
-            heroTrail.position.z = -0.5;
-            heroGroup.add(heroTrail);
-            
-            console.log('Hero created with fallback geometry');
-        }
-
-        function createStarfield() {
-            const starGeo = new THREE.BufferGeometry();
-            const starCount = 500;
-            const positions = new Float32Array(starCount * 3);
-            
-            for (let i = 0; i < starCount * 3; i++) {
-                positions[i] = (Math.random() - 0.5) * 100;
+                if (item) {
+                    this.collectibles.push(item);
+                }
             }
-            
-            starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            const starMat = new THREE.PointsMaterial({ 
-                color: 0xffffff,
-                size: 0.1,
-                transparent: true,
-                opacity: 0.8
-            });
-            
-            starsParticleSystem = new THREE.Points(starGeo, starMat);
-            scene.add(starsParticleSystem);
-            
-            console.log('Starfield created with 500 stars');
-        }
 
-        function onWindowResize() {
-            camera.aspect = gameContainer.clientWidth / gameContainer.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(gameContainer.clientWidth, gameContainer.clientHeight);
-        }
-
-        // Game logic
-        function startGame() {
-            console.log('Starting game...');
-            state.score = 0;
-            state.health = 100;
-            state.powerMode = false;
-            state.powerModeTimer = 0;
-            state.heroY = 0.5;
-            state.heroVelocity = 0;
-            state.gameSpeed = 0.0005;
-            state.obstacles = [];
-            state.collectibles = [];
-            state.particles = [];
-            state.isGameOver = false;
-            state.isPlaying = true;
-            
-            startScreen.classList.add('hidden');
-            gameOverScreen.classList.remove('visible');
-            
-            updateUI();
-            
-            // Clear DOM obstacles
-            document.querySelectorAll('.obstacle, .collectible, .power-up-icon, .shockwave').forEach(el => el.remove());
-            
-            // Reset Three.js city position
-            cityGroup.position.x = 0;
-            
-            state.lastTime = performance.now();
-            requestAnimationFrame(gameLoop);
-        }
-
-        function gameOver() {
-            console.log('Game over');
-            state.isGameOver = true;
-            state.isPlaying = false;
-            
-            if (state.score > state.highScore) {
-                state.highScore = state.score;
-                localStorage.setItem('neonGuardianHighScore', state.highScore);
-            }
-            
-            finalScoreDisplay.textContent = state.score;
-            gameOverScreen.classList.add('visible');
-        }
-
-        function updateUI() {
-            scoreDisplay.textContent = `SCORE: ${state.score}`;
-            highScoreDisplay.textContent = `HI: ${state.highScore}`;
-            healthFill.style.width = `${state.health}%`;
-            
-            if (state.powerMode) {
-                powerUpIndicator.style.opacity = '1';
-            } else {
-                powerUpIndicator.style.opacity = '0';
+            checkCollisions(basket) {
+                for (const item of this.collectibles) {
+                    if (!item.collected && 
+                        item.x < basket.x + basket.width &&
+                        item.x + item.width > basket.x &&
+                        item.y < basket.y + basket.height &&
+                        item.y + item.height > basket.y) {
+                        
+                        // Collision detected
+                        item.collected = true;
+                        
+                        if (item.points) {
+                            // Good item
+                            this.score += item.points;
+                            createParticles(item.x + item.width/2, item.y + item.height/2, item.color);
+                        } else if (item.penalty) {
+                            // Bad item
+                            this.score += item.penalty; // Penalty is negative
+                            createParticles(item.x + item.width/2, item.y + item.height/2, item.color, 10);
+                            this.misses++; // Extra miss for obstacle
+                            if (this.misses >= CONFIG.MAX_MISSES) {
+                                this.gameOver = true;
+                                endGame();
+                            }
+                        }
+                        
+                        // Remove item
+                        const index = this.collectibles.indexOf(item);
+                        if (index > -1) {
+                            this.collectibles.splice(index, 1);
+                        }
+                    }
+                }
             }
         }
 
-        function createObstacle() {
-            const width = 1 + Math.random() * 1.5;
-            const height = 0.5 + Math.random() * 1;
-            const x = Math.random() * (gameContainer.clientWidth - width);
-            
-            const obstacle = document.createElement('div');
-            obstacle.className = 'obstacle';
-            obstacle.style.width = `${width}px`;
-            obstacle.style.height = `${height}px`;
-            obstacle.style.left = `${x}px`;
-            obstacle.style.top = `${-height}px`;
-            obstacle.style.backgroundColor = state.powerMode ? '#ff0' : '#500';
-            
-            gameContainer.appendChild(obstacle);
-            
-            state.obstacles.push({
-                element: obstacle,
-                x: x,
-                y: -height,
-                width: width,
-                height: height,
-                active: true
-            });
+        // ============================================
+        // BASKET CLASS
+        // ============================================
+        class Basket {
+            constructor() {
+                this.width = CONFIG.BASKET_WIDTH;
+                this.height = CONFIG.BASKET_HEIGHT;
+                this.x = gameWidth / 2 - this.width / 2;
+                this.y = gameHeight - 150;
+                this.color = 'var(--basket-color)';
+                this.targetX = this.x; // For smooth movement
+            }
+
+            update(touchX) {
+                // Smooth follow with easing
+                const dx = touchX - this.x - this.width/2;
+                this.x += dx * 0.2;
+                
+                // Keep within bounds
+                if (this.x < 0) this.x = 0;
+                if (this.x > gameWidth - this.width) this.x = gameWidth - this.width;
+            }
+
+            draw(ctx) {
+                // Basket body
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 10);
+                ctx.fill();
+                
+                // Basket texture lines
+                ctx.strokeStyle = '#E67E00';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(this.x + 10, this.y + 5);
+                ctx.lineTo(this.x + 10, this.y + this.height - 5);
+                ctx.moveTo(this.x + 30, this.y + 5);
+                ctx.lineTo(this.x + 30, this.y + this.height - 5);
+                ctx.moveTo(this.x + 50, this.y + 5);
+                ctx.lineTo(this.x + 50, this.y + this.height - 5);
+                ctx.moveTo(this.x + 70, this.y + 5);
+                ctx.lineTo(this.x + 70, this.y + this.height - 5);
+                ctx.stroke();
+                
+                // Handle
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.width/2 - 10, this.y);
+                ctx.lineTo(this.x + this.width/2 - 10, this.y - 30);
+                ctx.lineTo(this.x + this.width/2 + 10, this.y - 30);
+                ctx.lineTo(this.x + this.width/2 + 10, this.y);
+                ctx.stroke();
+                
+                // Handle arc
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2, this.y - 30, 15, 0, Math.PI * 2);
+                ctx.fillStyle = '#8B4513';
+                ctx.fill();
+            }
         }
 
-        function createCollectible() {
-            const size = 20 + Math.random() * 15;
-            const x = Math.random() * (gameContainer.clientWidth - size);
-            
-            const collectible = document.createElement('div');
-            collectible.className = 'collectible';
-            collectible.style.width = `${size}px`;
-            collectible.style.height = `${size}px`;
-            collectible.style.left = `${x}px`;
-            collectible.style.top = `${-size}px`;
-            
-            gameContainer.appendChild(collectible);
-            
-            state.collectibles.push({
-                element: collectible,
-                x: x,
-                y: -size,
-                size: size,
-                active: true
-            });
+        // ============================================
+        // THREE.JS BACKGROUND SCENE
+        // ============================================
+        class FarmBackground {
+            constructor() {
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, gameWidth / gameHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: document.getElementById('bg-canvas'),
+                    alpha: true 
+                });
+                this.renderer.setSize(gameWidth, gameHeight);
+                this.renderer.setClearColor(0x87CEEB, 0); // Transparent
+                
+                this.objects = [];
+                this.init();
+            }
+
+            init() {
+                // Add sun
+                const sunGeometry = new THREE.CircleGeometry(30, 32);
+                const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
+                const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+                sun.position.set(gameWidth * 0.8, gameHeight * 0.2, 10);
+                this.scene.add(sun);
+                this.objects.push({ mesh: sun, type: 'sun' });
+
+                // Add clouds (simple shapes)
+                for (let i = 0; i < 5; i++) {
+                    const cloudGroup = new THREE.Group();
+                    
+                    // Cloud puffs
+                    for (let j = 0; j < 5; j++) {
+                        const puffSize = 20 + Math.random() * 15;
+                        const puffGeo = new THREE.SphereGeometry(puffSize, 16, 16);
+                        const puffMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+                        const puff = new THREE.Mesh(puffGeo, puffMat);
+                        
+                        const angle = (j / 5) * Math.PI * 2;
+                        const radius = puffSize * 0.8;
+                        puff.position.set(
+                            Math.cos(angle) * radius,
+                            Math.sin(angle) * radius,
+                            0
+                        );
+                        
+                        cloudGroup.add(puff);
+                    }
+                    
+                    cloudGroup.position.set(
+                        Math.random() * gameWidth,
+                        Math.random() * gameHeight * 0.4 + 50,
+                        5
+                    );
+                    cloudGroup.scale.set(0.5 + Math.random() * 0.5, 0.5 + Math.random() * 0.5, 1);
+                    
+                    this.scene.add(cloudGroup);
+                    this.objects.push({ 
+                        mesh: cloudGroup, 
+                        type: 'cloud', 
+                        speed: 0.2 + Math.random() * 0.3,
+                        originalX: cloudGroup.position.x 
+                    });
+                }
+
+                // Add distant hills
+                const hillCount = 3;
+                for (let i = 0; i < hillCount; i++) {
+                    const hillGeo = new THREE.CircleGeometry(150 + i * 50, 32);
+                    const hillMat = new THREE.MeshBasicMaterial({ 
+                        color: 0x7CFC00,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+                    const hill = new THREE.Mesh(hillGeo, hillMat);
+                    hill.position.set(
+                        (i - hillCount/2) * 300,
+                        gameHeight * 0.65,
+                        2
+                    );
+                    hill.scale.y = 0.5;
+                    hill.scale.x = 0.5;
+                    this.scene.add(hill);
+                    this.objects.push({ mesh: hill, type: 'hill', originalY: hill.position.y });
+                }
+
+                // Add trees (simple cones)
+                const treeCount = 8;
+                for (let i = 0; i < treeCount; i++) {
+                    const treeGroup = new THREE.Group();
+                    
+                    // Tree trunk
+                    const trunkGeo = new THREE.CylinderGeometry(8, 12, 30, 16);
+                    const trunkMat = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
+                    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                    trunk.position.y = 15;
+                    treeGroup.add(trunk);
+                    
+                    // Tree foliage (cone)
+                    const foliageGeo = new THREE.ConeGeometry(30, 50, 8);
+                    const foliageMat = new THREE.MeshBasicMaterial({ color: 0x228B22 });
+                    const foliage = new THREE.Mesh(foliageGeo, foliageMat);
+                    foliage.position.y = 50;
+                    treeGroup.add(foliage);
+                    
+                    // Position trees along the sides
+                    const side = Math.random() < 0.5 ? -1 : 1;
+                    treeGroup.position.set(
+                        gameWidth * 0.15 * side + (Math.random() - 0.5) * 100,
+                        gameHeight * 0.75,
+                        3
+                    );
+                    
+                    this.scene.add(treeGroup);
+                    this.objects.push({ 
+                        mesh: treeGroup, 
+                        type: 'tree',
+                        swaySpeed: 0.5 + Math.random() * 0.5,
+                        swayOffset: Math.random() * Math.PI * 2
+                    });
+                }
+
+                this.camera.position.z = 50;
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                // Rotate sun slowly
+                this.objects.forEach(obj => {
+                    if (obj.type === 'sun') {
+                        obj.mesh.rotation.z += 0.001;
+                    } else if (obj.type === 'cloud') {
+                        obj.mesh.position.x -= obj.speed;
+                        if (obj.mesh.position.x < -100) {
+                            obj.mesh.position.x = gameWidth + 100;
+                        }
+                    } else if (obj.type === 'tree') {
+                        // Gentle sway
+                        obj.mesh.rotation.z = Math.sin(Date.now() * 0.001 * obj.swaySpeed + obj.swayOffset) * 0.05;
+                    }
+                });
+
+                this.renderer.render(this.scene, this.camera);
+            }
         }
 
-        function createPowerUp() {
-            const size = 30;
-            const x = Math.random() * (gameContainer.clientWidth - size);
-            
-            const powerUp = document.createElement('div');
-            powerUp.className = 'power-up-icon';
-            powerUp.style.width = `${size}px`;
-            powerUp.style.height = `${size}px`;
-            powerUp.style.left = `${x}px`;
-            powerUp.style.top = `${-size}px`;
-            powerUp.style.color = '#ff0';
-            powerUp.textContent = 'P';
-            
-            gameContainer.appendChild(powerUp);
-            
-            state.collectibles.push({
-                element: powerUp,
-                x: x,
-                y: -size,
-                size: size,
-                active: true,
-                isPowerUp: true
-            });
-        }
-
-        function createExplosion(x, y) {
-            const particleCount = 20;
-            for (let i = 0; i < particleCount; i++) {
+        // ============================================
+        // PARTICLE SYSTEM
+        // ============================================
+        function createParticles(x, y, color, count = 8) {
+            for (let i = 0; i < count; i++) {
                 const particle = document.createElement('div');
                 particle.style.position = 'absolute';
-                particle.style.width = '6px';
-                particle.style.height = '6px';
+                particle.style.width = '8px';
+                particle.style.height = '8px';
+                particle.style.backgroundColor = color;
                 particle.style.borderRadius = '50%';
-                particle.style.backgroundColor = state.powerMode ? '#ff0' : '#f00';
-                particle.style.left = `${x}px`;
-                particle.style.top = `${y}px`;
-                particle.style.zIndex = '5';
-                gameContainer.appendChild(particle);
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.pointerEvents = 'none';
+                particle.style.zIndex = '6';
                 
-                const angle = (Math.PI * 2 * i) / particleCount;
+                // Random velocity
+                const angle = Math.random() * Math.PI * 2;
                 const speed = 2 + Math.random() * 3;
                 
-                state.particles.push({
+                particle.vx = Math.cos(angle) * speed;
+                particle.vy = Math.sin(angle) * speed;
+                particle.life = 1.0;
+                particle.size = 8;
+                
+                document.getElementById('particles').appendChild(particle);
+                
+                // Store particle data for animation
+                gameState.particles.push({
                     element: particle,
                     x: x,
                     y: y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    life: 1.0,
-                    active: true
+                    vx: particle.vx,
+                    vy: particle.vy,
+                    life: particle.life,
+                    size: particle.size
                 });
             }
         }
 
-        function createShockwave() {
-            if (state.shockwave) return;
-            
-            const shockwave = document.createElement('div');
-            shockwave.className = 'shockwave';
-            shockwave.style.left = `${gameContainer.clientWidth / 2}px`;
-            shockwave.style.top = `${state.heroY * gameContainer.clientHeight}px`;
-            gameContainer.appendChild(shockwave);
-            
-            state.shockwave = {
-                element: shockwave,
-                active: true
-            };
-            
-            setTimeout(() => {
-                if (state.shockwave && state.shockwave.element) {
-                    state.shockwave.element.remove();
-                    state.shockwave = null;
-                }
-            }, 500);
-        }
-
-        function spawnManager() {
-            // Spawn obstacles
-            if (Math.random() < 0.03) {
-                createObstacle();
-            }
-            
-            // Spawn collectibles
-            if (Math.random() < 0.015) {
-                if (Math.random() < 0.2) {
-                    createPowerUp();
-                } else {
-                    createCollectible();
-                }
-            }
-        }
-
-        function updateGameObjects(deltaTime) {
-            const containerHeight = gameContainer.clientHeight;
-            const containerWidth = gameContainer.clientWidth;
-            
-            // Update hero position
-            if (state.isPlaying && !state.isGameOver) {
-                // Apply input
-                if (isTouching) {
-                    state.heroVelocity += state.heroAcceleration;
-                }
-                
-                // Apply gravity
-                state.heroVelocity -= state.gravity;
-                
-                // Update Y position (0-1)
-                state.heroY += state.heroVelocity;
-                state.heroY = Math.max(0, Math.min(1, state.heroY));
-                
-                // Update hero visual
-                if (heroMesh) {
-                    heroMesh.position.y = state.heroY * 10 + 2;
-                    
-                    // Rotate based on velocity (limited to +/- 30 degrees)
-                    const targetRotation = state.heroVelocity * 2;
-                    // Smoothly rotate towards target
-                    heroMesh.rotation.z += (targetRotation - heroMesh.rotation.z) * 0.1;
-                    
-                    // Update trail
-                    if (heroTrail) {
-                        heroTrail.position.y = heroMesh.position.y - 1;
-                        heroTrail.scale.setScalar(1 + Math.abs(state.heroVelocity) * 2);
-                    }
-                }
-            }
-            
-            // Update obstacles
-            for (let i = state.obstacles.length - 1; i >= 0; i--) {
-                const obj = state.obstacles[i];
-                obj.y += state.gameSpeed * containerHeight;
-                obj.element.style.top = `${obj.y}px`;
-                
-                // Remove if off screen
-                if (obj.y > containerHeight) {
-                    obj.element.remove();
-                    state.obstacles.splice(i, 1);
-                    continue;
-                }
-                
-                // Check collision with hero
-                if (state.isPlaying && !state.isGameOver && obj.active) {
-                    const heroTop = state.heroY * containerHeight;
-                    const heroBottom = heroTop + 40; // Approximate hero height
-                    const heroLeft = containerWidth / 2 - 15;
-                    const heroRight = heroLeft + 30;
-                    
-                    if (obj.y + obj.height > heroTop && 
-                        obj.y < heroBottom && 
-                        obj.x + obj.width > heroLeft && 
-                        obj.x < heroRight) {
-                        
-                        if (state.powerMode) {
-                            // Destroy obstacle
-                            createExplosion(obj.x + obj.width/2, obj.y + obj.height/2);
-                            obj.element.remove();
-                            state.obstacles.splice(i, 1);
-                            state.score += 10;
-                        } else {
-                            // Take damage
-                            state.health -= 20;
-                            createExplosion(heroLeft + 15, heroTop + 20);
-                            
-                            if (state.health <= 0) {
-                                gameOver();
-                            }
-                            
-                            // Temporarily invincible after hit
-                            obj.active = false;
-                            obj.element.style.opacity = '0.3';
-                        }
-                        
-                        updateUI();
-                    }
-                }
-            }
-            
-            // Update collectibles
-            for (let i = state.collectibles.length - 1; i >= 0; i--) {
-                const obj = state.collectibles[i];
-                obj.y += state.gameSpeed * containerHeight;
-                obj.element.style.top = `${obj.y}px`;
-                
-                // Remove if off screen
-                if (obj.y > containerHeight) {
-                    obj.element.remove();
-                    state.collectibles.splice(i, 1);
-                    continue;
-                }
-                
-                // Check collision with hero
-                if (state.isPlaying && !state.isGameOver && obj.active) {
-                    const heroTop = state.heroY * containerHeight;
-                    const heroBottom = heroTop + 40;
-                    const heroLeft = containerWidth / 2 - 15;
-                    const heroRight = heroLeft + 30;
-                    
-                    if (obj.y + obj.size > heroTop && 
-                        obj.y < heroBottom && 
-                        obj.x + obj.size > heroLeft && 
-                        obj.x < heroRight) {
-                        
-                        if (obj.isPowerUp) {
-                            // Activate power mode
-                            state.powerMode = true;
-                            state.powerModeTimer = 500; // 5 seconds at 60fps
-                            createShockwave();
-                        } else {
-                            // Collect points
-                            state.score += 5;
-                        }
-                        
-                        obj.element.remove();
-                        state.collectibles.splice(i, 1);
-                        updateUI();
-                    }
-                }
-            }
-            
-            // Update particles
-            for (let i = state.particles.length - 1; i >= 0; i--) {
-                const p = state.particles[i];
+        function updateParticles() {
+            gameState.particles.forEach((p, index) => {
                 p.x += p.vx;
                 p.y += p.vy;
-                p.life -= 0.05;
-                p.element.style.left = `${p.x}px`;
-                p.element.style.top = `${p.y}px`;
+                p.life -= 0.02;
+                p.size *= 0.95;
+                
+                // Update DOM element
+                p.element.style.left = p.x + 'px';
+                p.element.style.top = p.y + 'px';
                 p.element.style.opacity = p.life;
+                p.element.style.width = p.size + 'px';
+                p.element.style.height = p.size + 'px';
                 
                 if (p.life <= 0) {
                     p.element.remove();
-                    state.particles.splice(i, 1);
+                    gameState.particles.splice(index, 1);
                 }
-            }
+            });
+        }
+
+        // ============================================
+        // MAIN GAME LOGIC
+        // ============================================
+        const gameContainer = document.getElementById('game-container');
+        const gameCanvas = document.getElementById('game-canvas');
+        const ctx = gameCanvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score-display');
+        const timerDisplay = document.getElementById('timer-display');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const instructions = document.getElementById('instructions');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreDisplay = document.getElementById('final-score');
+
+        // Set canvas size based on container
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            gameCanvas.width = container.clientWidth;
+            gameCanvas.height = container.clientHeight;
             
-            // Update power mode timer
-            if (state.powerMode) {
-                state.powerModeTimer--;
-                if (state.powerModeTimer <= 0) {
-                    state.powerMode = false;
-                }
-            }
+            // Update game dimensions
+            gameWidth = gameCanvas.width;
+            gameHeight = gameCanvas.height;
             
-            // Update game speed based on score
-            if (state.isPlaying && !state.isGameOver) {
-                state.gameSpeed = 0.0005 + (state.score / 5000) * 0.0003;
+            // Adjust basket position if needed
+            if (basket) {
+                basket.x = gameWidth / 2 - basket.width / 2;
+                basket.y = gameHeight - 150;
             }
         }
 
-        function updateThreeJS(deltaTime) {
-            // Move city towards camera
-            cityGroup.position.z += state.gameSpeed * 20;
-            if (cityGroup.position.z > 10) {
-                cityGroup.position.z = -50;
-            }
+        let gameWidth, gameHeight;
+        let basket, gameState, farmBackground;
+
+        // Initialize game
+        function initGame() {
+            resizeCanvas();
+            basket = new Basket();
+            gameState = new GameState();
+            farmBackground = new FarmBackground();
+            farmBackground.animate();
             
-            // Rotate stars slowly
-            if (starsParticleSystem) {
-                starsParticleSystem.rotation.y += 0.0001;
-            }
+            // Event listeners
+            startBtn.addEventListener('click', startGame);
+            restartBtn.addEventListener('click', restartGame);
             
-            // Animate hero trail
-            if (heroTrail) {
-                heroTrail.rotation.x = Math.PI / 2 + Math.sin(Date.now() * 0.01) * 0.1;
+            // Touch/mouse controls
+            gameContainer.addEventListener('touchmove', handleTouch, { passive: false });
+            gameContainer.addEventListener('touchstart', handleTouch, { passive: false });
+            gameContainer.addEventListener('mousemove', handleMouseMove);
+            
+            // Prevent context menu
+            gameContainer.addEventListener('contextmenu', e => e.preventDefault());
+            
+            // Start render loop
+            render();
+        }
+
+        function startGame() {
+            instructions.style.display = 'none';
+            gameState.isRunning = true;
+            gameLoop();
+        }
+
+        function restartGame() {
+            gameState.reset();
+            gameOverScreen.style.display = 'none';
+            gameState.isRunning = true;
+            gameLoop();
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = gameContainer.getBoundingClientRect();
+            const touchX = touch.clientX - rect.left;
+            if (basket) {
+                basket.targetX = touchX;
             }
         }
 
-        function gameLoop(currentTime) {
-            if (!state.isPlaying) return;
-            
-            const deltaTime = (currentTime - state.lastTime) / 16.67; // Normalize to 60fps
-            state.lastTime = currentTime;
-            
-            spawnManager();
-            updateGameObjects(deltaTime);
-            updateThreeJS(deltaTime);
-            
-            // Update score continuously
-            if (state.isPlaying && !state.isGameOver) {
-                state.score += Math.floor(deltaTime * 10);
-                updateUI();
+        function handleMouseMove(e) {
+            const rect = gameContainer.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            if (basket) {
+                basket.targetX = mouseX;
             }
+        }
+
+        function gameLoop() {
+            if (!gameState.isRunning || gameState.gameOver) return;
             
-            renderer.render(scene, camera);
+            gameState.update();
+            basket.update(basket.targetX || gameWidth/2);
+            gameState.checkCollisions(basket);
+            
+            // Continue loop
             requestAnimationFrame(gameLoop);
         }
 
-        // Input handling
-        let isTouching = false;
-        let touchStartY = 0;
+        function endGame() {
+            gameOverScreen.style.display = 'flex';
+            finalScoreDisplay.textContent = gameState.score;
+        }
 
-        function handleTouchStart(e) {
-            console.log('Touch start detected');
-            e.preventDefault();
-            e.stopPropagation();
-            isTouching = true;
-            state.heroVelocity = 0.003; // Immediate upward impulse
-            touchStartY = e.touches[0].clientY;
+        function render() {
+            // Clear canvas
+            ctx.clearRect(0, 0, gameWidth, gameHeight);
             
-            // Show touch indicator
-            const touchX = e.touches[0].clientX;
-            const touchY = e.touches[0].clientY;
-            state.touchX = touchX;
-            state.touchY = touchY;
-            touchIndicator.style.opacity = '1';
-            touchIndicator.style.background = `radial-gradient(circle at ${touchX}px ${touchY}px, rgba(0, 255, 255, 0.1) 0%, transparent 50%)`;
-        }
-
-        function handleTouchEnd(e) {
-            console.log('Touch end detected');
-            e.preventDefault();
-            e.stopPropagation();
-            isTouching = false;
-            touchIndicator.style.opacity = '0';
-        }
-
-        function handleTouchMove(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.touches.length > 0) {
-                const touchX = e.touches[0].clientX;
-                const touchY = e.touches[0].clientY;
-                state.touchX = touchX;
-                state.touchY = touchY;
-                touchIndicator.style.background = `radial-gradient(circle at ${touchX}px ${touchY}px, rgba(0, 255, 255, 0.1) 0%, transparent 50%)`;
+            // Draw ground line
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, gameHeight - 100);
+            ctx.lineTo(gameWidth, gameHeight - 100);
+            ctx.stroke();
+            
+            // Draw basket
+            if (basket) {
+                basket.draw(ctx);
             }
-        }
-
-        // Initialize
-        highScoreDisplay.textContent = `HI: ${state.highScore}`;
-        
-        // Check if Three.js loaded properly
-        try {
-            initThreeJS();
-            console.log('Three.js initialized');
-        } catch (e) {
-            console.error('Failed to initialize Three.js:', e);
-            alert('Failed to load 3D engine. Please try again in a different browser.');
-        }
-
-        // Add explicit touch handlers to buttons to ensure they work
-        if (startButton) {
-            startButton.addEventListener('touchstart', (e) => {
-                console.log('Touchstart on start button');
-                e.preventDefault();
-                e.stopPropagation();
-                startGame();
-            });
             
-            startButton.addEventListener('click', (e) => {
-                console.log('Click on start button');
-                e.preventDefault();
-                startGame();
-            });
-        } else {
-            console.error('Start button element not found!');
-        }
-
-        if (restartButton) {
-            restartButton.addEventListener('touchstart', (e) => {
-                console.log('Touchstart on restart button');
-                e.preventDefault();
-                e.stopPropagation();
-                startGame();
-            });
-            
-            restartButton.addEventListener('click', (e) => {
-                console.log('Click on restart button');
-                e.preventDefault();
-                startGame();
-            });
-        } else {
-            console.error('Restart button element not found!');
-        }
-        
-        // Container touch handlers for game input
-        gameContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
-        gameContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
-        gameContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
-        
-        // Mouse fallback for testing on desktop
-        gameContainer.addEventListener('mousedown', () => {
-            isTouching = true;
-            state.heroVelocity = 0.003;
-            touchIndicator.style.opacity = '1';
-        });
-        gameContainer.addEventListener('mouseup', () => {
-            isTouching = false;
-            touchIndicator.style.opacity = '0';
-        });
-        gameContainer.addEventListener('mousemove', (e) => {
-            state.touchX = e.clientX;
-            state.touchY = e.clientY;
-            touchIndicator.style.background = `radial-gradient(circle at ${state.touchX}px ${state.touchY}px, rgba(0, 255, 255, 0.1) 0%, transparent 50%)`;
-        });
-
-        // Fallback: Press 'S' to start game
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 's' || e.key === 'S') {
-                console.log('S key pressed, starting game...');
-                if (!state.isPlaying) {
-                    startGame();
+            // Draw collectibles
+            gameState.collectibles.forEach(item => {
+                // Item body
+                ctx.fillStyle = item.color;
+                ctx.beginPath();
+                if (item.type === 'apple') {
+                    // Draw apple shape
+                    ctx.ellipse(item.x + item.width/2, item.y + item.height/2, 
+                               item.width/2, item.height/2, 0, 0, Math.PI * 2);
+                } else if (item.type === 'egg') {
+                    // Draw egg shape
+                    ctx.moveTo(item.x + item.width/2, item.y);
+                    ctx.quadraticCurveTo(item.x + item.width, item.y + item.height/2,
+                                        item.x + item.width/2, item.y + item.height);
+                    ctx.quadraticCurveTo(item.x, item.y + item.height/2,
+                                        item.x + item.width/2, item.y);
+                } else if (item.type === 'milk') {
+                    // Draw milk bottle shape
+                    ctx.beginPath();
+                    ctx.moveTo(item.x + item.width/2, item.y + 5);
+                    ctx.lineTo(item.x + item.width - 5, item.y + 5);
+                    ctx.lineTo(item.x + item.width - 5, item.y + item.height - 5);
+                    ctx.lineTo(item.x + 5, item.y + item.height - 5);
+                    ctx.lineTo(item.x + 5, item.y + 5);
+                    ctx.fill();
+                } else if (item.type === 'golden') {
+                    // Golden apple with sparkle
+                    ctx.ellipse(item.x + item.width/2, item.y + item.height/2, 
+                               item.width/2, item.height/2, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fill();
+                    // Add sparkle
+                    ctx.fillStyle = '#FFFFE0';
+                    ctx.beginPath();
+                    ctx.moveTo(item.x + item.width/2, item.y);
+                    ctx.lineTo(item.x + item.width/2 - 3, item.y + item.height/3);
+                    ctx.lineTo(item.x, item.y + item.height/3);
+                    ctx.lineTo(item.x + item.width/2 - 8, item.y + item.height/2);
+                    ctx.lineTo(item.x, item.y + item.height/2 + 5);
+                    ctx.lineTo(item.x + item.width/2, item.y + item.height/2 + 3);
+                    ctx.lineTo(item.x + item.width, item.y + item.height/2 + 5);
+                    ctx.lineTo(item.x + item.width/2 + 8, item.y + item.height/2);
+                    ctx.lineTo(item.x + item.width, item.y + item.height/3);
+                    ctx.lineTo(item.x + item.width/2 + 3, item.y + item.height/3);
+                    ctx.fill();
+                } else if (item.type === 'rock') {
+                    // Draw rock
+                    ctx.beginPath();
+                    ctx.moveTo(item.x + item.width/2, item.y);
+                    ctx.lineTo(item.x + item.width, item.y + item.height/2);
+                    ctx.lineTo(item.x + item.width/2, item.y + item.height);
+                    ctx.lineTo(item.x, item.y + item.height/2);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (item.type === 'rotten') {
+                    // Draw rotten food (apple shape but purple)
+                    ctx.ellipse(item.x + item.width/2, item.y + item.height/2, 
+                               item.width/2, item.height/2, 0, 0, Math.PI * 2);
                 }
-            }
-        });
+            });
+            
+            // Update and draw particles
+            updateParticles();
+            
+            // Update UI
+            scoreDisplay.textContent = gameState.score;
+            timerDisplay.textContent = gameState.timeLeft;
+            
+            requestAnimationFrame(render);
+        }
 
-        // Initial render
-        renderer.render(scene, camera);
-        console.log('Game ready! Press START or S to begin');
+        // Handle window resize
+        window.addEventListener('resize', resizeCanvas);
+
+        // Start everything
+        initGame();
     </script>
 </body>
 </html>
