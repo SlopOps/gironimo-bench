@@ -9,7 +9,7 @@
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            box-sizing: other;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
@@ -1003,28 +1003,44 @@
 
         function handleTouchStart(e) {
             e.preventDefault();
+            e.stopPropagation();
             isTouching = true;
             touchStartY = e.touches[0].clientY;
         }
 
         function handleTouchEnd(e) {
             e.preventDefault();
+            e.stopPropagation();
             isTouching = false;
         }
 
         function handleTouchMove(e) {
             e.preventDefault();
-            // Could add fine control here if needed
+            e.stopPropagation();
         }
 
         // Initialize
         highScoreDisplay.textContent = `HI: ${state.highScore}`;
         initThreeJS();
 
-        // Event listeners
+        // Add explicit touch handlers to buttons to ensure they work
+        startButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            startGame();
+        });
+
+        restartButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            startGame();
+        });
+
+        // Also keep click handlers for desktop
         startButton.addEventListener('click', startGame);
         restartButton.addEventListener('click', startGame);
         
+        // Container touch handlers for game input
         gameContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
         gameContainer.addEventListener('touchend', handleTouchEnd, { passive: false });
         gameContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
