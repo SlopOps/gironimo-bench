@@ -9,8 +9,8 @@
         * {
             margin: 0;
             padding: 0;
-            box-sizing: other;
-            touch-action: manipulation;
+            box-sizing: border-box;
+            touch-action: auto; /* Changed from manipulation */
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -435,6 +435,8 @@
         let cityBuildings = [];
         let starsParticleSystem;
 
+        console.log('Game script loaded');
+
         function initThreeJS() {
             scene = new THREE.Scene();
             scene.fog = new THREE.Fog(0x0a0a2a, 10, 60);
@@ -467,6 +469,8 @@
 
             // Handle resize
             window.addEventListener('resize', onWindowResize);
+            
+            console.log('Three.js initialized');
         }
 
         function createCity() {
@@ -510,6 +514,8 @@
                 cityGroup.add(building);
                 cityBuildings.push(building);
             }
+            
+            console.log('City created with 40 buildings');
         }
 
         function createHero() {
@@ -576,6 +582,8 @@
             heroTrail.rotation.x = Math.PI / 2;
             heroTrail.position.z = -0.5;
             heroGroup.add(heroTrail);
+            
+            console.log('Hero created');
         }
 
         function createStarfield() {
@@ -597,6 +605,8 @@
             
             starsParticleSystem = new THREE.Points(starGeo, starMat);
             scene.add(starsParticleSystem);
+            
+            console.log('Starfield created with 500 stars');
         }
 
         function onWindowResize() {
@@ -607,6 +617,7 @@
 
         // Game logic
         function startGame() {
+            console.log('Starting game...');
             state.score = 0;
             state.health = 100;
             state.powerMode = false;
@@ -636,6 +647,7 @@
         }
 
         function gameOver() {
+            console.log('Game over');
             state.isGameOver = true;
             state.isPlaying = false;
             
@@ -830,11 +842,6 @@
                         heroTrail.scale.setScalar(1 + Math.abs(state.heroVelocity) * 2);
                     }
                 }
-                
-                // Create hero glow effect
-                if (heroGlow) {
-                    heroGlow.style.opacity = state.powerMode ? 0.3 : 0.1;
-                }
             }
             
             // Update obstacles
@@ -1021,24 +1028,50 @@
 
         // Initialize
         highScoreDisplay.textContent = `HI: ${state.highScore}`;
-        initThreeJS();
+        
+        // Check if Three.js loaded properly
+        try {
+            initThreeJS();
+            console.log('Three.js initialized successfully');
+        } catch (e) {
+            console.error('Failed to initialize Three.js:', e);
+            alert('Failed to load 3D engine. Please try again in a different browser.');
+        }
 
         // Add explicit touch handlers to buttons to ensure they work
-        startButton.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            startGame();
-        });
+        if (startButton) {
+            startButton.addEventListener('touchstart', (e) => {
+                console.log('Touchstart on start button');
+                e.preventDefault();
+                e.stopPropagation();
+                startGame();
+            });
+            
+            startButton.addEventListener('click', (e) => {
+                console.log('Click on start button');
+                e.preventDefault();
+                startGame();
+            });
+        } else {
+            console.error('Start button element not found!');
+        }
 
-        restartButton.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            startGame();
-        });
-
-        // Also keep click handlers for desktop
-        startButton.addEventListener('click', startGame);
-        restartButton.addEventListener('click', startGame);
+        if (restartButton) {
+            restartButton.addEventListener('touchstart', (e) => {
+                console.log('Touchstart on restart button');
+                e.preventDefault();
+                e.stopPropagation();
+                startGame();
+            });
+            
+            restartButton.addEventListener('click', (e) => {
+                console.log('Click on restart button');
+                e.preventDefault();
+                startGame();
+            });
+        } else {
+            console.error('Restart button element not found!');
+        }
         
         // Container touch handlers for game input
         gameContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -1050,8 +1083,19 @@
         gameContainer.addEventListener('mouseup', () => isTouching = false);
         gameContainer.addEventListener('mousemove', () => isTouching = false);
 
+        // Fallback: Press 'S' to start game
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 's' || e.key === 'S') {
+                console.log('S key pressed, starting game...');
+                if (!state.isPlaying) {
+                    startGame();
+                }
+            }
+        });
+
         // Initial render
         renderer.render(scene, camera);
+        console.log('Game ready! Press START or S to begin');
     </script>
 </body>
 </html>
