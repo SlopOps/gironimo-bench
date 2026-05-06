@@ -10,7 +10,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            touch-action: auto;
+            touch-action: none;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -248,16 +248,32 @@
             pointer-events: none;
         }
 
-        .tap-indicator {
+        #touch-indicator {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.7);
-            text-align: center;
-            animation: pulse 1.5s infinite;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
+            z-index: 50;
+            background: radial-gradient(circle at touchX touchY, rgba(0, 255, 255, 0.1) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        #control-hint {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            color: #0ff;
+            text-align: center;
+            padding: 5px 10px;
+            background: rgba(0, 20, 40, 0.8);
+            border-radius: 5px;
+            pointer-events: none;
+            z-index: 20;
         }
 
         @keyframes pulse {
@@ -277,7 +293,7 @@
             font-size: 20px;
             z-index: 5;
             pointer-events: none;
-            transition: all 0.3s ease;
+            transition: all: 0.3s ease;
             box-shadow: 0 0 15px currentColor;
         }
 
@@ -381,6 +397,8 @@
             </div>
             <div id="power-up-indicator">POWER MODE!</div>
         </div>
+        <div id="touch-indicator"></div>
+        <div id="control-hint">TAP & HOLD TO FLY</div>
         
         <div id="start-screen">
             <div class="title">NEON GUARDIAN</div>
@@ -408,14 +426,16 @@
             powerModeTimer: 0,
             heroY: 0.5, // 0-1 normalized position
             heroVelocity: 0,
-            heroAcceleration: -0.0015, // Upward acceleration when tapping
-            gravity: 0.001,
+            heroAcceleration: 0.003, // Increased acceleration
+            gravity: 0.002, // Decreased gravity
             obstacles: [],
             collectibles: [],
             particles: [],
             shockwave: null,
             gameSpeed: 0.0005,
-            lastTime: 0
+            lastTime: 0,
+            touchX: 0,
+            touchY: 0
         };
 
         // DOM elements
@@ -429,6 +449,8 @@
         const finalScoreDisplay = document.getElementById('final-score');
         const startButton = document.getElementById('start-button');
         const restartButton = document.getElementById('restart-button');
+        const touchIndicator = document.getElementById('touch-indicator');
+        const controlHint = document.getElementById('control-hint');
 
         // Three.js setup
         let scene, camera, renderer, cityGroup, heroMesh, heroTrail;
@@ -841,8 +863,10 @@
                 if (heroMesh) {
                     heroMesh.position.y = state.heroY * 10 + 2;
                     
-                    // Rotate based on velocity
-                    heroMesh.rotation.z = state.heroVelocity * 2;
+                    // Rotate based on velocity (limited to +/- 30 degrees)
+                    const targetRotation = state.heroVelocity * 2;
+                    // Smoothly rotate towards target
+                    heroMesh.rotation.z += (targetRotation - heroMesh.rotation.z) * 0.1;
                     
                     // Update trail
                     if (heroTrail) {
@@ -983,7 +1007,7 @@
             
             // Rotate stars slowly
             if (starsParticleSystem) {
-                starsParticleSystem.rotation.Y += 0.0001;
+                starsParticleSystem.rotation.y += 0.0001;
             }
             
             // Animate hero trail
@@ -1017,21 +1041,40 @@
         let touchStartY = 0;
 
         function handleTouchStart(e) {
+            console.log('Touch start detected');
             e.preventDefault();
             e.stopPropagation();
             isTouching = true;
+            state.heroVelocity = 0.003; // Immediate upward impulse
             touchStartY = e.touches[0].clientY;
+            
+            // Show touch indicator
+            const touchX = e.touches[0].clientX;
+            const touchY = e.touches[0].clientY;
+            state.touchX = touchX;
+            state.touchY = touchY;
+            touchIndicator.style.opacity = '1';
+            touchIndicator.style.background = `radial-gradient(circle at ${touchX}px ${touchY}px, rgba(0, 255, 255, 0.1) 0%, transparent 50%)`;
         }
 
         function handleTouchEnd(e) {
+            console.log('Touch end detected');
             e.preventDefault();
             e.stopPropagation();
             isTouching = false;
+            touchIndicator.style.opacity = '0';
         }
 
         function handleTouchMove(e) {
             e.preventDefault();
             e.stopPropagation();
+            if (e.touches.length > 0) {
+                const touchX = e.touches[0].clientX;
+                const touchY = e.touches[0].clientY;
+                state.touchX = touchX;
+                state.touchY = touchY;
+                touchIndicator.style.background = `radial-gradient(circle at ${touchX}px ${touchY}px, rgba(0, 255, 255, 0.1) 0%, transparent 50%)`;
+            }
         }
 
         // Initialize
@@ -1087,9 +1130,20 @@
         gameContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
         
         // Mouse fallback for testing on desktop
-        gameContainer.addEventListener('mousedown', () => isTouching = true);
-        gameContainer.addEventListener('mouseup', () => isTouching = false);
-        gameContainer.addEventListener('mousemove', () => isTouching = false);
+        gameContainer.addEventListener('mousedown', () => {
+            isTouching = true;
+            state.heroVelocity = 0.003;
+            touchIndicator.style.opacity = '1';
+        });
+        gameContainer.addEventListener('mouseup', () => {
+            isTouching = false;
+            touchIndicator.style.opacity = '0';
+        });
+        gameContainer.addEventListener('mousemove', (e) => {
+            state.touchX = e.clientX;
+            state.touchY = e.clientY;
+            touchIndicator.style.background = `radial-gradient(circle at ${state.touchX}px ${state.touchY}px, rgba(0, 255, 255, 0.1) 0%, transparent 50%)`;
+        });
 
         // Fallback: Press 'S' to start game
         document.addEventListener('keydown', (e) => {
