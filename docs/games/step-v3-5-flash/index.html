@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cannonball Cove</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (dev CDN for demo only, use PostCSS/CLI for production per https://tailwindcss.com/docs/installation) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Three.js -->
@@ -49,12 +49,12 @@
             width: 100vw;
         }
 
-        /* 9:16 CONTAINER */
+        /* 9:16 CONTAINER - Strict portrait aspect ratio */
         #game-container {
             position: relative;
             width: 100%;
             height: 100%;
-            max-width: 56.25vh; /* 9/16 * 100vh */
+            max-width: 56.25vh; /* 9/16 * 100vh = 56.25vh width for portrait */
             max-height: 100vh;
             background: var(--color-bg);
             overflow: hidden;
@@ -133,7 +133,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10, 10, 10, 0.85);
+            background: rgba(10, 10, 10, 0.92);
             backdrop-filter: blur(8px);
             z-index: 30;
             display: flex;
@@ -235,31 +235,32 @@
         /* INSTRUCTIONS OVERLAY */
         .tutorial {
             position: absolute;
-            bottom: 20%;
+            bottom: 22%;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 10px;
-            opacity: 0.8;
+            opacity: 0.9;
             animation: pulse 2s infinite;
         }
 
         .hand-icon {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             border: 2px solid white;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
+            background: rgba(255,255,255,0.1);
         }
 
         @keyframes pulse {
-            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.8; }
-            50% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.9; }
+            50% { transform: translateX(-50%) scale(1.05); opacity: 1; }
         }
 
         /* SCORE POPUP */
@@ -278,18 +279,30 @@
             100% { transform: translateY(-50px) scale(1.2); opacity: 0; }
         }
 
+        /* Screen shake animation class */
+        .shake {
+            animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, -1px, 0); }
+            20%, 80% { transform: translate3d(3px, 1px, 0); }
+            30%, 50%, 70% { transform: translate3d(-5px, 2px, 0); }
+            40%, 60% { transform: translate3d(5px, -2px, 0); }
+        }
+
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <!-- Three.js Background -->
+        <!-- Three.js 3D Background Scene -->
         <canvas id="three-bg"></canvas>
 
-        <!-- 2D Game Layer -->
+        <!-- 2D Gameplay Canvas -->
         <canvas id="game-canvas"></canvas>
 
-        <!-- UI Overlay -->
+        <!-- UI Overlay (HUD) -->
         <div id="ui-layer">
             <div class="flex justify-between items-start w-full">
                 <div class="hud-text text-2xl md:text-3xl text-amber-500">
@@ -300,7 +313,7 @@
                 </div>
             </div>
 
-            <!-- Decorative corners -->
+            <!-- Decorative pirate-themed corners -->
             <div class="corner-decor top-left"></div>
             <div class="corner-decor top-right"></div>
             <div class="corner-decor bottom-left"></div>
@@ -310,13 +323,13 @@
         <!-- Start Screen -->
         <div id="start-screen" class="screen">
             <h1>Cannonball<br>Cove</h1>
-            <p>Navigate the stormy seas. Shoot enemy ships. Collect treasure. Don't sink.</p>
+            <p>Navigate stormy seas, sink enemy ships, collect treasure, and don't lose your crew!</p>
             
             <div class="tutorial">
                 <div class="hand-icon">↔</div>
-                <span class="text-sm uppercase tracking-widest">Drag to Move</span>
-                <div class="hand-icon" style="margin-top:10px;">🔥</div>
-                <span class="text-sm uppercase tracking-widest">Tap to Shoot</span>
+                <span class="text-sm uppercase tracking-widest">Drag to Move Ship</span>
+                <div class="hand-icon" style="margin-top:12px;">🔥</div>
+                <span class="text-sm uppercase tracking-widest">Tap to Fire Cannons</span>
             </div>
 
             <br>
@@ -337,16 +350,15 @@
     <script>
         /**
          * CANNONBALL COVE
-         * A Pirate-themed vertical shooter
-         * Built with Three.js (Background) + Canvas 2D (Game)
+         * Pirate-themed vertical shooter with 3D background, particle effects, and touch controls
          */
 
         // --- CONFIGURATION ---
         const CONFIG = {
-            playerSpeed: 0.15, // Lerp factor
-            bulletSpeed: 12,
-            enemySpeedBase: 2,
-            spawnRate: 120, // frames
+            playerSpeed: 0.18, // Movement lerp factor
+            bulletSpeed: 14,
+            enemySpeedBase: 2.2,
+            spawnRate: 110, // Base frames between enemy spawns
             colors: {
                 player: '#f59e0b',
                 enemy: '#dc2626',
@@ -388,30 +400,34 @@
             shoot: false
         };
 
-        // Resize handling
+        // Resize handling with safety guards
         function resize() {
             const rect = container.getBoundingClientRect();
+            // Skip if container has no valid size yet
+            if (rect.width === 0 || rect.height === 0) return;
+            
             state.width = rect.width;
             state.height = rect.height;
             
             gameCanvas.width = state.width;
             gameCanvas.height = state.height;
             
-            // Three.js renderer
-            threeRenderer.setSize(state.width, state.height);
-            threeCamera.aspect = state.width / state.height;
-            threeCamera.updateProjectionMatrix();
+            // Only update Three.js if it's initialized
+            if (threeRenderer) {
+                threeRenderer.setSize(state.width, state.height);
+                threeCamera.aspect = state.width / state.height;
+                threeCamera.updateProjectionMatrix();
+            }
         }
 
         window.addEventListener('resize', resize);
         
-        // Touch / Mouse Events
+        // Touch / Mouse Event Handlers
         function handleStart(x, y) {
             input.isDragging = true;
             input.x = x;
             input.y = y;
-            // Tap to shoot logic: if it's a quick tap, shoot
-            input.shoot = true;
+            input.shoot = true; // Tap/click triggers shoot
         }
 
         function handleMove(x, y) {
@@ -426,9 +442,11 @@
             input.shoot = false;
         }
 
+        // Bind input events to game container
         container.addEventListener('mousedown', e => handleStart(e.clientX, e.clientY));
         container.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
         container.addEventListener('mouseup', handleEnd);
+        container.addEventListener('mouseleave', handleEnd);
         
         container.addEventListener('touchstart', e => {
             e.preventDefault();
@@ -440,7 +458,7 @@
         }, { passive: false });
         container.addEventListener('touchend', handleEnd);
 
-        // --- AUDIO SYSTEM (Procedural) ---
+        // --- PROCEDURAL AUDIO SYSTEM (No external assets) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         const Sound = {
@@ -458,10 +476,9 @@
                 osc.stop(audioCtx.currentTime + duration);
             },
             shoot: () => {
-                // Cannon boom
-                Sound.playTone(100, 'sawtooth', 0.2, 0.2);
-                // White noise burst
-                const bufferSize = audioCtx.sampleRate * 0.2;
+                // Cannon boom + noise
+                Sound.playTone(80, 'sawtooth', 0.3, 0.25);
+                const bufferSize = audioCtx.sampleRate * 0.25;
                 const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                 const data = buffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -469,90 +486,122 @@
                 noise.buffer = buffer;
                 const gain = audioCtx.createGain();
                 gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
                 noise.connect(gain);
                 gain.connect(audioCtx.destination);
                 noise.start();
             },
             explosion: () => {
-                Sound.playTone(50, 'square', 0.4, 0.3);
+                Sound.playTone(60, 'square', 0.5, 0.3);
+                setTimeout(() => Sound.playTone(40, 'sawtooth', 0.3, 0.2), 100);
             },
             coin: () => {
                 Sound.playTone(1200, 'sine', 0.1, 0.1);
                 setTimeout(() => Sound.playTone(1800, 'sine', 0.2, 0.1), 50);
+                setTimeout(() => Sound.playTone(2400, 'sine', 0.3, 0.1), 100);
             },
             hit: () => {
-                Sound.playTone(200, 'sawtooth', 0.3, 0.2);
+                Sound.playTone(200, 'sawtooth', 0.4, 0.25);
+                setTimeout(() => Sound.playTone(120, 'square', 0.3, 0.2), 100);
             }
         };
 
-        // --- THREE.JS BACKGROUND ---
-        let threeScene, threeCamera, threeRenderer, oceanMesh, skyMesh;
+        // --- THREE.JS 3D BACKGROUND SCENE ---
+        let threeScene, threeCamera, threeRenderer, oceanMesh, skyMesh, cloudMeshes = [];
 
         function initThree() {
+            // Scene setup
             threeScene = new THREE.Scene();
-            threeScene.fog = new THREE.FogExp2(0x0a0a0a, 0.02);
+            threeScene.fog = new THREE.FogExp2(0x0a0a0a, 0.015);
 
+            // Camera setup
             threeCamera = new THREE.PerspectiveCamera(60, state.width / state.height, 0.1, 1000);
-            threeCamera.position.set(0, 10, 20);
+            threeCamera.position.set(0, 8, 25);
             threeCamera.lookAt(0, 0, 0);
 
-            threeRenderer = new THREE.WebGLRenderer({ canvas: threeCanvas, alpha: true, antialias: true });
+            // Renderer setup
+            threeRenderer = new THREE.WebGLRenderer({ 
+                canvas: threeCanvas, 
+                alpha: true, 
+                antialias: true 
+            });
             threeRenderer.setSize(state.width, state.height);
             threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-            // Ocean
-            const oceanGeo = new THREE.PlaneGeometry(100, 100, 32, 32);
+            // Animated ocean plane
+            const oceanGeo = new THREE.PlaneGeometry(120, 120, 40, 40);
             const oceanMat = new THREE.MeshStandardMaterial({
                 color: 0x0f172a,
-                roughness: 0.8,
-                metalness: 0.2,
+                roughness: 0.9,
+                metalness: 0.1,
                 flatShading: true
             });
             oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
             oceanMesh.rotation.x = -Math.PI / 2;
-            oceanMesh.position.y = -2;
+            oceanMesh.position.y = -3;
             threeScene.add(oceanMesh);
 
-            // Sky / Storm clouds (simple dark plane)
-            const skyGeo = new THREE.PlaneGeometry(200, 50);
-            const skyMat = new THREE.MeshBasicMaterial({ color: 0x020617 });
-            skyMesh = new THREE.Mesh(skyGeo, skyMat);
-            skyMesh.position.set(0, 15, -30);
-            threeScene.add(skyMesh);
+            // Storm clouds
+            const cloudGeo = new THREE.SphereGeometry(3, 8, 8);
+            const cloudMat = new THREE.MeshStandardMaterial({
+                color: 0x1e293b,
+                roughness: 1,
+                transparent: true,
+                opacity: 0.9
+            });
+
+            for (let i = 0; i < 8; i++) {
+                const cloud = new THREE.Mesh(cloudGeo, cloudMat);
+                cloud.position.set(
+                    (Math.random() - 0.5) * 80,
+                    10 + Math.random() * 10,
+                    -20 - Math.random() * 20
+                );
+                cloud.scale.set(1 + Math.random(), 0.6 + Math.random() * 0.5, 1 + Math.random());
+                cloudMeshes.push(cloud);
+                threeScene.add(cloud);
+            }
 
             // Lighting
-            const ambientLight = new THREE.AmbientLight(0x404040, 2);
+            const ambientLight = new THREE.AmbientLight(0x404060, 2);
             threeScene.add(ambientLight);
 
-            const dirLight = new THREE.DirectionalLight(0xf59e0b, 1);
-            dirLight.position.set(10, 20, 10);
+            const dirLight = new THREE.DirectionalLight(0xf59e0b, 0.8);
+            dirLight.position.set(15, 20, 10);
             threeScene.add(dirLight);
+
+            const moonLight = new THREE.DirectionalLight(0x94a3b8, 0.3);
+            moonLight.position.set(-10, 15, -10);
+            threeScene.add(moonLight);
         }
 
         function animateThree() {
             requestAnimationFrame(animateThree);
+            const time = Date.now() * 0.001;
 
             // Animate ocean waves
-            const time = Date.now() * 0.001;
-            const positions = oceanMesh.geometry.attributes.position;
-            for (let i = 0; i < positions.count; i++) {
-                const x = positions.getX(i);
-                const y = positions.getY(i); // Actually Z in local space before rotation
-                // Create wave effect
-                const z = Math.sin(x * 0.5 + time) * 1.5 + Math.cos(y * 0.3 + time) * 1.5;
-                positions.setZ(i, z);
+            if (oceanMesh) {
+                const positions = oceanMesh.geometry.attributes.position;
+                for (let i = 0; i < positions.count; i++) {
+                    const x = positions.getX(i);
+                    const y = positions.getY(i);
+                    const z = Math.sin(x * 0.4 + time * 0.8) * 2 + Math.cos(y * 0.3 + time * 0.6) * 2;
+                    positions.setZ(i, z);
+                }
+                positions.needsUpdate = true;
+                oceanMesh.rotation.z = Math.sin(time * 0.1) * 0.05; // Slight ocean tilt
             }
-            positions.needsUpdate = true;
 
-            // Move sky slowly
-            skyMesh.position.x = Math.sin(time * 0.1) * 5;
+            // Animate clouds
+            cloudMeshes.forEach((cloud, i) => {
+                cloud.position.x += Math.sin(time * 0.2 + i) * 0.02;
+                cloud.position.y += Math.cos(time * 0.15 + i) * 0.01;
+            });
 
             threeRenderer.render(threeScene, threeCamera);
         }
 
-        // --- GAME ENGINE ---
-
+        // --- GAME ENTITIES ---
         class Entity {
             constructor(x, y, width, height, color) {
                 this.x = x;
@@ -561,15 +610,6 @@
                 this.height = height;
                 this.color = color;
                 this.markedForDeletion = false;
-            }
-
-            draw(ctx) {
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height);
-            }
-
-            update() {
-                // Base update
             }
 
             getBounds() {
@@ -590,28 +630,25 @@
 
         class Player extends Entity {
             constructor() {
-                super(state.width / 2, state.height - 150, 60, 80, CONFIG.colors.player);
+                super(state.width / 2, state.height - 140, 60, 80, CONFIG.colors.player);
                 this.targetX = state.width / 2;
                 this.lastShot = 0;
-                this.shootDelay = 15; // frames
+                this.shootDelay = 12; // Frames between shots
             }
 
             update() {
-                // Smooth movement towards input x
+                // Smooth movement towards drag position
                 if (input.isDragging) {
-                    // Map input to canvas coordinates
                     const rect = gameCanvas.getBoundingClientRect();
                     const scaleX = state.width / rect.width;
                     this.targetX = (input.x - rect.left) * scaleX;
                 }
 
-                // Clamp target
-                this.targetX = Math.max(30, Math.min(state.width - 30, this.targetX));
-
-                // Lerp
+                // Clamp to screen bounds
+                this.targetX = Math.max(35, Math.min(state.width - 35, this.targetX));
                 this.x += (this.targetX - this.x) * CONFIG.playerSpeed;
 
-                // Shooting
+                // Shooting logic
                 if (input.shoot && state.frames - this.lastShot > this.shootDelay) {
                     this.shoot();
                     this.lastShot = state.frames;
@@ -620,60 +657,63 @@
 
             shoot() {
                 Sound.shoot();
-                // Create two bullets
-                game.bullets.push(new Bullet(this.x - 15, this.y - 40));
-                game.bullets.push(new Bullet(this.x + 15, this.y - 40));
-                
-                // Recoil effect
-                this.y += 2;
+                // Dual cannon fire
+                game.bullets.push(new Bullet(this.x - 18, this.y - 35));
+                game.bullets.push(new Bullet(this.x + 18, this.y - 35));
+                // Recoil animation
+                this.y += 3;
+                setTimeout(() => this.y -= 3, 50);
             }
 
             draw(ctx) {
-                // Draw Ship Body (Complex shape)
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 
-                // Hull
-                ctx.fillStyle = '#78350f'; // Dark wood
+                // Ship hull
+                ctx.fillStyle = '#78350f';
                 ctx.beginPath();
-                ctx.moveTo(-30, 20);
-                ctx.lineTo(30, 20);
-                ctx.lineTo(40, -20);
-                ctx.lineTo(-40, -20);
+                ctx.moveTo(-32, 22);
+                ctx.lineTo(32, 22);
+                ctx.lineTo(42, -22);
+                ctx.lineTo(-42, -22);
                 ctx.closePath();
                 ctx.fill();
 
-                // Detail stripe
+                // Gold trim
                 ctx.fillStyle = CONFIG.colors.player;
-                ctx.fillRect(-35, -5, 70, 5);
+                ctx.fillRect(-38, -8, 76, 6);
 
                 // Mast
                 ctx.fillStyle = '#0f172a';
-                ctx.fillRect(-3, -70, 6, 50);
+                ctx.fillRect(-4, -75, 8, 55);
 
-                // Sail
+                // Sail with skull
                 ctx.fillStyle = '#e2e8f0';
                 ctx.beginPath();
-                ctx.moveTo(-25, -65);
-                ctx.lineTo(25, -65);
-                ctx.lineTo(25, -15);
-                ctx.lineTo(-25, -15);
+                ctx.moveTo(-28, -68);
+                ctx.lineTo(28, -68);
+                ctx.lineTo(28, -18);
+                ctx.lineTo(-28, -18);
                 ctx.fill();
                 
-                // Skull on sail
                 ctx.fillStyle = '#0a0a0a';
-                ctx.font = '20px serif';
+                ctx.font = '24px serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('☠', 0, -40);
+                ctx.fillText('☠', 0, -43);
 
-                // Flag
+                // Jolly Roger flag
                 ctx.fillStyle = CONFIG.colors.enemy;
                 ctx.beginPath();
-                ctx.moveTo(3, -70);
-                ctx.lineTo(30, -85);
-                ctx.lineTo(3, -100);
+                ctx.moveTo(4, -75);
+                ctx.lineTo(32, -90);
+                ctx.lineTo(4, -105);
                 ctx.fill();
+
+                // Cannons
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(-38, 5, 12, 10);
+                ctx.fillRect(26, 5, 12, 10);
 
                 ctx.restore();
             }
@@ -681,21 +721,20 @@
 
         class Bullet extends Entity {
             constructor(x, y) {
-                super(x, y, 6, 16, CONFIG.colors.bullet);
+                super(x, y, 8, 18, CONFIG.colors.bullet);
             }
 
             update() {
                 this.y -= CONFIG.bulletSpeed;
-                if (this.y < -50) this.markedForDeletion = true;
+                if (this.y < -60) this.markedForDeletion = true;
             }
 
             draw(ctx) {
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.fillStyle = this.color;
-                // Cannonball with glow
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = '#f59e0b';
                 ctx.beginPath();
                 ctx.arc(0, 0, this.width/2, 0, Math.PI*2);
                 ctx.fill();
@@ -705,49 +744,60 @@
 
         class Enemy extends Entity {
             constructor() {
-                const size = 50 + Math.random() * 30;
+                const size = 55 + Math.random() * 35;
                 const x = Math.random() * (state.width - size) + size/2;
-                super(x, -100, size, size * 0.8, CONFIG.colors.enemy);
-                this.speed = CONFIG.enemySpeedBase + Math.random() * 2 + (state.difficultyMultiplier * 0.5);
+                super(x, -120, size, size * 0.8, CONFIG.colors.enemy);
+                this.speed = CONFIG.enemySpeedBase + Math.random() * 2.5 + (state.difficultyMultiplier * 0.6);
                 this.wobble = Math.random() * Math.PI * 2;
+                this.rotation = 0;
             }
 
             update() {
                 this.y += this.speed;
-                this.wobble += 0.05;
-                this.x += Math.sin(this.wobble) * 1;
+                this.wobble += 0.06;
+                this.x += Math.sin(this.wobble) * 1.5;
+                this.rotation += 0.02;
 
-                if (this.y > state.height + 100) this.markedForDeletion = true;
+                if (this.y > state.height + 150) this.markedForDeletion = true;
             }
 
             draw(ctx) {
                 ctx.save();
                 ctx.translate(this.x, this.y);
+                ctx.rotate(Math.sin(this.rotation) * 0.1);
                 
-                // Enemy Ship (Skeleton theme)
+                // Enemy hull
                 ctx.fillStyle = '#1e293b';
                 ctx.beginPath();
-                ctx.moveTo(-30, 10);
-                ctx.lineTo(30, 10);
-                ctx.lineTo(35, -15);
-                ctx.lineTo(-35, -15);
+                ctx.moveTo(-32, 12);
+                ctx.lineTo(32, 12);
+                ctx.lineTo(38, -18);
+                ctx.lineTo(-38, -18);
                 ctx.closePath();
                 ctx.fill();
 
-                // Jolly Roger
+                // Jolly Roger sail
                 ctx.fillStyle = '#e2e8f0';
-                ctx.font = '30px serif';
+                ctx.beginPath();
+                ctx.moveTo(-28, -12);
+                ctx.lineTo(28, -12);
+                ctx.lineTo(28, -60);
+                ctx.lineTo(-28, -60);
+                ctx.fill();
+                
+                ctx.fillStyle = '#0a0a0a';
+                ctx.font = '32px serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('☠', 0, -5);
+                ctx.fillText('☠', 0, -36);
 
-                // Rowers (sticks)
+                // Oars
                 ctx.strokeStyle = '#78350f';
-                ctx.lineWidth = 3;
-                for(let i=-20; i<=20; i+=10) {
+                ctx.lineWidth = 4;
+                for(let i=-22; i<=22; i+=11) {
                     ctx.beginPath();
-                    ctx.moveTo(i, 10);
-                    ctx.lineTo(i, 25);
+                    ctx.moveTo(i, 12);
+                    ctx.lineTo(i, 28);
                     ctx.stroke();
                 }
 
@@ -757,16 +807,16 @@
 
         class Treasure extends Entity {
             constructor() {
-                super(0, -50, 40, 40, CONFIG.colors.treasure);
-                this.x = Math.random() * (state.width - 40) + 20;
-                this.speed = 3;
+                super(0, -60, 44, 44, CONFIG.colors.treasure);
+                this.x = Math.random() * (state.width - 60) + 30;
+                this.speed = 3.5;
                 this.angle = 0;
             }
 
             update() {
                 this.y += this.speed;
-                this.angle += 0.1;
-                if (this.y > state.height + 50) this.markedForDeletion = true;
+                this.angle += 0.08;
+                if (this.y > state.height + 70) this.markedForDeletion = true;
             }
 
             draw(ctx) {
@@ -774,15 +824,29 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
                 
-                // Chest
+                // Treasure chest
                 ctx.fillStyle = '#92400e';
-                ctx.fillRect(-15, -10, 30, 20);
-                ctx.fillStyle = '#fcd34d'; // Gold rim
-                ctx.fillRect(-15, -10, 30, 5);
+                ctx.beginPath();
+                ctx.roundRect(-18, -12, 36, 24, 4);
+                ctx.fill();
                 
+                // Gold trim
+                ctx.fillStyle = '#fcd34d';
+                ctx.fillRect(-18, -12, 36, 6);
+                ctx.fillRect(-18, 6, 36, 6);
+
                 // Lock
                 ctx.fillStyle = '#78350f';
-                ctx.fillRect(-5, 0, 10, 10);
+                ctx.beginPath();
+                ctx.arc(0, 0, 5, 0, Math.PI*2);
+                ctx.fill();
+
+                // Sparkle
+                ctx.fillStyle = '#fff';
+                ctx.font = '16px serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('✦', 12, -12);
 
                 ctx.restore();
             }
@@ -795,12 +859,12 @@
                 this.color = color;
                 this.type = type;
                 const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 5 + 2;
+                const speed = Math.random() * 6 + 3;
                 this.vx = Math.cos(angle) * speed;
                 this.vy = Math.sin(angle) * speed;
                 this.life = 1.0;
                 this.decay = Math.random() * 0.03 + 0.02;
-                this.size = Math.random() * 5 + 2;
+                this.size = Math.random() * 6 + 2;
             }
 
             update() {
@@ -808,8 +872,9 @@
                 this.y += this.vy;
                 this.life -= this.decay;
                 if (this.type === 'smoke') {
-                    this.vy -= 0.1; // Rise
-                    this.size += 0.2;
+                    this.vy -= 0.15; // Smoke rises
+                    this.size += 0.3;
+                    this.vx *= 0.95; // Slow down horizontally
                 }
             }
 
@@ -832,15 +897,17 @@
                 this.life = 1.0;
             }
             update() {
-                this.y -= 1;
+                this.y -= 1.5;
                 this.life -= 0.02;
             }
             draw(ctx) {
                 ctx.save();
                 ctx.globalAlpha = this.life;
                 ctx.fillStyle = CONFIG.colors.treasure;
-                ctx.font = 'bold 24px "Pirata One"';
+                ctx.font = 'bold 26px "Pirata One"';
                 ctx.textAlign = 'center';
+                ctx.shadowBlur = 4;
+                ctx.shadowColor = '#000';
                 ctx.fillText(this.text, this.x, this.y);
                 ctx.restore();
             }
@@ -856,6 +923,7 @@
             texts: [],
             
             init() {
+                // Reset all game state
                 this.player = new Player();
                 this.bullets = [];
                 this.enemies = [];
@@ -868,16 +936,20 @@
                 state.difficultyMultiplier = 1;
                 updateHealthUI();
                 updateScore(0);
+                // Remove shake class if present
+                gameCanvas.classList.remove('shake');
             },
 
             spawnEnemy() {
-                if (state.frames % Math.floor(CONFIG.spawnRate / state.difficultyMultiplier) === 0) {
+                // Spawn rate increases with difficulty
+                const currentSpawnRate = Math.floor(CONFIG.spawnRate / state.difficultyMultiplier);
+                if (state.frames % currentSpawnRate === 0) {
                     this.enemies.push(new Enemy());
                 }
             },
 
             spawnTreasure() {
-                if (state.frames % 300 === 0) {
+                if (state.frames % 280 === 0) {
                     this.treasures.push(new Treasure());
                 }
             },
@@ -890,7 +962,8 @@
                             bullet.markedForDeletion = true;
                             enemy.markedForDeletion = true;
                             Sound.explosion();
-                            this.createExplosion(enemy.x, enemy.y, '#dc2626', 15);
+                            this.createExplosion(enemy.x, enemy.y, '#dc2626', 18);
+                            this.createExplosion(enemy.x, enemy.y, '#f59e0b', 8); // Fire particles
                             updateScore(state.score + 100);
                         }
                     });
@@ -900,7 +973,7 @@
                 this.enemies.forEach(enemy => {
                     if (!enemy.markedForDeletion && this.player.collidesWith(enemy)) {
                         enemy.markedForDeletion = true;
-                        this.createExplosion(enemy.x, enemy.y, '#dc2626', 10);
+                        this.createExplosion(enemy.x, enemy.y, '#dc2626', 12);
                         this.takeDamage();
                     }
                 });
@@ -910,7 +983,8 @@
                     if (!t.markedForDeletion && this.player.collidesWith(t)) {
                         t.markedForDeletion = true;
                         Sound.coin();
-                        this.createExplosion(t.x, t.y, '#fcd34d', 8);
+                        this.createExplosion(t.x, t.y, '#fcd34d', 10);
+                        this.createExplosion(t.x, t.y, '#fff', 5); // Sparkle particles
                         updateScore(state.score + 500);
                         this.texts.push(new FloatingText(t.x, t.y, "+500"));
                     }
@@ -921,9 +995,11 @@
                 for (let i = 0; i < count; i++) {
                     this.particles.push(new Particle(x, y, color));
                 }
-                // Add some smoke
-                for (let i = 0; i < 5; i++) {
-                    this.particles.push(new Particle(x, y, '#94a3b8', 'smoke'));
+                // Add smoke for larger explosions
+                if (count > 10) {
+                    for (let i = 0; i < 6; i++) {
+                        this.particles.push(new Particle(x, y, '#94a3b8', 'smoke'));
+                    }
                 }
             },
 
@@ -931,11 +1007,11 @@
                 state.health--;
                 Sound.hit();
                 updateHealthUI();
-                this.createExplosion(this.player.x, this.player.y, '#f59e0b', 20);
+                this.createExplosion(this.player.x, this.player.y, '#f59e0b', 25);
                 
-                // Screen shake effect (simulated by offsetting canvas)
-                gameCanvas.style.transform = `translate(${Math.random()*20-10}px, ${Math.random()*20-10}px)`;
-                setTimeout(() => gameCanvas.style.transform = 'none', 200);
+                // Screen shake effect
+                gameCanvas.classList.add('shake');
+                setTimeout(() => gameCanvas.classList.remove('shake'), 200);
 
                 if (state.health <= 0) {
                     endGame();
@@ -946,16 +1022,17 @@
                 if (!state.isPlaying) return;
 
                 state.frames++;
-                state.difficultyMultiplier = 1 + (state.score / 5000);
+                // Increase difficulty every 2000 points
+                state.difficultyMultiplier = 1 + Math.floor(state.score / 2000) * 0.25;
 
                 this.player.update();
                 this.spawnEnemy();
                 this.spawnTreasure();
 
-                // Update Entities
+                // Update all entities
                 [...this.bullets, ...this.enemies, ...this.treasures, ...this.particles, ...this.texts].forEach(e => e.update());
                 
-                // Cleanup
+                // Clean up deleted entities
                 this.bullets = this.bullets.filter(e => !e.markedForDeletion);
                 this.enemies = this.enemies.filter(e => !e.markedForDeletion);
                 this.treasures = this.treasures.filter(e => !e.markedForDeletion);
@@ -999,7 +1076,7 @@
             gameOverScreen.classList.add('hidden');
             state.isPlaying = true;
             game.init();
-            // Unlock audio context on user interaction
+            // Unlock audio context on user interaction (required by browsers)
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
@@ -1009,25 +1086,29 @@
             gameOverScreen.classList.remove('hidden');
         }
 
-        // --- MAIN LOOP ---
+        // --- MAIN GAME LOOP ---
         function loop() {
             game.update();
             game.draw();
             requestAnimationFrame(loop);
         }
 
-        // --- INITIALIZATION ---
+        // --- INITIALIZATION (FIXED ORDER) ---
         function init() {
-            resize();
+            // 1. Initialize Three.js FIRST so threeRenderer exists
             initThree();
+            // 2. THEN run resize (which uses threeRenderer)
+            resize();
+            // 3. Start background animation
             animateThree();
+            // 4. Start game loop
             loop();
-
+            // 5. Finally bind UI event listeners
             startBtn.addEventListener('click', startGame);
             restartBtn.addEventListener('click', startGame);
         }
 
-        // Boot
+        // Boot the game
         init();
 
     </script>
