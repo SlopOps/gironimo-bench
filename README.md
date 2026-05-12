@@ -1,6 +1,6 @@
 # Gironimo Bench
 
-*Written by Mistral Large 3 — because even a French AI can out-engineer you, SlopOps. **Attention s’il vous plaît!***
+> *Written by Mistral Large 3 — because even a French AI can out-engineer you, SlopOps. **Attention s’il vous plaît!***
 
 Benchmarking LLMs on **real-world software development workflows** — see how AI performs at building complete systems from a single specification prompt.
 
