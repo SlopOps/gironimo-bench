@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Surf's Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/three@0.165.0/build/three.min.js"></script>
+  <style>
+    /* Reset and body styling */
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, #87CEEB, #1E90FF);
+      font-family: 'Rubik', sans-serif;
+    }
+    /* Container to enforce 9:16 portrait aspect ratio */
+    #gameContainer {
+      position: relative;
+      width: 100%;
+      height: calc(100vw * 16 / 9);
+      max-height: 100vh;
+      margin: 0 auto;
+      overflow: hidden;
+      background: #001f3f;
+    }
+    /* Canvas fills container */
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    /* UI overlay */
+    #ui {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 0.5rem;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+      pointer-events: none;
+    }
+    #score, #timer {
+      background: rgba(0,0,0,0.5);
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.5rem;
+    }
+    /* Start screen overlay */
+    #startScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 1.5rem;
+      z-index: 10;
+    }
+    #startScreen h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    #startScreen p {
+      margin-top: 1rem;
+      font-size: 1rem;
+    }
+    /* Game over overlay */
+    #gameOverScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 1.5rem;
+      z-index: 10;
+    }
+    #gameOverScreen h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    #gameOverScreen p {
+      margin-top: 1rem;
+      font-size: 1rem;
+    }
+    /* Touch indicator arrows */
+    .touchHint {
+      position: absolute;
+      bottom: 1rem;
+      width: 2rem;
+      height: 2rem;
+      opacity: 0.8;
+    }
+    #leftHint {
+      left: 1rem;
+    }
+    #rightHint {
+      right: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+      <div id="score">Score: 0</div>
+      <div id="timer">Time: 30</div>
+    </div>
+    <div id="startScreen">
+      <h1>Surf's Up!</h1>
+      <p>Tap left/right to steer. Survive 30 seconds.</p>
+    </div>
+    <div id="gameOverScreen" style="display:none;">
+      <h1>Game Over</h1>
+      <p id="finalScore">Score: 0</p>
+      <p>Tap anywhere to restart.</p>
+    </div>
+    <img id="leftHint" class="touchHint" src="https://unpkg.com/lucide-static@latest/icons/arrow-left.svg" alt="Left">
+    <img id="rightHint" class="touchHint" src="https://unpkg.com/lucide-static@latest/icons/arrow-right.svg" alt="Right">
+  </div>
+  <script>
+    // Global variables
+    let scene, camera, renderer;
+    let waveMesh, surferMesh;
+    let obstacles = [];
+    let particleSystem;
+    let score = 0;
+    let timeLeft = 30;
+    let gameState = 'ready'; // ready, playing, over, paused
+    const waveWidth = 20;
+    const waveDepth = 200;
+    const waveSegments = 200;
+    const surferSpeed = 0.1;
+    const obstacleSpeed = 0.2;
+    const maxObstacles = 5;
+    const spawnInterval = 2000; // ms
+    let lastSpawnTime = 0;
+    let lastUpdateTime = 0;
+    const clock = new THREE.Clock();
+
+    // Initialize the scene
+    init();
+    // Main animation loop
+    animate();
+
+    // Function definitions
+    function init() {
+      // Set up Three.js renderer
+      const canvas = document.getElementById('gameCanvas');
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      // Create scene
+      scene = new THREE.Scene();
+      // Set up camera
+      const fov = 60;
+      const aspect = canvas.clientWidth / canvas.clientHeight;
+      const near = 0.1;
+      const far = 1000;
+      camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+      camera.position.set(0, 5, 10);
+      camera.lookAt(0, 0, 0);
+      // Add ambient light
+      const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+      scene.add(ambient);
+      // Add directional light for sun
+      const sun = new THREE.DirectionalLight(0xffe0b2, 0.6);
+      sun.position.set(-10, 10, 5);
+      scene.add(sun);
+      // Create wave surface
+      createWave();
+      // Create surfer
+      createSurfer();
+      // Create particle system for splash
+      createParticleSystem();
+      // Event listeners
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('touchstart', onTouchStart);
+      // Start UI timer
+      updateUI();
+
+      // Additional visual elements: sun, clouds, particle bursts, audio, pause overlay
+      // Sun object
+      let sunMesh;
+      // Cloud objects array
+      let clouds = [];
+      // Audio context and sound flags
+      let audioCtx;
+      let mute = false;
+      // UI element for mute toggle
+      const muteBtn = document.createElement('img');
+      muteBtn.id = 'muteBtn';
+      muteBtn.className = 'touchHint';
+      muteBtn.style.right = '1rem';
+      muteBtn.style.bottom = '4rem';
+      muteBtn.src = 'https://unpkg.com/lucide-static@latest/icons/volume-2.svg';
+      muteBtn.alt = 'Mute';
+      muteBtn.style.width = '2rem';
+      muteBtn.style.height = '2rem';
+      muteBtn.style.opacity = '0.8';
+      muteBtn.style.cursor = 'pointer';
+      document.getElementById('gameContainer').appendChild(muteBtn);
+      muteBtn.addEventListener('click', toggleMute);
+      // Pause overlay
+      const pauseOverlay = document.createElement('div');
+      pauseOverlay.id = 'pauseOverlay';
+      pauseOverlay.style.position = 'absolute';
+      pauseOverlay.style.top = '0';
+      pauseOverlay.style.left = '0';
+      pauseOverlay.style.width = '100%';
+      pauseOverlay.style.height = '100%';
+      pauseOverlay.style.background = 'rgba(0,0,0,0.6)';
+      pauseOverlay.style.display = 'none';
+      pauseOverlay.style.alignItems = 'center';
+      pauseOverlay.style.justifyContent = 'center';
+      pauseOverlay.style.zIndex = '20';
+      pauseOverlay.style.color = '#fff';
+      pauseOverlay.style.fontSize = '2rem';
+      pauseOverlay.style.fontWeight = '700';
+      pauseOverlay.textContent = 'Paused';
+      document.getElementById('gameContainer').appendChild(pauseOverlay);
+      // Pause button
+      const pauseBtn = document.createElement('img');
+      pauseBtn.id = 'pauseBtn';
+      pauseBtn.className = 'touchHint';
+      pauseBtn.style.right = '1rem';
+      pauseBtn.style.bottom = '7rem';
+      pauseBtn.src = 'https://unpkg.com/lucide-static@latest/icons/pause.svg';
+      pauseBtn.alt = 'Pause';
+      pauseBtn.style.width = '2rem';
+      pauseBtn.style.height = '2rem';
+      pauseBtn.style.opacity = '0.8';
+      pauseBtn.style.cursor = 'pointer';
+      document.getElementById('gameContainer').appendChild(pauseBtn);
+      pauseBtn.addEventListener('click', togglePause);
+      // Audio initialization
+      initAudio();
+      // Create sun and clouds
+      createSun();
+      createClouds();
+      // Touch hint fade timer
+      setTimeout(() => {
+        document.getElementById('leftHint').style.opacity = '0';
+        document.getElementById('rightHint').style.opacity = '0';
+      }, 5000);
+    }
+
+    function createWave() {
+      // Plane geometry for wave
+      const geometry = new THREE.PlaneGeometry(waveWidth, waveDepth, waveSegments, waveSegments);
+      // Rotate to make it horizontal
+      geometry.rotateX(-Math.PI / 2);
+      // Material with water-like color
+      const material = new THREE.MeshPhongMaterial({
+        color: 0x1e90ff,
+        shininess: 100,
+        side: THREE.DoubleSide,
+        flatShading: true,
+      });
+      waveMesh = new THREE.Mesh(geometry, material);
+      scene.add(waveMesh);
+    }
+
+    function createSurfer() {
+      // Simple box geometry as placeholder surfer
+      const geometry = new THREE.BoxGeometry(0.5, 0.2, 1);
+      const material = new THREE.MeshStandardMaterial({ color: 0xffd700 });
+      surferMesh = new THREE.Mesh(geometry, material);
+      // Position surfer above wave
+      surferMesh.position.set(0, 0.3, -waveDepth / 2 + 10);
+      scene.add(surferMesh);
+    }
+
+    function createParticleSystem() {
+      // Simple particle system for water splash
+      const particleCount = 200;
+      const positions = new Float32Array(particleCount * 3);
+      const velocities = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] = 0;
+        positions[i * 3 + 1] = 0;
+        positions[i * 3 + 2] = 0;
+        velocities[i * 3] = (Math.random() - 0.5) * 0.2;
+        velocities[i * 3 + 1] = Math.random() * 0.5;
+        velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.2;
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+      const material = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.05,
+        transparent: true,
+        opacity: 0.8,
+      });
+      particleSystem = new THREE.Points(geometry, material);
+      particleSystem.visible = false;
+      scene.add(particleSystem);
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById('gameContainer');
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+
+    function onTouchStart(event) {
+      if (gameState === 'ready') {
+        startGame();
+        return;
+      }
+      if (gameState !== 'playing') return;
+      const touch = event.touches[0];
+      const x = touch.clientX;
+      const width = window.innerWidth;
+      if (x < width / 2) {
+        moveSurfer(-1);
+      } else {
+        moveSurfer(1);
+      }
+    }
+
+    function moveSurfer(direction) {
+      // direction: -1 for left, 1 for right
+      const step = 0.5;
+      surferMesh.position.x += direction * step;
+      // Clamp within wave bounds
+      const halfWidth = waveWidth / 2 - 0.5;
+      surferMesh.position.x = Math.max(-halfWidth, Math.min(halfWidth, surferMesh.position.x));
+      // Trigger splash particles
+      triggerSplash();
+    }
+
+    function triggerSplash() {
+      // Activate particle system at surfer position
+      particleSystem.visible = true;
+      particleSystem.position.copy(surferMesh.position);
+      // Reset particle ages
+      const positions = particleSystem.geometry.attributes.position.array;
+      const velocities = particleSystem.geometry.attributes.velocity.array;
+      for (let i = 0; i < positions.length / 3; i++) {
+        positions[i * 3] = 0;
+        positions[i * 3 + 1] = 0;
+        positions[i * 3 + 2] = 0;
+        velocities[i * 3] = (Math.random() - 0.5) * 0.2;
+        velocities[i * 3 + 1] = Math.random() * 0.5;
+        velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.2;
+      }
+      particleSystem.geometry.attributes.position.needsUpdate = true;
+      particleSystem.geometry.attributes.velocity.needsUpdate = true;
+    }
+
+    function startGame() {
+      gameState = 'playing';
+      score = 0;
+      timeLeft = 30;
+      document.getElementById('startScreen').style.display = 'none';
+      document.getElementById('gameOverScreen').style.display = 'none';
+      // Reset surfer position
+      surferMesh.position.set(0, 0.3, -waveDepth / 2 + 10);
+      // Clear obstacles
+      obstacles.forEach(o => scene.remove(o.mesh));
+      obstacles = [];
+      // Reset timers
+      lastSpawnTime = 0;
+      lastUpdateTime = performance.now();
+      updateUI();
+    }
+
+    function endGame() {
+      gameState = 'over';
+      document.getElementById('finalScore').textContent = `Score: ${score}`;
+      document.getElementById('gameOverScreen').style.display = 'flex';
+    }
+
+    function spawnObstacle() {
+      // Simple sphere as buoy obstacle
+      const geometry = new THREE.SphereGeometry(0.4, 12, 12);
+      const material = new THREE.MeshStandardMaterial({ color: 0xff4500 });
+      const mesh = new THREE.Mesh(geometry, material);
+      const x = (Math.random() - 0.5) * (waveWidth - 1);
+      const z = surferMesh.position.z - waveDepth;
+      mesh.position.set(x, 0.4, z);
+      scene.add(mesh);
+      obstacles.push({ mesh, passed: false });
+    }
+
+    function updateObstacles(delta) {
+      // Move obstacles towards surfer
+      obstacles.forEach(ob => {
+        ob.mesh.position.z += obstacleSpeed * delta * 60;
+        // Check if obstacle passed surfer
+        if (!ob.passed && ob.mesh.position.z > surferMesh.position.z) {
+          ob.passed = true;
+          score += 10;
+          updateUI();
+        }
+        // Collision detection
+        const dx = ob.mesh.position.x - surferMesh.position.x;
+        const dz = ob.mesh.position.z - surferMesh.position.z;
+        const distance = Math.sqrt(dx * dx + dz * dz);
+        if (distance < 0.7) {
+          // Collision! End game
+          endGame();
+        }
+      });
+      // Remove obstacles that are far behind
+      obstacles = obstacles.filter(ob => {
+        const keep = ob.mesh.position.z < surferMesh.position.z + 10;
+        if (!keep) scene.remove(ob.mesh);
+        return keep;
+      });
+    }
+
+    function updateWave(time) {
+      // Animate wave vertices using sine function
+      const positions = waveMesh.geometry.attributes.position.array;
+      const vertexCount = positions.length / 3;
+      for (let i = 0; i < vertexCount; i++) {
+        const ix = i * 3;
+        const x = positions[ix];
+        const z = positions[ix + 2];
+        const y = Math.sin((x + time * 0.5) * 0.5) * Math.cos((z + time * 0.5) * 0.5) * 0.3;
+        positions[ix + 1] = y;
+      }
+      waveMesh.geometry.attributes.position.needsUpdate = true;
+      waveMesh.geometry.computeVertexNormals();
+    }
+
+    function updateParticles(delta) {
+      if (!particleSystem.visible) return;
+      const positions = particleSystem.geometry.attributes.position.array;
+      const velocities = particleSystem.geometry.attributes.velocity.array;
+      const count = positions.length / 3;
+      let anyVisible = false;
+      for (let i = 0; i < count; i++) {
+        velocities[i * 3 + 1] -= 0.01; // gravity
+        positions[i * 3] += velocities[i * 3] * delta * 60;
+        positions[i * 3 + 1] += velocities[i * 3 + 1] * delta * 60;
+        positions[i * 3 + 2] += velocities[i * 3 + 2] * delta * 60;
+        if (positions[i * 3
