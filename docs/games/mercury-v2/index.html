@@ -6,375 +6,342 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <!-- Three.js CDN (core only) -->
   <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-  <!-- Custom CSS: mobile‑first, portrait 9:16 aspect ratio -->
-  <style>
-    /* Reset and base styles */
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html, body { height:100%; overflow:hidden; font-family:'Arial',sans-serif; background:#0a0f2c; }
 
-    /* Container forces 9:16 portrait aspect ratio */
-    #game-container {
+  <!-- --------------------------------------------------------------
+       STYLE SECTION – mobile‑first, portrait 9:16 aspect ratio
+       -------------------------------------------------------------- -->
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;overflow:hidden;font-family:Arial,Helvetica,sans-serif;background:#0a0f2c}
+    #game-container{
       position:relative;
       width:100vw;
-      height:calc(100vw * 16 / 9);
+      height:calc(100vw*16/9);
       max-height:100vh;
       margin:0 auto;
-      background:linear-gradient(to bottom, #001e4d, #003e8a);
-      overflow:hidden;
+      background:linear-gradient(to bottom,#001e4d,#003e8a);
+      overflow:hidden
     }
-
-    /* Full‑screen canvas for Three.js */
-    #three-canvas {
-      position:absolute;
-      top:0; left:0;
-      width:100%; height:100%;
-      display:block;
-    }
-
-    /* UI overlay */
-    #ui {
-      position:absolute;
-      top:0; left:0;
-      width:100%; height:100%;
+    #three-canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block}
+    #ui{
+      position:absolute;top:0;left:0;width:100%;height:100%;
       pointer-events:none;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      padding:0.5rem;
-      color:#fff;
-      text-shadow:0 0 5px #000;
+      display:flex;flex-direction:column;justify-content:space-between;
+      padding:0.5rem;color:#fff;text-shadow:0 0 5px #000
     }
-
-    #score {
-      font-size:1.2rem;
-      font-weight:bold;
+    #score{font-size:1.2rem;font-weight:bold}
+    #message{
+      text-align:center;font-size:1.5rem;font-weight:bold;
+      background:rgba(0,0,0,0.5);padding:0.5rem 1rem;border-radius:0.5rem;margin:auto
     }
-
-    #message {
-      text-align:center;
-      font-size:1.5rem;
-      font-weight:bold;
-      background:rgba(0,0,0,0.5);
-      padding:0.5rem 1rem;
-      border-radius:0.5rem;
-      margin:auto;
+    #tap-indicator{
+      position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);
+      width:3rem;height:3rem;border-radius:50%;
+      background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);
+      animation:pulse 1.5s infinite;pointer-events:none
     }
-
-    /* Tap indicator (visual cue) */
-    #tap-indicator {
-      position:absolute;
-      bottom:1rem; left:50%;
-      transform:translateX(-50%);
-      width:3rem; height:3rem;
-      border-radius:50%;
-      background:rgba(255,255,255,0.2);
-      border:2px solid rgba(255,255,255,0.5);
-      animation:pulse 1.5s infinite;
-      pointer-events:none;
+    @keyframes pulse{
+      0%{transform:translateX(-50%) scale(1);opacity:0.7}
+      50%{transform:translateX(-50%) scale(1.3);opacity:0.3}
+      100%{transform:translateX(-50%) scale(1);opacity:0.7}
     }
-
-    @keyframes pulse {
-      0% { transform:translateX(-50%) scale(1); opacity:0.7; }
-      50% { transform:translateX(-50%) scale(1.3); opacity:0.3; }
-      100% { transform:translateX(-50%) scale(1); opacity:0.7; }
+    .hidden{display:none}
+    /* Hint overlay – shows left/right arrows */
+    #hint{
+      position:absolute;bottom:4rem;left:50%;transform:translateX(-50%);
+      display:flex;gap:1rem;align-items:center;color:#fff;
+      font-size:0.9rem;text-shadow:0 0 4px #000;
     }
-
-    /* Hide UI elements when not needed */
-    .hidden { display:none; }
+    #hint img{width:1.2rem;height:1.2rem}
   </style>
 </head>
 <body>
   <div id="game-container">
     <canvas id="three-canvas"></canvas>
+
+    <!-- UI overlay -->
     <div id="ui">
       <div id="score">Score: 0</div>
       <div id="message" class="hidden"></div>
     </div>
+
+    <!-- Tap indicator (visible in MENU / PLAYING) -->
     <div id="tap-indicator" class="hidden"></div>
+
+    <!-- Horizontal‑movement hint -->
+    <div id="hint" class="hidden">
+      <img src="https://unpkg.com/lucide-static@latest/icons/arrow-left.svg" alt="←">
+      <span>Swipe left/right to steer</span>
+      <img src="https://unpkg.com/lucide-static@latest/icons/arrow-right.svg" alt="→">
+    </div>
   </div>
 
-  <!-- Main JavaScript: 3D scene, particle system, game logic -->
+  <!-- --------------------------------------------------------------
+       MAIN JAVASCRIPT – 3D scene, particle system, game logic
+       -------------------------------------------------------------- -->
   <script>
-    /* --------------------------------------------------------------
-       GLOBAL CONSTANTS & STATE
-       -------------------------------------------------------------- */
+    // ------------------------------------------------------------------
+    // GLOBAL STATE
+    // ------------------------------------------------------------------
     const STATE = {
-      // Game phases
-      PHASE: { MENU:0, PLAYING:1, GAMEOVER:2 },
-      phase: 0, // start at MENU
-      score: 0,
-      // Timing
-      lastTime: 0,
-      // Submarine physics
-      subY: 0,
-      subVelocity: 0,
-      gravity: -0.0015,
-      thrust: 0.004,
-      // Obstacle management
-      obstacles: [],
-      obstacleSpawnInterval: 2000, // ms
-      lastObstacleTime: 0,
-      // Bubble particle system
-      bubbleParticles: [],
-      // Three.js essentials
-      scene: null,
-      camera: null,
-      renderer: null,
-      submarine: null,
-      // UI elements
-      scoreEl: document.getElementById('score'),
-      messageEl: document.getElementById('message'),
-      tapIndicator: document.getElementById('tap-indicator')
+      PHASE:{MENU:0,PLAYING:1,GAMEOVER:2},
+      phase:0,
+      score:0,
+      lastTime:0,
+      // Submarine physics (meters per second)
+      subY:0, subX:0,
+      subVelocity:0,
+      gravity:-0.6,
+      thrust:1.2,
+      // Horizontal drag handling
+      dragging:false,
+      dragStartX:0,
+      dragStartSubX:0,
+      // Obstacles
+      obstacles:[],
+      obstacleSpawnInterval:1500,
+      lastObstacleTime:0,
+      // Bubbles
+      bubbleParticles:[],
+      // Three.js
+      scene:null,camera:null,renderer:null,submarine:null,
+      // UI
+      scoreEl:document.getElementById('score'),
+      messageEl:document.getElementById('message'),
+      tapIndicator:document.getElementById('tap-indicator'),
+      hintEl:document.getElementById('hint')
     };
 
-    /* --------------------------------------------------------------
-       INITIALIZATION: SETUP THREE.JS SCENE
-       -------------------------------------------------------------- */
-    function initThree() {
-      const canvas = document.getElementById('three-canvas');
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-
-      // Renderer
-      STATE.renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-      STATE.renderer.setSize(width, height);
+    // ------------------------------------------------------------------
+    // THREE.JS INITIALISATION
+    // ------------------------------------------------------------------
+    function initThree(){
+      const canvas=document.getElementById('three-canvas');
+      const w=canvas.clientWidth,h=canvas.clientHeight;
+      STATE.renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+      STATE.renderer.setSize(w,h);
       STATE.renderer.setPixelRatio(window.devicePixelRatio);
-
-      // Scene
-      STATE.scene = new THREE.Scene();
-
-      // Camera: orthographic for 2D‑like feel, but we keep perspective for depth
-      const fov = 60;
-      const aspect = width / height;
-      const near = 0.1;
-      const far = 1000;
-      STATE.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-      STATE.camera.position.set(0, 0, 5);
+      STATE.scene=new THREE.Scene();
+      const fov=60,aspect=w/h,near=0.1,far=1000;
+      STATE.camera=new THREE.PerspectiveCamera(fov,aspect,near,far);
+      STATE.camera.position.set(0,0,5);
       STATE.camera.lookAt(0,0,0);
-
-      // Ambient light (soft underwater glow)
-      const ambient = new THREE.AmbientLight(0x4080ff, 0.6);
-      STATE.scene.add(ambient);
-
-      // Directional light (sunlight from above)
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.4);
-      dirLight.position.set(0, 5, 5);
-      STATE.scene.add(dirLight);
-
-      // Create submarine mesh (simple capsule shape)
-      const subGeom = new THREE.CapsuleGeometry(0.15, 0.5, 4, 8);
-      const subMat = new THREE.MeshStandardMaterial({ color:0xffd700, metalness:0.3, roughness:0.4 });
-      STATE.submarine = new THREE.Mesh(subGeom, subMat);
-      STATE.submarine.position.set(0, -0.8, 0);
+      STATE.scene.add(new THREE.AmbientLight(0x4080ff,0.6));
+      const dir=new THREE.DirectionalLight(0xffffff,0.4);
+      dir.position.set(0,5,5);
+      STATE.scene.add(dir);
+      const subGeom=new THREE.CapsuleGeometry(0.15,0.5,4,8);
+      const subMat=new THREE.MeshStandardMaterial({color:0xffd700,metalness:0.3,roughness:0.4});
+      STATE.submarine=new THREE.Mesh(subGeom,subMat);
+      STATE.submarine.position.set(0,-0.8,0);
       STATE.scene.add(STATE.submarine);
-
-      // Ground plane (sea floor) – just a visual reference
-      const floorGeom = new THREE.PlaneGeometry(10, 10);
-      const floorMat = new THREE.MeshStandardMaterial({ color:0x001e4d, side:THREE.DoubleSide });
-      const floor = new THREE.Mesh(floorGeom, floorMat);
-      floor.rotation.x = -Math.PI/2;
-      floor.position.y = -1.5;
+      const floorGeom=new THREE.PlaneGeometry(10,10);
+      const floorMat=new THREE.MeshStandardMaterial({color:0x001e4d,side:THREE.DoubleSide});
+      const floor=new THREE.Mesh(floorGeom,floorMat);
+      floor.rotation.x=-Math.PI/2;
+      floor.position.y=-1.5;
       STATE.scene.add(floor);
     }
 
-    /* --------------------------------------------------------------
-       PARTICLE SYSTEM: BUBBLES EMITTED FROM SUBMARINE
-       -------------------------------------------------------------- */
-    function createBubble() {
-      const bubbleGeom = new THREE.SphereGeometry(0.02, 6, 6);
-      const bubbleMat = new THREE.MeshStandardMaterial({
-        color:0xffffff,
-        transparent:true,
-        opacity:0.6,
-        emissive:0x88ccff,
-        emissiveIntensity:0.5
+    // ------------------------------------------------------------------
+    // BUBBLE PARTICLE SYSTEM
+    // ------------------------------------------------------------------
+    function createBubble(){
+      const geom=new THREE.SphereGeometry(0.02,6,6);
+      const mat=new THREE.MeshStandardMaterial({
+        color:0xffffff,transparent:true,opacity:0.6,
+        emissive:0x88ccff,emissiveIntensity:0.5
       });
-      const bubble = new THREE.Mesh(bubbleGeom, bubbleMat);
+      const bubble=new THREE.Mesh(geom,mat);
       bubble.position.copy(STATE.submarine.position);
-      bubble.position.y -= 0.2; // start just below submarine
+      bubble.position.y-=0.2;
       STATE.scene.add(bubble);
-      STATE.bubbleParticles.push({ mesh:bubble, life:2000, birth:performance.now() });
+      STATE.bubbleParticles.push({mesh:bubble,life:2000,birth:performance.now()});
     }
-
-    function updateBubbles(delta) {
-      const now = performance.now();
-      for (let i = STATE.bubbleParticles.length - 1; i >= 0; i--) {
-        const p = STATE.bubbleParticles[i];
-        const age = now - p.birth;
-        // Move upward and drift slightly
-        p.mesh.position.y += 0.0005 * delta;
-        p.mesh.position.x += (Math.random()-0.5)*0.0002*delta;
-        // Fade out over life
-        const remaining = Math.max(0, 1 - age / p.life);
-        p.mesh.material.opacity = 0.6 * remaining;
-        if (age > p.life) {
-          // Remove from scene and array
+    function updateBubbles(deltaSec){
+      const now=performance.now();
+      for(let i=STATE.bubbleParticles.length-1;i>=0;i--){
+        const p=STATE.bubbleParticles[i];
+        const age=now-p.birth;
+        p.mesh.position.y+=0.3*deltaSec;
+        p.mesh.position.x+=(Math.random()-0.5)*0.1*deltaSec;
+        const remaining=Math.max(0,1-age/p.life);
+        p.mesh.material.opacity=0.6*remaining;
+        if(age>p.life){
           STATE.scene.remove(p.mesh);
           STATE.bubbleParticles.splice(i,1);
         }
       }
     }
 
-    /* --------------------------------------------------------------
-       OBSTACLE LOGIC: MINES THAT MOVE DOWNWARD
-       -------------------------------------------------------------- */
-    function spawnObstacle() {
-      const radius = 0.12 + Math.random()*0.08;
-      const mineGeom = new THREE.SphereGeometry(radius, 12, 12);
-      const mineMat = new THREE.MeshStandardMaterial({ color:0x8b0000, metalness:0.6, roughness:0.3 });
-      const mine = new THREE.Mesh(mineGeom, mineMat);
-      const xPos = (Math.random()-0.5) * 1.5; // spread horizontally
-      mine.position.set(xPos, 1.2, 0);
+    // ------------------------------------------------------------------
+    // OBSTACLES (MINES)
+    // ------------------------------------------------------------------
+    function spawnObstacle(){
+      const radius=0.12+Math.random()*0.08;
+      const geom=new THREE.SphereGeometry(radius,12,12);
+      const mat=new THREE.MeshStandardMaterial({color:0x8b0000,metalness:0.6,roughness:0.3});
+      const mine=new THREE.Mesh(geom,mat);
+      const xPos=(Math.random()-0.5)*1.5;
+      mine.position.set(xPos,1.2,0);
       STATE.scene.add(mine);
-      STATE.obstacles.push({ mesh:mine, radius });
+      STATE.obstacles.push({mesh:mine,radius});
     }
-
-    function updateObstacles(delta) {
-      const speed = 0.0008 * delta; // downward speed
-      for (let i = STATE.obstacles.length - 1; i >= 0; i--) {
-        const o = STATE.obstacles[i];
-        o.mesh.position.y -= speed;
-        // Remove when off‑screen
-        if (o.mesh.position.y < -1.5) {
+    function updateObstacles(deltaSec){
+      const speed=0.6*deltaSec;
+      for(let i=STATE.obstacles.length-1;i>=0;i--){
+        const o=STATE.obstacles[i];
+        o.mesh.position.y-=speed;
+        if(o.mesh.position.y<-1.5){
           STATE.scene.remove(o.mesh);
           STATE.obstacles.splice(i,1);
         }
       }
     }
 
-    /* --------------------------------------------------------------
-       COLLISION DETECTION BETWEEN SUBMARINE AND MINES
-       -------------------------------------------------------------- */
-    function checkCollisions() {
-      const subPos = STATE.submarine.position;
-      for (const o of STATE.obstacles) {
-        const dist = subPos.distanceTo(o.mesh.position);
-        if (dist < 0.15 + o.radius) {
-          // Collision!
+    // ------------------------------------------------------------------
+    // COLLISION DETECTION
+    // ------------------------------------------------------------------
+    function checkCollisions(){
+      const subPos=STATE.submarine.position;
+      for(const o of STATE.obstacles){
+        const dist=subPos.distanceTo(o.mesh.position);
+        if(dist<0.15+o.radius){
           endGame();
           break;
         }
       }
     }
 
-    /* --------------------------------------------------------------
-       GAME STATE MANAGEMENT (START, PLAY, END)
-       -------------------------------------------------------------- */
-    function startGame() {
-      STATE.phase = STATE.PHASE.PLAYING;
-      STATE.score = 0;
-      STATE.lastTime = performance.now();
-      STATE.subY = -0.8;
-      STATE.subVelocity = 0;
-      STATE.submarine.position.y = STATE.subY;
-      STATE.obstacles = [];
-      STATE.bubbleParticles = [];
+    // ------------------------------------------------------------------
+    // GAME STATE MANAGEMENT
+    // ------------------------------------------------------------------
+    function startGame(){
+      STATE.phase=STATE.PHASE.PLAYING;
+      STATE.score=0;
+      STATE.lastTime=performance.now();
+      STATE.subY=-0.8;STATE.subX=0;
+      STATE.subVelocity=0;
+      STATE.submarine.position.set(0,STATE.subY,0);
+      STATE.obstacles=[];
+      STATE.bubbleParticles=[];
       STATE.messageEl.classList.add('hidden');
       STATE.tapIndicator.classList.remove('hidden');
-      STATE.scoreEl.textContent = `Score: 0`;
+      STATE.hintEl.classList.remove('hidden');
+      STATE.scoreEl.textContent=`Score: 0`;
     }
-
-    function endGame() {
-      STATE.phase = STATE.PHASE.GAMEOVER;
-      STATE.messageEl.textContent = `Game Over! Tap to retry`;
+    function endGame(){
+      STATE.phase=STATE.PHASE.GAMEOVER;
+      STATE.messageEl.textContent=`Game Over! Tap to retry`;
       STATE.messageEl.classList.remove('hidden');
       STATE.tapIndicator.classList.add('hidden');
+      STATE.hintEl.classList.add('hidden');
     }
-
-    function resetGame() {
-      // Clean up objects
-      for (const o of STATE.obstacles) STATE.scene.remove(o.mesh);
-      for (const p of STATE.bubbleParticles) STATE.scene.remove(p.mesh);
-      STATE.obstacles = [];
-      STATE.bubbleParticles = [];
+    function resetGame(){
+      for(const o of STATE.obstacles) STATE.scene.remove(o.mesh);
+      for(const p of STATE.bubbleParticles) STATE.scene.remove(p.mesh);
+      STATE.obstacles=[];STATE.bubbleParticles=[];
       startGame();
     }
 
-    /* --------------------------------------------------------------
-       INPUT HANDLING: TOUCH / CLICK
-       -------------------------------------------------------------- */
-    function onUserInput() {
-      if (STATE.phase === STATE.PHASE.MENU) {
-        startGame();
-      } else if (STATE.phase === STATE.PHASE.PLAYING) {
-        // Apply upward thrust
-        STATE.subVelocity += STATE.thrust;
-      } else if (STATE.phase === STATE.PHASE.GAMEOVER) {
-        resetGame();
-      }
+    // ------------------------------------------------------------------
+    // INPUT HANDLING – TAP FOR VERTICAL THRUST, DRAG FOR HORIZONTAL
+    // ------------------------------------------------------------------
+    function onPointerDown(e){
+      if(STATE.phase===STATE.PHASE.MENU){ startGame(); return; }
+      if(STATE.phase===STATE.PHASE.GAMEOVER){ resetGame(); return; }
+      // Vertical thrust
+      STATE.subVelocity+=STATE.thrust;
+      // Begin horizontal drag
+      STATE.dragging=true;
+      STATE.dragStartX=e.clientX;
+      STATE.dragStartSubX=STATE.subX;
     }
+    function onPointerMove(e){
+      if(!STATE.dragging) return;
+      const container=document.getElementById('game-container');
+      const rect=container.getBoundingClientRect();
+      const deltaX=e.clientX-STATE.dragStartX;
+      // Map pixel delta to world units (max ±0.8)
+      const worldDelta=(deltaX/rect.width)*1.6; // 1.6 ≈ max range (‑0.8 to 0.8)
+      let newX=STATE.dragStartSubX+worldDelta;
+      newX=Math.max(-0.8,Math.min(0.8,newX));
+      STATE.subX=newX;
+      STATE.submarine.position.x=STATE.subX;
+    }
+    function onPointerUp(){
+      STATE.dragging=false;
+    }
+    const container=document.getElementById('game-container');
+    container.addEventListener('pointerdown',onPointerDown);
+    container.addEventListener('pointermove',onPointerMove);
+    container.addEventListener('pointerup',onPointerUp);
+    container.addEventListener('pointercancel',onPointerUp);
+    container.addEventListener('touchstart',e=>e.preventDefault());
 
-    // Register touch and mouse events
-    document.getElementById('game-container').addEventListener('pointerdown', onUserInput);
-    document.getElementById('game-container').addEventListener('touchstart', e => e.preventDefault());
-
-    /* --------------------------------------------------------------
-       MAIN ANIMATION LOOP
-       -------------------------------------------------------------- */
-    function animate(now) {
+    // ------------------------------------------------------------------
+    // MAIN ANIMATION LOOP
+    // ------------------------------------------------------------------
+    function animate(now){
       requestAnimationFrame(animate);
-      const delta = now - STATE.lastTime;
-      STATE.lastTime = now;
+      const deltaMs=now-STATE.lastTime;
+      STATE.lastTime=now;
+      const deltaSec=deltaMs/1000;
 
-      if (STATE.phase === STATE.PHASE.PLAYING) {
-        // Submarine physics
-        STATE.subVelocity += STATE.gravity * delta;
-        STATE.subY += STATE.subVelocity * delta;
-        // Clamp to screen bounds
-        STATE.subY = Math.max(-0.9, Math.min(0.9, STATE.subY));
-        STATE.submarine.position.y = STATE.subY;
+      if(STATE.phase===STATE.PHASE.PLAYING){
+        // Physics
+        STATE.subVelocity+=STATE.gravity*deltaSec;
+        STATE.subY+=STATE.subVelocity*deltaSec;
+        STATE.subY=Math.max(-0.9,Math.min(0.9,STATE.subY));
+        STATE.submarine.position.y=STATE.subY;
 
-        // Emit bubbles periodically
-        if (Math.random() < 0.02) createBubble();
+        // Bubbles
+        if(Math.random()<0.03) createBubble();
 
-        // Update particles and obstacles
-        updateBubbles(delta);
-        updateObstacles(delta);
+        // Particles & obstacles
+        updateBubbles(deltaSec);
+        updateObstacles(deltaSec);
         checkCollisions();
 
-        // Spawn obstacles at interval
-        if (now - STATE.lastObstacleTime > STATE.obstacleSpawnInterval) {
+        // Spawn mines
+        if(now-STATE.lastObstacleTime>STATE.obstacleSpawnInterval){
           spawnObstacle();
-          STATE.lastObstacleTime = now;
+          STATE.lastObstacleTime=now;
         }
 
-        // Increment score based on survival time
-        STATE.score = Math.floor((now - STATE.lastObstacleTime) / 1000);
-        STATE.scoreEl.textContent = `Score: ${STATE.score}`;
+        // Score = seconds survived
+        const elapsed=Math.floor((now-STATE.lastObstacleTime)/1000);
+        STATE.score=elapsed;
+        STATE.scoreEl.textContent=`Score: ${STATE.score}`;
       }
 
-      // Render the scene
-      STATE.renderer.render(STATE.scene, STATE.camera);
+      STATE.renderer.render(STATE.scene,STATE.camera);
     }
 
-    /* --------------------------------------------------------------
-       RESPONSIVE RESIZE HANDLER (maintains 9:16 portrait)
-       -------------------------------------------------------------- */
-    function onResize() {
-      const container = document.getElementById('game-container');
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-      STATE.renderer.setSize(width, height);
-      STATE.camera.aspect = width / height;
+    // ------------------------------------------------------------------
+    // RESPONSIVE RESIZE – keep 9:16 ratio
+    // ------------------------------------------------------------------
+    function onResize(){
+      const container=document.getElementById('game-container');
+      const w=container.clientWidth,h=container.clientHeight;
+      STATE.renderer.setSize(w,h);
+      STATE.camera.aspect=w/h;
       STATE.camera.updateProjectionMatrix();
     }
-    window.addEventListener('resize', onResize);
+    window.addEventListener('resize',onResize);
 
-    /* --------------------------------------------------------------
-       INITIAL STARTUP
-       -------------------------------------------------------------- */
-    function init() {
+    // ------------------------------------------------------------------
+    // INITIALISATION
+    // ------------------------------------------------------------------
+    function init(){
       initThree();
-      // Show initial menu message
-      STATE.messageEl.textContent = `Submarine Dive – Tap to start`;
+      STATE.messageEl.textContent=`Submarine Dive – Tap to start`;
       STATE.messageEl.classList.remove('hidden');
       STATE.tapIndicator.classList.add('hidden');
-      // Begin animation loop
+      STATE.hintEl.classList.add('hidden');
       requestAnimationFrame(animate);
     }
-
-    // Kick‑off
-    init();
+    window.addEventListener('load',init);
   </script>
 </body>
 </html>
