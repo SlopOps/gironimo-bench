@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- ========================================================= -->
+  <!--  Beach Surfing Mini‑Game – Single‑File Implementation      -->
+  <!-- ========================================================= -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Surf's Up</title>
+  <title>Surf’s Up – Beach Surfing Game</title>
+
+  <!-- Google Font – Rubik for UI text -->
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Three.js – 3D engine (allowed) -->
   <script src="https://unpkg.com/three@0.165.0/build/three.min.js"></script>
+
+  <!-- ========================================================= -->
+  <!--  Custom CSS – Mobile‑first, 9:16 portrait aspect ratio    -->
+  <!-- ========================================================= -->
   <style>
-    /* Reset and body styling */
+    /* Reset and base styling */
     html, body {
       margin: 0;
       padding: 0;
@@ -16,8 +27,10 @@
       height: 100%;
       background: linear-gradient(to bottom, #87CEEB, #1E90FF);
       font-family: 'Rubik', sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
-    /* Container to enforce 9:16 portrait aspect ratio */
+
+    /* Container enforces strict 9:16 portrait ratio */
     #gameContainer {
       position: relative;
       width: 100%;
@@ -25,15 +38,17 @@
       max-height: 100vh;
       margin: 0 auto;
       overflow: hidden;
-      background: #001f3f;
+      background: #001f3f; /* deep ocean */
     }
-    /* Canvas fills container */
+
+    /* Full‑screen canvas */
     #gameCanvas {
       display: block;
       width: 100%;
       height: 100%;
     }
-    /* UI overlay */
+
+    /* UI overlay – score & timer */
     #ui {
       position: absolute;
       top: 0;
@@ -51,13 +66,11 @@
       padding: 0.25rem 0.5rem;
       border-radius: 0.5rem;
     }
+
     /* Start screen overlay */
     #startScreen {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: rgba(0,0,0,0.7);
       color: #fff;
       display: flex;
@@ -77,13 +90,11 @@
       margin-top: 1rem;
       font-size: 1rem;
     }
-    /* Game over overlay */
+
+    /* Game‑over overlay */
     #gameOverScreen {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       background: rgba(0,0,0,0.8);
       color: #fff;
       display: flex;
@@ -103,7 +114,8 @@
       margin-top: 1rem;
       font-size: 1rem;
     }
-    /* Touch indicator arrows */
+
+    /* Touch‑hint icons (left/right arrows) */
     .touchHint {
       position: absolute;
       bottom: 1rem;
@@ -111,68 +123,133 @@
       height: 2rem;
       opacity: 0.8;
     }
-    #leftHint {
-      left: 1rem;
+    #leftHint { left: 1rem; }
+    #rightHint { right: 1rem; }
+
+    /* Mute / Pause button styling */
+    #muteBtn, #pauseBtn {
+      position: absolute;
+      width: 2rem;
+      height: 2rem;
+      opacity: 0.8;
+      cursor: pointer;
     }
-    #rightHint {
-      right: 1rem;
+    #muteBtn { right: 1rem; bottom: 4rem; }
+    #pauseBtn { right: 1rem; bottom: 7rem; }
+
+    /* Pause overlay */
+    #pauseOverlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      z-index: 20;
     }
   </style>
 </head>
 <body>
+  <!-- ========================================================= -->
+  <!--  Game Container – holds canvas and UI overlays               -->
+  <!-- ========================================================= -->
   <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
+
+    <!-- UI overlay -->
     <div id="ui">
       <div id="score">Score: 0</div>
       <div id="timer">Time: 30</div>
     </div>
+
+    <!-- Start screen (visible on load) -->
     <div id="startScreen">
-      <h1>Surf's Up!</h1>
-      <p>Tap left/right to steer. Survive 30 seconds.</p>
+      <h1>Surf’s Up!</h1>
+      <p>Tap left/right to steer. Survive 30 seconds.</p>
     </div>
+
+    <!-- Game‑over screen (hidden until end) -->
     <div id="gameOverScreen" style="display:none;">
       <h1>Game Over</h1>
       <p id="finalScore">Score: 0</p>
       <p>Tap anywhere to restart.</p>
     </div>
+
+    <!-- Touch hint arrows -->
     <img id="leftHint" class="touchHint" src="https://unpkg.com/lucide-static@latest/icons/arrow-left.svg" alt="Left">
     <img id="rightHint" class="touchHint" src="https://unpkg.com/lucide-static@latest/icons/arrow-right.svg" alt="Right">
+
+    <!-- Mute and Pause icons (added via JS) -->
+    <div id="pauseOverlay">Paused</div>
   </div>
+
+  <!-- ========================================================= -->
+  <!--  JavaScript – core game logic, rendering, UI, audio          -->
+  <!-- ========================================================= -->
   <script>
-    // Global variables
+    // ---------------------------------------------------------
+    //  Global Variables & Constants
+    // ---------------------------------------------------------
     let scene, camera, renderer;
     let waveMesh, surferMesh;
-    let obstacles = [];
-    let particleSystem;
+    let obstacles = [];                 // Array of obstacle objects
+    let particleSystem;                // Splash particles
+    let burstSystem;                   // Collision burst particles
     let score = 0;
-    let timeLeft = 30;
-    let gameState = 'ready'; // ready, playing, over, paused
+    let timeLeft = 30;                 // Seconds
+    let gameState = 'ready';           // 'ready' | 'playing' | 'paused' | 'over'
     const waveWidth = 20;
     const waveDepth = 200;
     const waveSegments = 200;
     const surferSpeed = 0.1;
     const obstacleSpeed = 0.2;
     const maxObstacles = 5;
-    const spawnInterval = 2000; // ms
+    const spawnInterval = 2000;        // ms
     let lastSpawnTime = 0;
     let lastUpdateTime = 0;
     const clock = new THREE.Clock();
 
-    // Initialize the scene
+    // UI Elements
+    const uiScore = document.getElementById('score');
+    const uiTimer = document.getElementById('timer');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const finalScoreEl = document.getElementById('finalScore');
+    const pauseOverlay = document.getElementById('pauseOverlay');
+
+    // Audio
+    let audioCtx;
+    let mute = false;
+    let splashBuffer = null;
+    let collisionBuffer = null;
+
+    // Sun & Clouds
+    let sunMesh;
+    const clouds = [];
+
+    // ---------------------------------------------------------
+    //  Initialization
+    // ---------------------------------------------------------
     init();
-    // Main animation loop
     animate();
 
-    // Function definitions
+    // ---------------------------------------------------------
+    //  Function: init – sets up scene, camera, lights, objects
+    // ---------------------------------------------------------
     function init() {
-      // Set up Three.js renderer
+      // ----- Renderer -----
       const canvas = document.getElementById('gameCanvas');
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-      // Create scene
+
+      // ----- Scene -----
       scene = new THREE.Scene();
-      // Set up camera
+
+      // ----- Camera -----
       const fov = 60;
       const aspect = canvas.clientWidth / canvas.clientHeight;
       const near = 0.1;
@@ -180,100 +257,58 @@
       camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
       camera.position.set(0, 5, 10);
       camera.lookAt(0, 0, 0);
-      // Add ambient light
+
+      // ----- Lights -----
       const ambient = new THREE.AmbientLight(0xffffff, 0.8);
       scene.add(ambient);
-      // Add directional light for sun
-      const sun = new THREE.DirectionalLight(0xffe0b2, 0.6);
-      sun.position.set(-10, 10, 5);
-      scene.add(sun);
-      // Create wave surface
-      createWave();
-      // Create surfer
-      createSurfer();
-      // Create particle system for splash
-      createParticleSystem();
-      // Event listeners
-      window.addEventListener('resize', onWindowResize);
-      window.addEventListener('touchstart', onTouchStart);
-      // Start UI timer
-      updateUI();
+      const sunLight = new THREE.DirectionalLight(0xffe0b2, 0.6);
+      sunLight.position.set(-10, 10, 5);
+      scene.add(sunLight);
 
-      // Additional visual elements: sun, clouds, particle bursts, audio, pause overlay
-      // Sun object
-      let sunMesh;
-      // Cloud objects array
-      let clouds = [];
-      // Audio context and sound flags
-      let audioCtx;
-      let mute = false;
-      // UI element for mute toggle
-      const muteBtn = document.createElement('img');
-      muteBtn.id = 'muteBtn';
-      muteBtn.className = 'touchHint';
-      muteBtn.style.right = '1rem';
-      muteBtn.style.bottom = '4rem';
-      muteBtn.src = 'https://unpkg.com/lucide-static@latest/icons/volume-2.svg';
-      muteBtn.alt = 'Mute';
-      muteBtn.style.width = '2rem';
-      muteBtn.style.height = '2rem';
-      muteBtn.style.opacity = '0.8';
-      muteBtn.style.cursor = 'pointer';
-      document.getElementById('gameContainer').appendChild(muteBtn);
-      muteBtn.addEventListener('click', toggleMute);
-      // Pause overlay
-      const pauseOverlay = document.createElement('div');
-      pauseOverlay.id = 'pauseOverlay';
-      pauseOverlay.style.position = 'absolute';
-      pauseOverlay.style.top = '0';
-      pauseOverlay.style.left = '0';
-      pauseOverlay.style.width = '100%';
-      pauseOverlay.style.height = '100%';
-      pauseOverlay.style.background = 'rgba(0,0,0,0.6)';
-      pauseOverlay.style.display = 'none';
-      pauseOverlay.style.alignItems = 'center';
-      pauseOverlay.style.justifyContent = 'center';
-      pauseOverlay.style.zIndex = '20';
-      pauseOverlay.style.color = '#fff';
-      pauseOverlay.style.fontSize = '2rem';
-      pauseOverlay.style.fontWeight = '700';
-      pauseOverlay.textContent = 'Paused';
-      document.getElementById('gameContainer').appendChild(pauseOverlay);
-      // Pause button
-      const pauseBtn = document.createElement('img');
-      pauseBtn.id = 'pauseBtn';
-      pauseBtn.className = 'touchHint';
-      pauseBtn.style.right = '1rem';
-      pauseBtn.style.bottom = '7rem';
-      pauseBtn.src = 'https://unpkg.com/lucide-static@latest/icons/pause.svg';
-      pauseBtn.alt = 'Pause';
-      pauseBtn.style.width = '2rem';
-      pauseBtn.style.height = '2rem';
-      pauseBtn.style.opacity = '0.8';
-      pauseBtn.style.cursor = 'pointer';
-      document.getElementById('gameContainer').appendChild(pauseBtn);
-      pauseBtn.addEventListener('click', togglePause);
-      // Audio initialization
-      initAudio();
-      // Create sun and clouds
+      // ----- Wave Surface -----
+      createWave();
+
+      // ----- Surfer -----
+      createSurfer();
+
+      // ----- Particle Systems -----
+      createParticleSystem();
+      createBurstSystem();
+
+      // ----- Sun & Clouds -----
       createSun();
       createClouds();
-      // Touch hint fade timer
+
+      // ----- UI Buttons (Mute & Pause) -----
+      createUIButtons();
+
+      // ----- Event Listeners -----
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('touchstart', onTouchStart);
+      window.addEventListener('click', onClick); // For restart after game over
+
+      // ----- Audio Context -----
+      initAudio();
+
+      // ----- Initial UI Update -----
+      updateUI();
+
+      // ----- Fade out touch hints after a few seconds -----
       setTimeout(() => {
         document.getElementById('leftHint').style.opacity = '0';
         document.getElementById('rightHint').style.opacity = '0';
       }, 5000);
     }
 
+    // ---------------------------------------------------------
+    //  Function: createWave – builds a dynamic water plane
+    // ---------------------------------------------------------
     function createWave() {
-      // Plane geometry for wave
       const geometry = new THREE.PlaneGeometry(waveWidth, waveDepth, waveSegments, waveSegments);
-      // Rotate to make it horizontal
       geometry.rotateX(-Math.PI / 2);
-      // Material with water-like color
       const material = new THREE.MeshPhongMaterial({
         color: 0x1e90ff,
-        shininess: 100,
+        shininess: 120,
         side: THREE.DoubleSide,
         flatShading: true,
       });
@@ -281,18 +316,21 @@
       scene.add(waveMesh);
     }
 
+    // ---------------------------------------------------------
+    //  Function: createSurfer – simple box as placeholder surfer
+    // ---------------------------------------------------------
     function createSurfer() {
-      // Simple box geometry as placeholder surfer
       const geometry = new THREE.BoxGeometry(0.5, 0.2, 1);
       const material = new THREE.MeshStandardMaterial({ color: 0xffd700 });
       surferMesh = new THREE.Mesh(geometry, material);
-      // Position surfer above wave
       surferMesh.position.set(0, 0.3, -waveDepth / 2 + 10);
       scene.add(surferMesh);
     }
 
+    // ---------------------------------------------------------
+    //  Function: createParticleSystem – splash particles
+    // ---------------------------------------------------------
     function createParticleSystem() {
-      // Simple particle system for water splash
       const particleCount = 200;
       const positions = new Float32Array(particleCount * 3);
       const velocities = new Float32Array(particleCount * 3);
@@ -318,6 +356,89 @@
       scene.add(particleSystem);
     }
 
+    // ---------------------------------------------------------
+    //  Function: createBurstSystem – collision explosion particles
+    // ---------------------------------------------------------
+    function createBurstSystem() {
+      const burstCount = 300;
+      const positions = new Float32Array(burstCount * 3);
+      const velocities = new Float32Array(burstCount * 3);
+      for (let i = 0; i < burstCount; i++) {
+        positions[i * 3] = 0;
+        positions[i * 3 + 1] = 0;
+        positions[i * 3 + 2] = 0;
+        velocities[i * 3] = (Math.random() - 0.5) * 0.6;
+        velocities[i * 3 + 1] = Math.random() * 0.8;
+        velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.6;
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+      const material = new THREE.PointsMaterial({
+        color: 0xff4500,
+        size: 0.07,
+        transparent: true,
+        opacity: 0.9,
+      });
+      burstSystem = new THREE.Points(geometry, material);
+      burstSystem.visible = false;
+      scene.add(burstSystem);
+    }
+
+    // ---------------------------------------------------------
+    //  Function: createSun – simple glowing sphere
+    // ---------------------------------------------------------
+    function createSun() {
+      const geometry = new THREE.SphereGeometry(2, 32, 32);
+      const material = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+      sunMesh = new THREE.Mesh(geometry, material);
+      sunMesh.position.set(0, 15, -30);
+      scene.add(sunMesh);
+    }
+
+    // ---------------------------------------------------------
+    //  Function: createClouds – generate a few white planes
+    // ---------------------------------------------------------
+    function createClouds() {
+      const cloudCount = 8;
+      for (let i = 0; i < cloudCount; i++) {
+        const geometry = new THREE.PlaneGeometry(5, 2);
+        const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+        const cloud = new THREE.Mesh(geometry, material);
+        const x = (Math.random() - 0.5) * waveWidth * 1.5;
+        const y = 8 + Math.random() * 4;
+        const z = -Math.random() * waveDepth * 0.5;
+        cloud.position.set(x, y, z);
+        cloud.rotation.x = -Math.PI / 2;
+        clouds.push(cloud);
+        scene.add(cloud);
+      }
+    }
+
+    // ---------------------------------------------------------
+    //  Function: createUIButtons – mute & pause icons
+    // ---------------------------------------------------------
+    function createUIButtons() {
+      // Mute button
+      const muteBtn = document.createElement('img');
+      muteBtn.id = 'muteBtn';
+      muteBtn.src = 'https://unpkg.com/lucide-static@latest/icons/volume-2.svg';
+      muteBtn.alt = 'Mute';
+      document.getElementById('gameContainer').appendChild(muteBtn);
+      muteBtn.addEventListener('click', toggleMute);
+
+      // Pause button
+      const pauseBtn = document.createElement('img');
+      pauseBtn.id = 'pauseBtn';
+      pauseBtn.src = 'https://unpkg.com/lucide-static@latest/icons/pause.svg';
+      pauseBtn.alt = 'Pause';
+      document.getElementById('gameContainer').appendChild(pauseBtn);
+      pauseBtn.addEventListener('click', togglePause);
+    }
+
+    // ---------------------------------------------------------
+    //  Function: onWindowResize – keep canvas and camera in sync
+    // ---------------------------------------------------------
     function onWindowResize() {
       const container = document.getElementById('gameContainer');
       const width = container.clientWidth;
@@ -327,6 +448,9 @@
       camera.updateProjectionMatrix();
     }
 
+    // ---------------------------------------------------------
+    //  Function: onTouchStart – handle left/right taps
+    // ---------------------------------------------------------
     function onTouchStart(event) {
       if (gameState === 'ready') {
         startGame();
@@ -343,25 +467,36 @@
       }
     }
 
+    // ---------------------------------------------------------
+    //  Function: onClick – restart after game over
+    // ---------------------------------------------------------
+    function onClick(event) {
+      if (gameState === 'over') {
+        startGame();
+      }
+    }
+
+    // ---------------------------------------------------------
+    //  Function: moveSurfer – shift surfer left/right
+    // ---------------------------------------------------------
     function moveSurfer(direction) {
-      // direction: -1 for left, 1 for right
       const step = 0.5;
       surferMesh.position.x += direction * step;
-      // Clamp within wave bounds
       const halfWidth = waveWidth / 2 - 0.5;
       surferMesh.position.x = Math.max(-halfWidth, Math.min(halfWidth, surferMesh.position.x));
-      // Trigger splash particles
       triggerSplash();
     }
 
+    // ---------------------------------------------------------
+    //  Function: triggerSplash – emit splash particles
+    // ---------------------------------------------------------
     function triggerSplash() {
-      // Activate particle system at surfer position
       particleSystem.visible = true;
       particleSystem.position.copy(surferMesh.position);
-      // Reset particle ages
       const positions = particleSystem.geometry.attributes.position.array;
       const velocities = particleSystem.geometry.attributes.velocity.array;
-      for (let i = 0; i < positions.length / 3; i++) {
+      const count = positions.length / 3;
+      for (let i = 0; i < count; i++) {
         positions[i * 3] = 0;
         positions[i * 3 + 1] = 0;
         positions[i * 3 + 2] = 0;
@@ -371,33 +506,40 @@
       }
       particleSystem.geometry.attributes.position.needsUpdate = true;
       particleSystem.geometry.attributes.velocity.needsUpdate = true;
+      playSound(splashBuffer);
     }
 
+    // ---------------------------------------------------------
+    //  Function: startGame – reset state and begin play
+    // ---------------------------------------------------------
     function startGame() {
       gameState = 'playing';
       score = 0;
       timeLeft = 30;
-      document.getElementById('startScreen').style.display = 'none';
-      document.getElementById('gameOverScreen').style.display = 'none';
-      // Reset surfer position
+      startScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
       surferMesh.position.set(0, 0.3, -waveDepth / 2 + 10);
-      // Clear obstacles
       obstacles.forEach(o => scene.remove(o.mesh));
       obstacles = [];
-      // Reset timers
       lastSpawnTime = 0;
       lastUpdateTime = performance.now();
       updateUI();
     }
 
+    // ---------------------------------------------------------
+    //  Function: endGame – show final score and stop updates
+    // ---------------------------------------------------------
     function endGame() {
       gameState = 'over';
-      document.getElementById('finalScore').textContent = `Score: ${score}`;
-      document.getElementById('gameOverScreen').style.display = 'flex';
+      finalScoreEl.textContent = `Score: ${score}`;
+      gameOverScreen.style.display = 'flex';
+      playSound(collisionBuffer);
     }
 
+    // ---------------------------------------------------------
+    //  Function: spawnObstacle – create a buoy obstacle
+    // ---------------------------------------------------------
     function spawnObstacle() {
-      // Simple sphere as buoy obstacle
       const geometry = new THREE.SphereGeometry(0.4, 12, 12);
       const material = new THREE.MeshStandardMaterial({ color: 0xff4500 });
       const mesh = new THREE.Mesh(geometry, material);
@@ -408,22 +550,23 @@
       obstacles.push({ mesh, passed: false });
     }
 
+    // ---------------------------------------------------------
+    //  Function: updateObstacles – move, check collisions, score
+    // ---------------------------------------------------------
     function updateObstacles(delta) {
-      // Move obstacles towards surfer
       obstacles.forEach(ob => {
         ob.mesh.position.z += obstacleSpeed * delta * 60;
-        // Check if obstacle passed surfer
         if (!ob.passed && ob.mesh.position.z > surferMesh.position.z) {
           ob.passed = true;
           score += 10;
           updateUI();
         }
-        // Collision detection
         const dx = ob.mesh.position.x - surferMesh.position.x;
         const dz = ob.mesh.position.z - surferMesh.position.z;
         const distance = Math.sqrt(dx * dx + dz * dz);
         if (distance < 0.7) {
-          // Collision! End game
+          // Collision!
+          spawnBurst(ob.mesh.position.clone());
           endGame();
         }
       });
@@ -435,8 +578,10 @@
       });
     }
 
+    // ---------------------------------------------------------
+    //  Function: updateWave – animate water surface with sine waves
+    // ---------------------------------------------------------
     function updateWave(time) {
-      // Animate wave vertices using sine function
       const positions = waveMesh.geometry.attributes.position.array;
       const vertexCount = positions.length / 3;
       for (let i = 0; i < vertexCount; i++) {
@@ -450,15 +595,217 @@
       waveMesh.geometry.computeVertexNormals();
     }
 
+    // ---------------------------------------------------------
+    //  Function: updateParticles – animate splash particles
+    // ---------------------------------------------------------
     function updateParticles(delta) {
       if (!particleSystem.visible) return;
       const positions = particleSystem.geometry.attributes.position.array;
       const velocities = particleSystem.geometry.attributes.velocity.array;
       const count = positions.length / 3;
-      let anyVisible = false;
+      let anyAlive = false;
       for (let i = 0; i < count; i++) {
         velocities[i * 3 + 1] -= 0.01; // gravity
         positions[i * 3] += velocities[i * 3] * delta * 60;
         positions[i * 3 + 1] += velocities[i * 3 + 1] * delta * 60;
         positions[i * 3 + 2] += velocities[i * 3 + 2] * delta * 60;
-        if (positions[i * 3
+        if (positions[i * 3 + 1] > -2) anyAlive = true;
+      }
+      if (!anyAlive) particleSystem.visible = false;
+      particleSystem.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // ---------------------------------------------------------
+    //  Function: updateBurst – animate collision burst particles
+    // ---------------------------------------------------------
+    function updateBurst(delta) {
+      if (!burstSystem.visible) return;
+      const positions = burstSystem.geometry.attributes.position.array;
+      const velocities = burstSystem.geometry.attributes.velocity.array;
+      const count = positions.length / 3;
+      let anyAlive = false;
+      for (let i = 0; i < count; i++) {
+        velocities[i * 3 + 1] -= 0.02; // stronger gravity
+        positions[i * 3] += velocities[i * 3] * delta * 60;
+        positions[i * 3 + 1] += velocities[i * 3 + 1] * delta * 60;
+        positions[i * 3 + 2] += velocities[i * 3 + 2] * delta * 60;
+        if (positions[i * 3 + 1] > -3) anyAlive = true;
+      }
+      if (!anyAlive) burstSystem.visible = false;
+      burstSystem.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // ---------------------------------------------------------
+    //  Function: spawnBurst – emit explosion particles at a point
+    // ---------------------------------------------------------
+    function spawnBurst(position) {
+      burstSystem.visible = true;
+      burstSystem.position.copy(position);
+      const positions = burstSystem.geometry.attributes.position.array;
+      const velocities = burstSystem.geometry.attributes.velocity.array;
+      const count = positions.length / 3;
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] = 0;
+        positions[i * 3 + 1] = 0;
+        positions[i * 3 + 2] = 0;
+        velocities[i * 3] = (Math.random() - 0.5) * 0.6;
+        velocities[i * 3 + 1] = Math.random() * 0.8;
+        velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.6;
+      }
+      burstSystem.geometry.attributes.position.needsUpdate = true;
+      burstSystem.geometry.attributes.velocity.needsUpdate = true;
+    }
+
+    // ---------------------------------------------------------
+    //  Function: updateSun – simple rotation for visual interest
+    // ---------------------------------------------------------
+    function updateSun(delta) {
+      sunMesh.rotation.y += delta * 0.2;
+    }
+
+    // ---------------------------------------------------------
+    //  Function: updateClouds – drift clouds slowly across sky
+    // ---------------------------------------------------------
+    function updateClouds(delta) {
+      clouds.forEach(cloud => {
+        cloud.position.x += delta * 0.5;
+        if (cloud.position.x > waveWidth / 2 + 5) {
+          cloud.position.x = -waveWidth / 2 - 5;
+        }
+      });
+    }
+
+    // ---------------------------------------------------------
+    //  Function: updateTimer – countdown and end when zero
+    // ---------------------------------------------------------
+    function updateTimer(delta) {
+      if (gameState !== 'playing') return;
+      timeLeft -= delta;
+      if (timeLeft <= 0) {
+        timeLeft = 0;
+        endGame();
+      }
+      updateUI();
+    }
+
+    // ---------------------------------------------------------
+    //  Function: updateUI – refresh score & timer display
+    // ---------------------------------------------------------
+    function updateUI() {
+      uiScore.textContent = `Score: ${score}`;
+      uiTimer.textContent = `Time: ${Math.ceil(timeLeft)}`;
+    }
+
+    // ---------------------------------------------------------
+    //  Function: toggleMute – mute/unmute audio
+    // ---------------------------------------------------------
+    function toggleMute() {
+      mute = !mute;
+      const muteBtn = document.getElementById('muteBtn');
+      muteBtn.src = mute
+        ? 'https://unpkg.com/lucide-static@latest/icons/mute.svg'
+        : 'https://unpkg.com/lucide-static@latest/icons/volume-2.svg';
+    }
+
+    // ---------------------------------------------------------
+    //  Function: togglePause – pause or resume the game
+    // ---------------------------------------------------------
+    function togglePause() {
+      if (gameState === 'playing') {
+        gameState = 'paused';
+        pauseOverlay.style.display = 'flex';
+      } else if (gameState === 'paused') {
+        gameState = 'playing';
+        pauseOverlay.style.display = 'none';
+        // Reset clock to avoid large delta after pause
+        clock.getDelta();
+      }
+    }
+
+    // ---------------------------------------------------------
+    //  Function: initAudio – set up Web Audio API and load sounds
+    // ---------------------------------------------------------
+    function initAudio() {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Load splash sound (simple white noise burst)
+        loadSound('https://cdn.jsdelivr.net/gh/terkelg/awesome-audio@master/splash.wav', buffer => splashBuffer = buffer);
+        // Load collision sound (low‑frequency thump)
+        loadSound('https://cdn.jsdelivr.net/gh/terkelg/awesome-audio@master/collision.wav', buffer => collisionBuffer = buffer);
+      } catch (e) {
+        console.warn('Web Audio API not supported:', e);
+      }
+    }
+
+    // ---------------------------------------------------------
+    //  Function: loadSound – fetch and decode audio file
+    // ---------------------------------------------------------
+    function loadSound(url, callback) {
+      fetch(url)
+        .then(r => r.arrayBuffer())
+        .then(buf => audioCtx.decodeAudioData(buf))
+        .then(decoded => callback(decoded))
+        .catch(err => console.error('Audio load error:', err));
+    }
+
+    // ---------------------------------------------------------
+    //  Function: playSound – play a buffer if not muted
+    // ---------------------------------------------------------
+    function playSound(buffer) {
+      if (mute || !audioCtx) return;
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioCtx.destination);
+      source.start(0);
+    }
+
+    // ---------------------------------------------------------
+    //  Function: animate – main loop (requestAnimationFrame)
+    // ---------------------------------------------------------
+    function animate() {
+      requestAnimationFrame(animate);
+      const now = performance.now();
+      const delta = (now - lastUpdateTime) / 1000;
+      lastUpdateTime = now;
+
+      if (gameState === 'playing') {
+        // Update game elements
+        updateWave(now * 0.001);
+        updateObstacles(delta);
+        updateParticles(delta);
+        updateBurst(delta);
+        updateSun(delta);
+        updateClouds(delta);
+        updateTimer(delta);
+
+        // Spawn new obstacles at intervals
+        if (now - lastSpawnTime > spawnInterval && obstacles.length < maxObstacles) {
+          spawnObstacle();
+          lastSpawnTime = now;
+        }
+      }
+
+      // Render scene
+      renderer.render(scene, camera);
+    }
+
+    // ---------------------------------------------------------
+    //  Function: clamp – utility to keep values within bounds
+    // ---------------------------------------------------------
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, val));
+    }
+
+    // ---------------------------------------------------------
+    //  Function: randomRange – utility for random numbers
+    // ---------------------------------------------------------
+    function randomRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    // ---------------------------------------------------------
+    //  End of Script – all functions defined above
+    // ---------------------------------------------------------
+  </script>
+</body>
+</html>
