@@ -90,6 +90,22 @@
       margin-top: 1rem;
       font-size: 1rem;
     }
+    #startBtn {
+      margin-top: 1.5rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: #ff4500;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      transition: background 0.2s;
+    }
+    #startBtn:hover {
+      background: #e03e00;
+    }
 
     /* Game‑over overlay */
     #gameOverScreen {
@@ -169,6 +185,7 @@
     <div id="startScreen">
       <h1>Surf’s Up!</h1>
       <p>Tap left/right to steer. Survive 30 seconds.</p>
+      <button id="startBtn">Start Game</button>
     </div>
 
     <!-- Game‑over screen (hidden until end) -->
@@ -286,6 +303,9 @@
       window.addEventListener('resize', onWindowResize);
       window.addEventListener('touchstart', onTouchStart);
       window.addEventListener('click', onClick); // For restart after game over
+
+      // Start button click (desktop)
+      document.getElementById('startBtn').addEventListener('click', startGame);
 
       // ----- Audio Context -----
       initAudio();
