@@ -90,21 +90,27 @@
       margin-top: 1rem;
       font-size: 1rem;
     }
-    #startBtn {
+
+    /* Start button styling */
+    #startButton {
       margin-top: 1.5rem;
-      padding: 0.6rem 1.2rem;
-      font-size: 1rem;
-      font-weight: 600;
-      color: #fff;
-      background: #ff4500;
+      padding: 0.8rem 2rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      font-family: 'Rubik', sans-serif;
+      background: #ffd700;
+      color: #001f3f;
       border: none;
-      border-radius: 0.5rem;
+      border-radius: 2rem;
       cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
       transition: background 0.2s;
+      z-index: 11;
     }
-    #startBtn:hover {
-      background: #e03e00;
+    #startButton:hover {
+      background: #ffea70;
+    }
+    #startButton:active {
+      background: #e6c200;
     }
 
     /* Game‑over overlay */
@@ -181,11 +187,11 @@
       <div id="timer">Time: 30</div>
     </div>
 
-    <!-- Start screen (visible on load) -->
+    <!-- Start screen (visible on load) – NOW WITH START BUTTON -->
     <div id="startScreen">
       <h1>Surf’s Up!</h1>
       <p>Tap left/right to steer. Survive 30 seconds.</p>
-      <button id="startBtn">Start Game</button>
+      <button id="startButton">Start</button>
     </div>
 
     <!-- Game‑over screen (hidden until end) -->
@@ -304,8 +310,13 @@
       window.addEventListener('touchstart', onTouchStart);
       window.addEventListener('click', onClick); // For restart after game over
 
-      // Start button click (desktop)
-      document.getElementById('startBtn').addEventListener('click', startGame);
+      // ***** NEW: Start button click listener *****
+      document.getElementById('startButton').addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent window click from firing
+        if (gameState === 'ready') {
+          startGame();
+        }
+      });
 
       // ----- Audio Context -----
       initAudio();
