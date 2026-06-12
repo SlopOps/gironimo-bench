@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gironimo Explorer</title>
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+
+<div id="app" class="app">
+  <header class="header">
+    <h1>🦒 Gironimo Explorer</h1>
+
+    <div class="header-actions">
+      <button
+        class="btn"
+        id="themeToggle"
+        aria-label="Toggle Theme">
+        Toggle Theme
+      </button>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <section class="panel">
+      <h2>Philosophy Explorer</h2>
+      <div id="philosophyFilters"></div>
+      <div id="philosophyStatements"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Leaderboard</h2>
+
+      <div class="toolbar">
+        <label>
+          Sort
+          <select id="sortSelect">
+            <option value="score">Overall Score</option>
+            <option value="date">Date</option>
+            <option value="alpha">Alphabetical</option>
+          </select>
+        </label>
+      </div>
+
+      <div
+        id="leaderboardContainer"
+        class="leaderboard"
+        aria-live="polite">
+      </div>
+    </section>
+
+    <section class="panel workflow-panel">
+      <h2>Workflow</h2>
+      <div id="workflowStages"></div>
+    </section>
+
+  </main>
+
+  <aside class="mascot-container">
+    <div id="mascot"></div>
+  </aside>
+
+  <div
+    id="notificationRoot"
+    aria-live="polite"
+    aria-atomic="true">
+  </div>
+
+  <div
+    id="modalRoot">
+  </div>
+
+</div>
+
+<script type="module" src="./js/app.js"></script>
+
+</body>
+</html>
