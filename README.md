@@ -423,12 +423,14 @@ Desktop and Mobile
 
 ### **Value (10 pts)**
 
-Cloud Models:
+Cloud Models (API Pricing): 1M input + 1M output
 
-- **9–10:** Free and unlimited
-- **7–8:** Free with limits
-- **4–6:** Cost $ but unlimited
-- **1–3:** Cost $$ and limited
+- **10:** Free and unlimited
+- **9:** <$1
+- **7–8:** $1-$5
+- **4–6:** $5-$10
+- **2–3:** $10-$20
+- **1:** >$20
 
 Local Models: (model size + kv cache) - most instances 5-10GB kvcache
 
