@@ -13,4 +13,4 @@ Step-3.5-Flash,Cloud,Chat,on,https://stepfun.ai/,196B,China,StepFun
 DeepSeek-v4-Flash,Cloud,Chat,off,https://chat.deepseek.com,284B,China,DeepSeek
 DeepSeek-v4,Cloud,Chat,off,https://chat.deepseek.com,1.6T,China,DeepSeek
 Gemini-3.5-Flash,Cloud,Chat,off,https://gemini.google.com/,??,USA,Google
-MiniMax-M3,Cloud,Chat,on,https://agent.minimax.io,??,China,MiniMax
+MiniMax-M3,Cloud,Chat,on,https://agent.minimax.io,428B,China,MiniMax
