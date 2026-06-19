@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gironimo - AI Evaluation Platform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app-root">
+        <header class="app-header">
+            <div class="header-content">
+                <h1>Gironimo</h1>
+                <div class="header-controls">
+                    <div id="theme-toggle-container"></div>
+                    <div id="notification-container" aria-live="polite"></div>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <section id="mascot-section" class="panel mascot-panel" aria-label="Giraffe Mascot">
+                <div id="mascot-container"></div>
+                <div class="mascot-label">Gironimo the Giraffe</div>
+            </section>
+
+            <section id="workflow-section" class="panel workflow-panel" aria-label="Workflow System">
+                <h2>Workflow Progression</h2>
+                <div id="workflow-container"></div>
+            </section>
+
+            <section id="leaderboard-section" class="panel leaderboard-panel" aria-label="Leaderboard">
+                <h2>Model Leaderboard</h2>
+                <div id="leaderboard-controls"></div>
+                <div id="leaderboard-container"></div>
+            </section>
+
+            <section id="philosophy-section" class="panel philosophy-panel" aria-label="Philosophy Explorer">
+                <h2>Philosophy Explorer</h2>
+                <div id="philosophy-filters"></div>
+                <div id="philosophy-container"></div>
+            </section>
+        </main>
+
+        <div id="modal-root"></div>
+        <div id="tooltip-root"></div>
+    </div>
+
+    <script src="store.js"></script>
+    <script src="components.js"></script>
+    <script src="mascot.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
